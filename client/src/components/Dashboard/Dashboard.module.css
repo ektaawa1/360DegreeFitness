@@ -1,0 +1,15 @@
+
+.ant-list-header {
+    font-size: 14px;
+    font-weight: 700;
+    color: rgb(35, 42, 49);
+    text-transform: uppercase;
+    padding-top: 10px;
+    padding-left: 15px;
+}
+
+.ant-list-item-meta-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: rgb(25, 103, 210)
+}

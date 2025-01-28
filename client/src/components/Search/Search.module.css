@@ -1,0 +1,95 @@
+
+.search_page {
+  padding: 20px !important;
+  width: 100%;
+  height: 100%;
+}
+
+.inputBox {
+  display: flex;
+  justify-content: center;
+}
+
+.contentBox {
+  display: block;
+  height: calc(100vh - 350px);
+  margin: 10px;
+  overflow: hidden;
+}
+
+.stockCard {
+  display: flex; /* relevant part */
+  flex-direction: column; /* relevant part */
+  overflow: hidden; /* relevant part */
+  height: 100%;
+}
+
+.stockData {
+  overflow: auto;
+  flex-grow: 1;
+}
+
+.mainLayout {
+  height: 100%;
+  background-color: white;
+}
+
+.infoCard {
+  padding: 5px;
+}
+
+.sider {
+  padding: 5px;
+  background: white;
+  border-radius: 10px;
+  border: 1px solid gray;
+  margin-right: 20px;
+}
+
+.ant-statistic-title {
+  color: cadetblue !important;
+}
+
+.centerGrid {
+  margin: 0 auto !important;
+}
+
+.submit {
+  margin-top: 20px !important;
+  margin-bottom: 20px !important;
+  background-color: rgba(0, 0, 255, 0.5) !important;
+}
+
+.backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.form {
+  margin: 0 auto;
+  width: 80%;
+  margin-top: 20px;
+}
+
+.card {
+  margin: 0 2% !important;
+  margin-bottom: 45px !important;
+}
+
+.cardBorder {
+  border-bottom: 10px solid rgba(0, 0, 255, 0.5);
+}
+
+.information {
+  padding: 16px !important;
+  display: flex !important;
+  overflow: auto !important;
+  flex-direction: column !important;
+  background-color: #faf9f9e7 !important;
+  margin: 0 auto !important;
+}
+

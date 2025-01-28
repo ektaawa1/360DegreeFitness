@@ -1,0 +1,60 @@
+.logo {
+
+    height: 30px;
+    width: 10px;
+    margin: 10px;
+}
+
+.logo-text {
+    color: brown;
+    font-size: 18px;
+    padding-top: 18px;
+}
+
+.footer {
+    background: ghostwhite;
+    text-align: center;
+    font-weight: 600;
+}
+
+.header-text {
+    text-align: right;
+    padding-right: 20px !important;
+    font-size: 18px;
+    color: darkslategrey;
+    font-weight: 600;
+}
+
+.site-layout .site-layout-background {
+    background: #fff;
+}
+[data-theme="dark"] .site-layout .site-layout-background {
+    background: #141414;
+}
+
+.ant-menu-item span.item {
+    font-size: 18px;
+    padding-left: 24px;
+}
+
+li.ant-menu-item {
+    display: flex;
+    align-items: center;
+    padding-left: 24px;
+}
+
+.content {
+    margin-top: 25px;
+    flex-grow: 1;
+    height: calc(100% - 70px);
+    overflow: auto;
+}
+
+
+.ant-page-header  {
+    padding: 5px 0 !important;
+}
+
+.ant-page-header-heading-title  {
+    height: 40px;
+}
