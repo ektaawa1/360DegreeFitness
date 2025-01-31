@@ -17,6 +17,8 @@ cd ../backend
 python -m venv venv
 
 source venv/bin/activate
+or .\venv\Scripts\Activate (powershell)
+or venv\Scripts\activate (cmd)
 
 pip install fastapi uvicorn
 
