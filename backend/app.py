@@ -16,3 +16,11 @@ async def analyze_data(input: DataAnalysisInput):
     numbers = input.numbers
     average = sum(numbers) / len(numbers) if numbers else 0
     return {"average": average, "count": len(numbers)}
+
+# is user profile existing & completed?
+# create a fitness profile for the user
+# get user fitness profile
+# edit user fitness profile
+# delete user fitness profile
+# create fitness plan
+# get fitness plan
