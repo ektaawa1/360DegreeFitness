@@ -24,3 +24,6 @@ async def analyze_data(input: DataAnalysisInput):
 # delete user fitness profile
 # create fitness plan
 # get fitness plan
+# delete fitness plan
+
+

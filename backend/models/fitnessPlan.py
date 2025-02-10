@@ -19,9 +19,14 @@ class WorkoutPlan(BaseModel):
     day_6: str
     day_7: str
 
+class SleepAndLifestyleSuggestions(BaseModel):
+    sleep_duration: str
+    sleep_tips: str
+    stress_management: str
+
 class FitnessPlan(BaseModel):
     user_id: str
     plan_duration: str #Duration of the fitness plan
     user_meal_plan: MealPlan #User's 1 week meal plan
     user_workout_plan: WorkoutPlan #User's 1 week exercise plan
-    user_sleep_and_lifestyle_suggestions: Dict[str, str]
+    user_sleep_and_lifestyle_suggestions: SleepAndLifestyleSuggestions
