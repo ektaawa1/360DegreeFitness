@@ -18,26 +18,26 @@ npm install
 cd ../backend
 python -m venv venv
 
-Activate Virtual Environment:
-# Unix/macOS:
+### **Activate Virtual Environment:**
+**Unix/macOS:**
 source venv/bin/activate
-# Windows PowerShell:
+**Windows PowerShell:**
 .\venv\Scripts\Activate
-# Windows CMD:
+**Windows CMD:**
 venv\Scripts\activate
 
 ### **Install Dependencies**
 pip install -r requirements.txt
 
 ### **Start Services**
-# Start Backend Server
+**Start Backend Server**
 uvicorn app:app --reload
 
-# In a new terminal, start Server
+### **In a new terminal, start Server**
 cd ../server
 npm start
 
-# In another terminal, start Frontend
+### **In another terminal, start Frontend**
 cd ../client
 npm start
 
@@ -54,22 +54,17 @@ Visit `http://localhost:8000/docs` for interactive API documentation
 ## Project Structure
 
 backend/
-│
 ├── core/
-│   └── security.py           # JWT and password security
-│
+│   └── security.py         # JWT and password security
 ├── db/
-│   ├── connection.py         # Database connection
-│   └── database.py          # Database models
-│
+│   ├── connection.py       # Database connection
+│   └── database.py        # Database models
 ├── models/
-│   ├── auth.py              # Auth models
-│   ├── fitnessPlan.py       # Fitness plan models
-│   └── userFitnessProfile.py # User profile models
-│
+│   ├── auth.py            # Auth models
+│   ├── fitnessPlan.py     # Fitness plan models
+│   └── userFitnessProfile.py  # User profile models
 ├── routers/
-│   ├── authRouter.py        # Auth endpoints
-│   ├── fitnessPlanRouter.py # Fitness plan endpoints
-│   └── userFitnessProfileRouter.py # Profile endpoints
-│
-└── app.py                   # Main application
+│   ├── authRouter.py      # Auth endpoints
+│   ├── fitnessPlanRouter.py  # Fitness plan endpoints
+│   └── userFitnessProfileRouter.py  # Profile endpoints
+└── app.py                 # Main application
