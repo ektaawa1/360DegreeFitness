@@ -1,18 +1,32 @@
 from fastapi import APIRouter, HTTPException
 from pymongo.errors import PyMongoError
-
-from backend.models.userFitnessProfile import UserFitnessProfile
-from backend.models.userFitnessProfileUpdate import UserFitnessProfileUpdate
+from models.userFitnessProfile import UserFitnessProfile
+from models.userFitnessProfileUpdate import UserFitnessProfileUpdate
+from db.connection import get_fitness_profile_collection
+from decimal import Decimal
+import json
 
 profile_router = APIRouter()
+
+class DecimalEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, Decimal):
+            return float(obj)
+        return super(DecimalEncoder, self).default(obj)
 
 # create user fitness profile
 @profile_router.post("/v1/360_degree_fitness/create_fitness_profile")
 async def create_fitness_profile(user_profile: UserFitnessProfile):
-    # Convert Pydantic model to a dictionary for MongoDB
-    # Insert the profile into MongoDB
+    # Get collection inside the handler
+    fitness_profiles_collection = get_fitness_profile_collection()
+    
     try:
-        result = await fitness_profiles_collection.insert_one(user_profile.dict())
+        # Convert Pydantic model to dict and handle Decimal conversion
+        profile_dict = json.loads(
+            json.dumps(user_profile.dict(), cls=DecimalEncoder)
+        )
+        
+        result = await fitness_profiles_collection.insert_one(profile_dict)
         return {"message": "User fitness profile created successfully!", "profile_id": str(result.inserted_id)}
     except PyMongoError as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
@@ -22,8 +36,11 @@ async def create_fitness_profile(user_profile: UserFitnessProfile):
 # retrieve user fitness profile
 @profile_router.get("/v1/360_degree_fitness/get_fitness_profile/{user_id}")
 async def get_fitness_profile(user_id: str):
+    # Get collection inside the handler
+    fitness_profiles_collection = get_fitness_profile_collection()
+    
     try:
-        user_profile = await fitness_profile_collection.find_one({"user_id": user_id})
+        user_profile = await fitness_profiles_collection.find_one({"user_id": user_id})
         if user_profile is None:
             raise HTTPException(status_code=404, detail="Profile not found")
         return user_profile

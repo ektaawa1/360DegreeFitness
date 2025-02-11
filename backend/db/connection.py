@@ -1,0 +1,28 @@
+from motor.motor_asyncio import AsyncIOMotorClient
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+class Database:
+    client: AsyncIOMotorClient = None
+    
+    @classmethod
+    async def connect_db(cls):
+        cls.client = AsyncIOMotorClient(os.getenv("MONGO_URI"))
+        
+    @classmethod
+    async def close_db(cls):
+        if cls.client is not None:
+            cls.client.close()
+            
+    @classmethod
+    def get_db(cls):
+        return cls.client['360DegreeFitness']
+
+# Collection getters
+def get_fitness_profile_collection():
+    return Database.get_db()['fitness_profiles']
+
+def get_fitness_plan_collection():
+    return Database.get_db()['fitness_plans'] 

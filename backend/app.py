@@ -1,7 +1,25 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
+from db.connection import Database
+from routers import userFitnessProfileRouter, fitnessPlanRouter, authRouter
 
 app = FastAPI()
+
+@app.on_event("startup")
+async def startup_db_client():
+    await Database.connect_db()
+
+@app.on_event("shutdown")
+async def shutdown_db_client():
+    await Database.close_db()
+
+# Include routers
+app.include_router(authRouter.auth_router, prefix="/auth", tags=["Authentication"])
+app.include_router(
+    userFitnessProfileRouter.profile_router,
+    tags=["Fitness Profile"]
+)
+app.include_router(fitnessPlanRouter.plan_router)
 
 # Data model for analysis input
 class DataAnalysisInput(BaseModel):
