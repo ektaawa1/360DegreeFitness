@@ -18,15 +18,15 @@ npm install
 cd ../backend
 python -m venv venv
 
-# Activate Virtual Environment
-# For Unix/macOS:
+Activate Virtual Environment:
+# Unix/macOS:
 source venv/bin/activate
-# For Windows PowerShell:
-# .\venv\Scripts\Activate
-# For Windows CMD:
-# venv\Scripts\activate
+# Windows PowerShell:
+.\venv\Scripts\Activate
+# Windows CMD:
+venv\Scripts\activate
 
-# Install Python Dependencies
+### **Install Dependencies**
 pip install -r requirements.txt
 
 ### **Start Services**
@@ -54,17 +54,22 @@ Visit `http://localhost:8000/docs` for interactive API documentation
 ## Project Structure
 
 backend/
+│
 ├── core/
 │   └── security.py           # JWT and password security
+│
 ├── db/
 │   ├── connection.py         # Database connection
 │   └── database.py          # Database models
+│
 ├── models/
 │   ├── auth.py              # Auth models
 │   ├── fitnessPlan.py       # Fitness plan models
 │   └── userFitnessProfile.py # User profile models
+│
 ├── routers/
 │   ├── authRouter.py        # Auth endpoints
 │   ├── fitnessPlanRouter.py # Fitness plan endpoints
 │   └── userFitnessProfileRouter.py # Profile endpoints
+│
 └── app.py                   # Main application
