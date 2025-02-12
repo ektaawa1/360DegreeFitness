@@ -2,6 +2,8 @@ from fastapi import APIRouter, HTTPException
 from pymongo.errors import PyMongoError
 import logging
 
+from backend.db.connection import get_fitness_plan_collection
+
 # Note-
 # Install pymongo- pip install pymongo
 
@@ -74,10 +76,12 @@ async def create_fitness_plan(user_id: str): #Next Stage: Create this dynamicall
             "stress_management": "Practice deep breathing exercises, take breaks during work, and try journaling your thoughts. Engage in hobbies you enjoy."
         }
     }
+    # Get collection inside the handler
+    fitness_plans_collection = get_fitness_plan_collection()
 
     # saving the static plan in MongoDB
     try:
-        result = await fitness_plan_collection.insert_one(fitness_plan)
+        result = await fitness_plans_collection.insert_one(fitness_plan)
         return {"plan_id": str(result.inserted_id), "fitness_plan": fitness_plan}
 
     except PyMongoError as e:
@@ -92,9 +96,11 @@ async def create_fitness_plan(user_id: str): #Next Stage: Create this dynamicall
 # Fetch the fitness plan from the database
 @plan_router.get("/v1/360_degree_fitness/retrieve_fitness_plan/{user_id}")
 async def get_user_fitness_plan(user_id: str):
+    # Get collection inside the handler
+    fitness_plans_collection = get_fitness_plan_collection()
     try:
         # MongoDB query to fetch the plan for a user with the given user_id
-        fitness_plan = await fitness_plan_collection.find_one({"user_id": user_id})
+        fitness_plan = await fitness_plans_collection.find_one({"user_id": user_id})
         if fitness_plan is None:
             raise HTTPException(status_code=404, detail="Fitness Plan not found")
         return fitness_plan
@@ -109,9 +115,11 @@ async def get_user_fitness_plan(user_id: str):
 # delete fitness plan ---> soft delete or hard delete?? for historical reference
 @plan_router.delete("/v1/360_degree_fitness/delete_fitness_plan/{user_id}")
 async def delete_user_fitness_plan(user_id: str):
+    # Get collection inside the handler
+    fitness_plans_collection = get_fitness_plan_collection()
     try:
         #mongoDB logic to delete the fitness plan
-        result = await fitness_plan_collection.delete_one({"user_id": user_id})
+        result = await fitness_plans_collection.delete_one({"user_id": user_id})
         if result.deleted_count == 0:
             raise HTTPException(status_code=404, details="Fitness Plan not found")
         return {"message": "Fitness Plan deleted successfully"}

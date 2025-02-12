@@ -1,8 +1,8 @@
 from fastapi import APIRouter, HTTPException
 from pymongo.errors import PyMongoError
-from models.userFitnessProfile import UserFitnessProfile
-from models.userFitnessProfileUpdate import UserFitnessProfileUpdate
-from db.connection import get_fitness_profile_collection
+from backend.models.userFitnessProfile import UserFitnessProfile
+from backend.models.userFitnessProfileUpdate import UserFitnessProfileUpdate
+from backend.db.connection import get_fitness_profile_collection
 from decimal import Decimal
 import json
 
@@ -52,9 +52,11 @@ async def get_fitness_profile(user_id: str):
 #edit user fitness profile
 @profile_router.put("/v1/360_degree_fitness/edit_fitness_profile/{user_id}")
 async def edit_fitness_profile(user_id: str, updated_profile: UserFitnessProfileUpdate):
+    # Get collection inside the handler
+    fitness_profiles_collection = get_fitness_profile_collection()
     try:
         #Fetching user's existing profile
-        existing_profile = await fitness_profile_collection.find_one({"user_id": user_id})
+        existing_profile = await fitness_profiles_collection.find_one({"user_id": user_id})
         if not existing_profile:
             raise HTTPException(status_code=404, detail="Profile not found")
 
@@ -74,7 +76,7 @@ async def edit_fitness_profile(user_id: str, updated_profile: UserFitnessProfile
             updated_data["user_routine_assessment"] = updated_profile.user_routine_assessment.dict(exclude_unset=True)
 
         # Perform the partial update in the database
-        result = await fitness_profile_collection.update_one(
+        result = await fitness_profiles_collection.update_one(
             {"user_id": user_id}, {"$set": updated_data}
         )
 
@@ -90,9 +92,11 @@ async def edit_fitness_profile(user_id: str, updated_profile: UserFitnessProfile
 # delete user fitness profile
 @profile_router.delete("/v1/360_degree_fitness/delete_fitness_profile/{user_id}")
 async def delete_fitness_profile(user_id: str):
+    # Get collection inside the handler
+    fitness_profiles_collection = get_fitness_profile_collection()
     try:
         # MongoDB access to delete the fitness profile
-        result = await fitness_profile_collection.delete_one({"user_id": user_id})
+        result = await fitness_profiles_collection.delete_one({"user_id": user_id})
         if result.deleted_count == 0:
             raise HTTPException(status_code=404, detail="Profile not found")
         return {"message": "Profile deleted successfully"}
@@ -104,8 +108,10 @@ async def delete_fitness_profile(user_id: str):
 # is user fitness profile created & completed?
 @profile_router.get("/v1/360_degree_fitness/check_profile_completion/{user_id}")
 async def check_profile_complete(user_id: str):
+    # Get collection inside the handler
+    fitness_profiles_collection = get_fitness_profile_collection()
     try:
-        user_profile = await fitness_profile_collection.find_one({"user_id": user_id})
+        user_profile = await fitness_profiles_collection.find_one({"user_id": user_id})
         if user_profile is None:
             raise HTTPException(status_code=404, detail="User Profile not found")
 
