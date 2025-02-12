@@ -1,5 +1,22 @@
-venv
-node_modules
-.idea
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+*.pyc
+.Python
+env/
+venv/
+.env
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
 .DS_Store
-__pycache__
+Thumbs.db
+
+# Node
+node_modules/
