@@ -2,59 +2,88 @@
 
 ## Installation and Setup
 
-### **Clone Repository**
+### • Prerequisites
+- Python 3.12.7 (recommended) or Python 3.12.x
+- Conda (recommended) or pip
+- Node.js and npm
+
+### • Clone Repository
 git clone https://github.com/tashigarg/360DegreeFitness.git
 
 cd 360DegreeFitness
 
-### **Setup Frontend**
+### • Setup Frontend
 cd client
 
 npm install -f
 
-### **Setup Server**
+### • Setup Server
 cd ../server
 
 npm install
 
-### **Setup Backend**
+### • Setup Backend and Resolve Linter Errors
 cd ../backend
 
-python -m venv venv
+#### 1. Create and activate conda environment
+conda create -n 360fitness python=3.12.7
 
-### **Activate Virtual Environment:**
-**Unix/macOS:**
-source venv/bin/activate
+conda activate 360fitness
 
-**Windows PowerShell:**
-.\venv\Scripts\Activate
-
-**Windows CMD:**
-venv\Scripts\activate
-
-### **Install Dependencies**
+#### 2. Install dependencies
+#### >> Install requirements from backend directory
 pip install -r requirements.txt
 
-### **Start Services**
-**Start Backend Server**
-uvicorn app:app --reload
+#### >> Then go to root directory (where setup.py is) and install package
+cd ..
 
-### **In a new terminal, start Server**
-cd ../server
+pip install -e .
+
+#### 3. If you see "Import fastapi could not be resolved" errors:
+&nbsp;&nbsp;&nbsp;&nbsp;a. Verify you're in the conda environment
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;conda activate 360fitness
+
+&nbsp;&nbsp;&nbsp;&nbsp;b. Check installations
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pip show fastapi
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pip list | grep -E "fastapi|pydantic|uvicorn"
+
+&nbsp;&nbsp;&nbsp;&nbsp;c. Reinstall packages
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pip uninstall fastapi pydantic
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pip install -r requirements.txt
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pip install -e .
+
+&nbsp;&nbsp;&nbsp;&nbsp;d. In VS Code:
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;• Press Cmd/Ctrl + Shift + P
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;• Type "Python: Select Interpreter"
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;• Choose the conda environment (360fitness)
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;• Type "Developer: Reload Window"
+
+### • Start Services
+
+#### Start Backend Server
+cd backend
+
+uvicorn backend.app:app --reload
+
+#### In a new terminal, start Server
+cd server
 
 npm start
 
-### **In another terminal, start Frontend**
-cd ../client
+#### In another terminal, start Frontend
+cd client
 
 npm start
 
-## Features
 
-- **User Authentication**: Register, login, and secure access
-- **Fitness Profile Management**: Create and manage personal fitness profiles
-- **Fitness Plan Generation**: Get personalized workout and meal plans
-
-## API Documentation
-
-Visit `http://localhost:8000/docs` for interactive API documentation
+### API Documentation
+Visit http://localhost:8000/docs for interactive API documentation

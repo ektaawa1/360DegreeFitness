@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
-from db.connection import Database
-from routers import userFitnessProfileRouter, fitnessPlanRouter, authRouter
+from .db.connection import Database
+from .routers import userFitnessProfileRouter, fitnessPlanRouter, authRouter
 
 app = FastAPI()
 

@@ -1,8 +1,8 @@
 from fastapi import APIRouter, HTTPException
 from pymongo.errors import PyMongoError
-from backend.models.userFitnessProfile import UserFitnessProfile
-from backend.models.userFitnessProfileUpdate import UserFitnessProfileUpdate
-from backend.db.connection import get_fitness_profile_collection
+from ..models.userFitnessProfile import UserFitnessProfile
+from ..models.userFitnessProfileUpdate import UserFitnessProfileUpdate
+from ..db.connection import get_fitness_profile_collection
 from decimal import Decimal
 import json
 
