@@ -5,7 +5,6 @@
   "scripts": {
     "start": "node --env-file=config/.env server"
   },
- 
   "dependencies": {
     "axios": "^1.7.2",
     "bcryptjs": "^2.4.3",
