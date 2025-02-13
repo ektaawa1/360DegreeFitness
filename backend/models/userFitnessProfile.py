@@ -76,7 +76,6 @@ class RoutineAssessment(BaseModel):
     }
 
 class UserFitnessProfile(BaseModel):
-    user_id: str # A unique identifier for the user
     user_basic_details: UserDetails
     user_initial_measurements: InitialMeasurements
     user_health_details: HealthDetails
