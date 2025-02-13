@@ -37,6 +37,10 @@ const dashboardRouter = require("./dashboard/routes/dashboardRoutes");
 app.use("/api/dashboard", dashboardRouter);
 
 
+const profileRouter = require("./profile/routes/profileRoutes");
+app.use("/api/profile", profileRouter);
+
+
 // Route to analyze data
 app.post("/api/analyze", async (req, res) => {
     try {
