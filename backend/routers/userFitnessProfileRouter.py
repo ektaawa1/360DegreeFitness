@@ -1,4 +1,6 @@
-from fastapi import APIRouter, HTTPException
+from bson import ObjectId
+from fastapi import APIRouter
+from fastapi.responses import JSONResponse
 from pymongo.errors import PyMongoError
 from ..models.userFitnessProfile import UserFitnessProfile
 from ..models.userFitnessProfileUpdate import UserFitnessProfileUpdate
@@ -29,36 +31,53 @@ async def create_fitness_profile(user_profile: UserFitnessProfile):
         result = await fitness_profiles_collection.insert_one(profile_dict)
         return {"message": "User fitness profile created successfully!", "profile_id": str(result.inserted_id)}
     except PyMongoError as e:
-        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+        return JSONResponse(status_code=500, content= {"message": f"Database error: {str(e)}"})
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error creating profile: {str(e)}")
+        return JSONResponse(status_code=500, content= {"message": f"Error creating profile: {str(e)}"})
 
 # retrieve user fitness profile
 @profile_router.get("/v1/360_degree_fitness/get_fitness_profile/{user_id}")
 async def get_fitness_profile(user_id: str):
     # Get collection inside the handler
     fitness_profiles_collection = get_fitness_profile_collection()
-    
+
     try:
-        user_profile = await fitness_profiles_collection.find_one({"user_id": user_id})
+        user_id = ObjectId(user_id)
+    except Exception as e:
+        return JSONResponse(status_code=400, content= {"message": "Invalid user id format"})
+    try:
+        user_profile = await fitness_profiles_collection.find_one({"_id": user_id})
+        print("----User Profile----:", user_profile)
+
         if user_profile is None:
-            raise HTTPException(status_code=404, detail="Profile not found")
+            print("Profile does not exist.") # debug
+            return JSONResponse(status_code=200, content={"message": "User Profile does not exist"})
+
+        user_profile["_id"] = str(user_profile["_id"])
         return user_profile
     except PyMongoError as e:
-        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+        return JSONResponse(status_code=500, content= {"message": f"Database error: {str(e)}"})
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error fetching user profile: {str(e)}")
+        return JSONResponse(status_code=500, content= {"message": f"Error fetching user profile: {str(e)}"})
 
 #edit user fitness profile
 @profile_router.put("/v1/360_degree_fitness/edit_fitness_profile/{user_id}")
 async def edit_fitness_profile(user_id: str, updated_profile: UserFitnessProfileUpdate):
     # Get collection inside the handler
     fitness_profiles_collection = get_fitness_profile_collection()
+
+    try:
+        user_id = ObjectId(user_id)
+    except Exception as e:
+        return JSONResponse(status_code=400, content= {"message": "Invalid user id format"})
     try:
         #Fetching user's existing profile
-        existing_profile = await fitness_profiles_collection.find_one({"user_id": user_id})
+        existing_profile = await fitness_profiles_collection.find_one({"_id": user_id})
+
+        print("----Existing User Profile----:", existing_profile)
         if not existing_profile:
-            raise HTTPException(status_code=404, detail="Profile not found")
+            #do we need to throw an exception??
+            return JSONResponse(status_code=404, content= {"message": "Profile not found"})
 
         # Preparing the data to be updated by checking which fields were provided
         updated_data = {}
@@ -75,9 +94,12 @@ async def edit_fitness_profile(user_id: str, updated_profile: UserFitnessProfile
         if updated_profile.user_routine_assessment:
             updated_data["user_routine_assessment"] = updated_profile.user_routine_assessment.dict(exclude_unset=True)
 
+        # It converts Decimal fields to float using DecimalEncoder
+        updated_data = json.loads(json.dumps(updated_data, cls=DecimalEncoder))
+
         # Perform the partial update in the database
         result = await fitness_profiles_collection.update_one(
-            {"user_id": user_id}, {"$set": updated_data}
+            {"_id": user_id}, {"$set": updated_data}
         )
 
         if result.modified_count > 0:
@@ -85,25 +107,38 @@ async def edit_fitness_profile(user_id: str, updated_profile: UserFitnessProfile
         else:
             return {"message": "No changes were made"}
     except PyMongoError as e:
-        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+        return JSONResponse(status_code=500, content= {"message": f"Database error: {str(e)}"})
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error encountered with profile update: {str(e)}")
+        return JSONResponse(status_code=500, content= {"message": f"Error encountered with profile update: {str(e)}"})
 
 # delete user fitness profile
 @profile_router.delete("/v1/360_degree_fitness/delete_fitness_profile/{user_id}")
 async def delete_fitness_profile(user_id: str):
     # Get collection inside the handler
     fitness_profiles_collection = get_fitness_profile_collection()
+
     try:
+        user_id = ObjectId(user_id)
+    except Exception as e:
+        return JSONResponse(status_code=400, content={"message": "Invalid user id format"})
+    try:
+        print("----Attempting to delete profile with user_id:----:", user_id)
+        #do we need to check here if the user profile exists or not?
         # MongoDB access to delete the fitness profile
-        result = await fitness_profiles_collection.delete_one({"user_id": user_id})
+        result = await fitness_profiles_collection.delete_one({"_id": user_id})
+        print("----Delete result----", {result.deleted_count})
         if result.deleted_count == 0:
-            raise HTTPException(status_code=404, detail="Profile not found")
+            print("Profile not found for user_id:", user_id)
+            return JSONResponse(status_code=200, content={"message": "Profile not found"})
+
         return {"message": "Profile deleted successfully"}
     except PyMongoError as e:
-        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+        print("Database error encountered")
+        return JSONResponse(status_code=500, content={"message": f"Database error: {str(e)}"})
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error deleting user profile: {str(e)}")
+        print("Something went wrong... Error deleting user profile")
+
+        return JSONResponse(status_code=500, content={"message": f"Error deleting user profile: {str(e)}"})
 
 # is user fitness profile created & completed?
 @profile_router.get("/v1/360_degree_fitness/check_profile_completion/{user_id}")
@@ -111,9 +146,18 @@ async def check_profile_complete(user_id: str):
     # Get collection inside the handler
     fitness_profiles_collection = get_fitness_profile_collection()
     try:
-        user_profile = await fitness_profiles_collection.find_one({"user_id": user_id})
+        user_id = ObjectId(user_id)
+    except Exception as e:
+        return JSONResponse(status_code=400, content= {"message": "Invalid user id format"})
+    try:
+        # Fetch User Profile from DB
+        user_profile = await fitness_profiles_collection.find_one({"_id": user_id})
+        print("----User Profile----:", user_profile)
+
+        # If user profile doesn't exist then return False
         if user_profile is None:
-            return {"profile_created": False}
+            print("Profile does not exist.") # debug log
+            return {"profile_exists": False, "profile_complete": False}
 
         # Check if the user profile contains all necessary fields
         is_complete = True
@@ -129,10 +173,11 @@ async def check_profile_complete(user_id: str):
         for field in required_fields:
             if field not in user_profile:
                 is_complete = False
+                print(f"Missing field: {field}")  # debug log
                 break
 
-        return {"profile_completed": is_complete}
+        return {"profile_exists": True, "profile_complete": is_complete,}
     except PyMongoError as e:
-        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+        return JSONResponse(status_code=500, content={"message":f"Database error: {str(e)}"})
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
+        return JSONResponse(status_code=500, content={"message": f"Unexpected error: {str(e)}"})
