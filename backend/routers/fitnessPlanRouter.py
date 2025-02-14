@@ -1,4 +1,6 @@
-from fastapi import APIRouter, HTTPException
+from bson import ObjectId
+from fastapi import APIRouter
+from fastapi.responses import JSONResponse
 from pymongo.errors import PyMongoError
 import logging
 
@@ -8,12 +10,15 @@ from backend.db.connection import get_fitness_plan_collection
 # Install pymongo- pip install pymongo
 
 plan_router = APIRouter()
-logger = logging.getLogger(__name__)
 
 @plan_router.post("/v1/360_degree_fitness/create_fitness_plan/{user_id}")
 async def create_fitness_plan(user_id: str): #Next Stage: Create this dynamically
-    # It is a static fitness plan
+    try:
+        user_id = ObjectId(user_id)
+    except Exception as e:
+        return JSONResponse(status_code=400, content= {"message": "Invalid user id format"})
 
+    # It is a static fitness plan
     fitness_plan = {
         "user_id": user_id,
         "plan_duration": "7 days",
@@ -85,12 +90,10 @@ async def create_fitness_plan(user_id: str): #Next Stage: Create this dynamicall
         return {"plan_id": str(result.inserted_id), "fitness_plan": fitness_plan}
 
     except PyMongoError as e:
-        logger.error(f"MongoDB error: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+        return JSONResponse(status_code=500, content= {"message": f"Database error: {str(e)}"})
 
     except Exception as e:
-        logger.error(f"Unexpected error: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
+        return JSONResponse(status_code=500, content= {"message": f"Unexpected error: {str(e)}"})
 
 
 # Fetch the fitness plan from the database
@@ -102,15 +105,13 @@ async def get_user_fitness_plan(user_id: str):
         # MongoDB query to fetch the plan for a user with the given user_id
         fitness_plan = await fitness_plans_collection.find_one({"user_id": user_id})
         if fitness_plan is None:
-            raise HTTPException(status_code=404, detail="Fitness Plan not found")
+            return JSONResponse(status_code=404, content= {"message": "Fitness Plan not found"})
         return fitness_plan
     except PyMongoError as e:
-        logger.error(f"MongoDB error: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+        return JSONResponse(status_code=500, content= {"message": f"Database error: {str(e)}"})
 
     except Exception as e:
-        logger.error(f"Unexpected error: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
+        return JSONResponse(status_code=500, content= {"message": f"Unexpected error: {str(e)}"})
 
 # delete fitness plan ---> soft delete or hard delete?? for historical reference
 @plan_router.delete("/v1/360_degree_fitness/delete_fitness_plan/{user_id}")
@@ -121,14 +122,14 @@ async def delete_user_fitness_plan(user_id: str):
         #mongoDB logic to delete the fitness plan
         result = await fitness_plans_collection.delete_one({"user_id": user_id})
         if result.deleted_count == 0:
-            raise HTTPException(status_code=404, details="Fitness Plan not found")
+            return JSONResponse(status_code=404, content= {"message": "Fitness Plan not found"})
         return {"message": "Fitness Plan deleted successfully"}
     except PyMongoError as e:
         # Handle database-related errors
-        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+        return JSONResponse(status_code=500, content= {"message": f"Database error: {str(e)}"})
     except Exception as e:
         # Catch any other exceptions
-        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
+        return JSONResponse(status_code=500, content= {"message": f"Unexpected error: {str(e)}"})
 
 #update fitness plan ---> once we integrate AI/ML
 #Use Pydantic Model Class for plan creation & validation- fitnessPlan.py
