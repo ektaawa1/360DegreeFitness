@@ -1,6 +1,7 @@
 export { default as Login } from "./Authentication/Login";
 export { default as Register } from "./Authentication/Register";
 export { default as MainPage } from "./Template/MainPage";
+export { default as ProfileCreation } from "./ProfileCreation/ProfileCreation";
 
 export { default as Search } from "./Search/Search";
 

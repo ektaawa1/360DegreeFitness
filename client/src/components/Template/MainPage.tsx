@@ -15,6 +15,7 @@ import Copyright from "./Copyright";
 import {Search} from "../index";
 import Dashboard from "../Dashboard/Dashboard";
 import LandingPage from "../LandingPage/LandingPage";
+import {ProfileCreation} from "../index";
 
 const {Header, Content, Footer, Sider} = Layout;
 
@@ -81,7 +82,6 @@ const MainPage = () => {
                     {selectedPage === "search" && (
                         <Search />
                     )}
-                    
                 </div>
             </div>)
     }
@@ -155,6 +155,7 @@ const MainPage = () => {
                         <Copyright/>
                     </Footer>
                 </Layout>
+                {!userData?.profile_created && <ProfileCreation userData={userData}/>}
             </Layout>
 
         </div>

@@ -6,16 +6,19 @@ import UserContext from "./context/UserContext";
 import { BASE_URL } from './config/Config';
 
 function App() {
-    const [userData, setUserData] = useState({
+    const baseState = {
         token: undefined,
         user: undefined,
-    });
+        profile_created: false,
+        profile_completed: false
+    };
+    const [userData, setUserData] = useState(baseState);
 
     useEffect(() => {
         const loginCheck = async () => {
             let token = localStorage.getItem("auth-token");
             if (!token) {
-                setUserData({token: undefined, user: undefined});
+                setUserData(baseState);
                 return;
             }
 
@@ -36,11 +39,13 @@ function App() {
                     headers,
                 });
                 setUserData({
-                    token,
-                    user: userRes.data,
+                    token: token as any,
+                    user: userRes.data as any,
+                    profile_created: tokenIsValid.data.profile_created as boolean,
+                    profile_completed: tokenIsValid.data.profile_completed  as boolean
                 });
             } else {
-                setUserData({token: undefined, user: undefined});
+                setUserData(baseState);
             }
         };
 

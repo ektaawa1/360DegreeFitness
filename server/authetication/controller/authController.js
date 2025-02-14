@@ -1,7 +1,8 @@
 const User = require('../../user/model/userModel');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-
+const axios = require("axios");
+const FASTAPI_BASE_URL = process.env.FASTAPI_BASE_URL;
 const errorMessage = (res, error) => {
     return res.status(400).json({status: 'fail', message: error.message});
 };
@@ -73,6 +74,7 @@ exports.loginUser = async (req, res) => {
         }
 
         const token = jwt.sign({id: user._id}, process.env.JWT_SECRET);
+        const response = await axios.get(`${FASTAPI_BASE_URL}/check_profile_completion/${user._id}`);
         return res.status(200).json({
             token,
             user: {
@@ -80,6 +82,8 @@ exports.loginUser = async (req, res) => {
                 name: user.name,
                 id: user._id,
                 balance: user.balance,
+                profile_created: response.data.profile_created,
+                profile_completed: response.data.profile_completed
             },
         });
     } catch (error) {
@@ -102,8 +106,12 @@ exports.validate = async (req, res) => {
         if (!user) {
             return res.json(false);
         }
-
-        return res.json(true);
+        const response = await axios.get(`${FASTAPI_BASE_URL}/check_profile_completion/${verified.id}`);
+        return res.json({
+            validate: true,
+            profile_created: response.data.profile_created,
+            profile_completed: response.data.profile_completed
+        });
     } catch (error) {
         return res.json(false);
     }

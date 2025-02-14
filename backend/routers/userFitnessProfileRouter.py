@@ -113,7 +113,7 @@ async def check_profile_complete(user_id: str):
     try:
         user_profile = await fitness_profiles_collection.find_one({"user_id": user_id})
         if user_profile is None:
-            raise HTTPException(status_code=404, detail="User Profile not found")
+            return {"profile_created": False}
 
         # Check if the user profile contains all necessary fields
         is_complete = True
@@ -131,7 +131,7 @@ async def check_profile_complete(user_id: str):
                 is_complete = False
                 break
 
-        return {"profile_complete": is_complete}
+        return {"profile_completed": is_complete}
     except PyMongoError as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
     except Exception as e:
