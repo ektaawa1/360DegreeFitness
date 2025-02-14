@@ -14,12 +14,12 @@ class UserDetails(BaseModel):
         'Other']
 
 class InitialMeasurements(BaseModel):
-    arms_in_cm: condecimal(ge=0) #positive value
-    neck_in_cm: condecimal(ge=0)
-    chest_in_cm: condecimal(ge=0)
-    waist_in_cm: condecimal(ge=0)
-    thighs_in_cm: condecimal(ge=0)
-    hips_in_cm: condecimal(ge=0)
+    arms_in_cm: Optional[condecimal(ge=0)] #positive value
+    neck_in_cm: Optional[condecimal(ge=0)]
+    chest_in_cm: Optional[condecimal(ge=0)]
+    waist_in_cm: Optional[condecimal(ge=0)]
+    thighs_in_cm: Optional[condecimal(ge=0)]
+    hips_in_cm: Optional[condecimal(ge=0)]
 
 class HealthDetails(BaseModel):
     family_history: Optional[str] #Can be None if no health history exists
@@ -29,39 +29,39 @@ class HealthDetails(BaseModel):
     current_supplements: Optional[List[str]] #Can be None if not having any supplements
 
 class HabitsAssessment(BaseModel):
-    daily_water_intake_in_liter: Literal[ #dropdown option
+    daily_water_intake_in_liter: Optional[Literal[ #dropdown option
         '1 liter',
         '2 liters',
         '3 liters',
         '4 liters',
         '5 liters'
-    ]
-    weekly_workout_frequency: condecimal(ge=0, le=7) # workout frequency should be between 0 and 7
-    diet_preference: Literal[ # Dropdown option
+    ]]
+    weekly_workout_frequency: Optional[condecimal(ge=0, le=7)] # workout frequency should be between 0 and 7
+    diet_preference: Optional[Literal[ # Dropdown option
         'Vegetarian',
         'Non-Vegetarian',
         'Vegan',
         'Gluten-Free',
-        'Keto']
+        'Keto']]
     uncomfortable_foods: Optional[List[str]] #Can be none
-    activity_level: Literal[  # Dropdown option
+    activity_level: Optional[Literal[  # Dropdown option
         'Sedentary',
         'Lightly active',
         'Moderately active',
         'Very active',
         'Super active'
-    ]
+    ]]
 
 class RoutineAssessment(BaseModel):
     # Allowing optional meals as some users might not have more than 3 meals in a day
-    typical_meals: Dict[str, Optional[str]] = {
+    typical_meals: Optional[Dict[str, Optional[str]]] = {
         'breakfast': None, # each meal can be left blank
         'lunch': None,
         'snacks': None,
         'dinner': None
     }
     #Allowing optional time as some users may not follow set times
-    daily_routine: Dict[str, Optional[str]] = {
+    daily_routine: Optional[Dict[str, Optional[str]]]= {
         'wakeup_time': None,
         'breakfast_time': None,
         'lunch_time': None,
@@ -69,7 +69,7 @@ class RoutineAssessment(BaseModel):
         'dinner_time': None,
         'bed_time': None
     }
-    stress_audit: Dict[str, Optional[str]] = {
+    stress_audit: Optional[Dict[str, Optional[str]]] = {
         'time_sitting_at_a_stretch': None,
         'time_standing_at_a_stretch': None,
         'time_travelling_per_day': None
@@ -77,10 +77,10 @@ class RoutineAssessment(BaseModel):
 
 class UserFitnessProfile(BaseModel):
     user_basic_details: UserDetails
-    user_initial_measurements: InitialMeasurements
-    user_health_details: HealthDetails
-    user_habits_assessment: HabitsAssessment
-    user_routine_assessment: RoutineAssessment
+    user_initial_measurements: InitialMeasurements #for now making it optional and will change it later
+    user_health_details: HealthDetails #for now making it optional and will change it later
+    user_habits_assessment: HabitsAssessment #for now making it optional and will change it later
+    user_routine_assessment: RoutineAssessment #for now making it optional and will change it later
     user_fitness_goals: Literal[  # Dropdown option
         'Weight Loss',
         'Weight Gain',
