@@ -82,8 +82,8 @@ exports.loginUser = async (req, res) => {
                 name: user.name,
                 id: user._id,
                 balance: user.balance,
-                profile_created: response.data.profile_created,
-                profile_completed: response.data.profile_completed
+                profile_created: response.data.profile_exists,
+                profile_completed: response.data.profile_complete
             },
         });
     } catch (error) {
@@ -109,8 +109,8 @@ exports.validate = async (req, res) => {
         const response = await axios.get(`${FASTAPI_BASE_URL}/check_profile_completion/${verified.id}`);
         return res.json({
             validate: true,
-            profile_created: response.data.profile_created,
-            profile_completed: response.data.profile_completed
+            profile_created: response.data.profile_exists,
+            profile_completed: response.data.profile_complete
         });
     } catch (error) {
         return res.json(false);
