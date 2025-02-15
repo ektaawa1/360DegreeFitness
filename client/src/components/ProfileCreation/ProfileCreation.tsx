@@ -1,14 +1,15 @@
-import React, {useEffect, useState} from "react";
-import {Modal, Steps, Button, message, Progress} from 'antd';
+import React, {useEffect, useState, createRef} from "react";
+import {Modal, Steps, Button, Progress, message} from 'antd';
 import Axios from "axios";
 import {BASE_URL} from "../../config/Config";
+import BasicForm from "./BasicForm";
 
 const { Step } = Steps;
 
 const steps = [
     {
         title: 'User Details',
-        content: 'First-content',
+        content: BasicForm,
     },
     {
         title: 'Initial Measurements',
@@ -53,6 +54,18 @@ const ProfileCreation = ({userData}) => {
 
     }, []);
 
+    const handleValidateForm = () => {
+        void formRef.current?.getFormattedValues((err, values) => {
+            if (!err) {
+                setProfile({...profileData, ...values});
+                next();
+            } else {
+                message.error("Please fix the form errors before proceeding.");
+            }
+        });
+    };
+
+
 
     const next = () => {
         setCurrentStep(current + 1 );
@@ -71,13 +84,32 @@ const ProfileCreation = ({userData}) => {
         }, 3000);
     };
 
+    const ComponentToRender = steps[current].content;
+    const formRef = createRef<any>();
 
+    const getInitialValues = () => {
+        if (!profileData) {
+            return;
+        }
+
+        switch (current) {
+            case 0:
+                // return {
+                //     "age": 25,
+                //     "weight": 70,
+                //     "height": 175,
+                //     "gender": "Male"
+                // };
+
+            return profileData.user_details;
+        }
+    }
     return (
 
 
         <Modal
             visible={visible}
-            title="Title"
+            title="Profile"
             closable={false}
             maskClosable={false}
             centered={true}
@@ -90,7 +122,7 @@ const ProfileCreation = ({userData}) => {
                 <Button onClick={prev} disabled={current === 0 || loading}>
                     Previous
                 </Button>,
-                <Button type="primary" onClick={next} disabled={loading}>
+                <Button type="primary" onClick={handleValidateForm} disabled={loading}>
                     Next
                 </Button>,
                 <Button key="submit" type="primary" onClick={handleOk} disabled={current !== 4 || loading}>
@@ -104,7 +136,9 @@ const ProfileCreation = ({userData}) => {
                         <Step key={item.title} title={item.title} />
                     ))}
                 </Steps>
-                {loading ? <Progress /> : <div className="steps-content">{steps[current].content}</div>}
+                {loading ? <Progress /> : <div className="steps-content">
+                    <ComponentToRender wrappedComponentRef={formRef} initialValues={getInitialValues()}/>
+                </div>}
 
             </div>
         </Modal>
