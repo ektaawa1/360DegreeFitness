@@ -2,7 +2,7 @@ from bson import ObjectId
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from pymongo.errors import PyMongoError
-import logging
+import httpx
 
 from backend.db.connection import get_fitness_plan_collection
 
@@ -11,8 +11,43 @@ from backend.db.connection import get_fitness_plan_collection
 
 plan_router = APIRouter()
 
+# Initialize the HTTP client
+http_client = httpx.AsyncClient()
+
 @plan_router.post("/v1/360_degree_fitness/create_fitness_plan/{user_id}")
 async def create_fitness_plan(user_id: str): #Next Stage: Create this dynamically
+
+    # # Check if this user exists in the user collection
+    # user_details_collection = get_user_details_collection()
+    #
+    # try:
+    #     user = await user_details_collection.find_one({"_id": user_id})
+    #     if not user:
+    #         # If the user doesn't exist in the DB, return a 404 response
+    #         return JSONResponse(status_code=404, content={"message": "User does not exist."})
+    # except PyMongoError as e:
+    #     return JSONResponse(status_code=500, content= {"message": f"Database error: {str(e)}"})
+
+    # Now that the user existence is confirmed, calling the check_profile_completion API
+    try:
+        api_response = await http_client.get(f"http://localhost:8000/v1/360_degree_fitness/check_profile_completion/{user_id}")
+
+        if api_response.status_code != 200:
+            return JSONResponse(status_code=api_response.status_code, content=api_response.json())
+        api_response_data = api_response.json()
+        print("=====Response data is=====",api_response_data)
+
+        # If user profile doesn't exist or is incomplete, returning a message
+        if not api_response_data.get('profile_exists', False):
+            return JSONResponse(status_code=400, content={"message": "Fitness Profile does not exist, cannot create fitness plan"})
+
+        if not api_response_data.get('profile_complete', False):
+            return JSONResponse(status_code=400, content={"message": "Profile is incomplete, cannot create fitness plan"})
+    except httpx.HTTPStatusError as e:
+        return JSONResponse(status_code=500, content={"message": f"Error checking profile completion: {str(e)}"})
+    except httpx.RequestError as e:
+        return JSONResponse(status_code=500, content={"message": f"Error while making request to check profile completion: {str(e)}"})
+
     try:
         user_id = ObjectId(user_id)
     except Exception as e:
@@ -84,9 +119,19 @@ async def create_fitness_plan(user_id: str): #Next Stage: Create this dynamicall
     # Get collection inside the handler
     fitness_plans_collection = get_fitness_plan_collection()
 
+    existing_fitness_plan = await fitness_plans_collection.find_one({"user_id": user_id})
+    if existing_fitness_plan:
+        return JSONResponse(status_code=400, content={"message": "Fitness plan already exists for this user."})
+
     # saving the static plan in MongoDB
     try:
         result = await fitness_plans_collection.insert_one(fitness_plan)
+        
+        #Convert ObjectId to string for proper serialization
+        fitness_plan['user_id'] = str(fitness_plan['user_id'])
+        fitness_plan['_id'] = str(result.inserted_id)
+
+        #Return the response
         return {"plan_id": str(result.inserted_id), "fitness_plan": fitness_plan}
 
     except PyMongoError as e:
@@ -99,13 +144,28 @@ async def create_fitness_plan(user_id: str): #Next Stage: Create this dynamicall
 # Fetch the fitness plan from the database
 @plan_router.get("/v1/360_degree_fitness/retrieve_fitness_plan/{user_id}")
 async def get_user_fitness_plan(user_id: str):
+
+    # Note: also include code for user_id validation i.e. if the user_id exists
+
     # Get collection inside the handler
     fitness_plans_collection = get_fitness_plan_collection()
+
+    try:
+        user_id = ObjectId(user_id)
+    except Exception as e:
+        return JSONResponse(status_code=400, content= {"message": "Invalid user id format"})
+
     try:
         # MongoDB query to fetch the plan for a user with the given user_id
         fitness_plan = await fitness_plans_collection.find_one({"user_id": user_id})
+
         if fitness_plan is None:
             return JSONResponse(status_code=404, content= {"message": "Fitness Plan not found"})
+
+        #Convert ObjectId to string for proper serialization
+        fitness_plan['user_id'] = str(fitness_plan['user_id'])
+        fitness_plan['_id'] = str(fitness_plan['_id'])
+
         return fitness_plan
     except PyMongoError as e:
         return JSONResponse(status_code=500, content= {"message": f"Database error: {str(e)}"})
@@ -116,13 +176,23 @@ async def get_user_fitness_plan(user_id: str):
 # delete fitness plan ---> soft delete or hard delete?? for historical reference
 @plan_router.delete("/v1/360_degree_fitness/delete_fitness_plan/{user_id}")
 async def delete_user_fitness_plan(user_id: str):
+
+    # Note: also include code for user_id validation i.e. if the user_id exists
+
     # Get collection inside the handler
     fitness_plans_collection = get_fitness_plan_collection()
+
+    try:
+        user_id = ObjectId(user_id)
+    except Exception as e:
+        return JSONResponse(status_code=400, content= {"message": "Invalid user id format"})
+
     try:
         #mongoDB logic to delete the fitness plan
         result = await fitness_plans_collection.delete_one({"user_id": user_id})
         if result.deleted_count == 0:
             return JSONResponse(status_code=404, content= {"message": "Fitness Plan not found"})
+
         return {"message": "Fitness Plan deleted successfully"}
     except PyMongoError as e:
         # Handle database-related errors
