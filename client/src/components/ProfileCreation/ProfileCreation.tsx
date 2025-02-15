@@ -3,6 +3,7 @@ import {Modal, Steps, Button, Progress, message} from 'antd';
 import Axios from "axios";
 import {BASE_URL} from "../../config/Config";
 import BasicForm from "./BasicForm";
+import InitialMeasurementsForm from "./InitialMeasurementsForm";
 
 const { Step } = Steps;
 
@@ -13,7 +14,7 @@ const steps = [
     },
     {
         title: 'Initial Measurements',
-        content: 'Second-content',
+        content: InitialMeasurementsForm,
     },
     {
         title: 'Health Details',
@@ -87,23 +88,6 @@ const ProfileCreation = ({userData}) => {
     const ComponentToRender = steps[current].content;
     const formRef = createRef<any>();
 
-    const getInitialValues = () => {
-        if (!profileData) {
-            return;
-        }
-
-        switch (current) {
-            case 0:
-                // return {
-                //     "age": 25,
-                //     "weight": 70,
-                //     "height": 175,
-                //     "gender": "Male"
-                // };
-
-            return profileData.user_details;
-        }
-    }
     return (
 
 
@@ -137,7 +121,7 @@ const ProfileCreation = ({userData}) => {
                     ))}
                 </Steps>
                 {loading ? <Progress /> : <div className="steps-content">
-                    <ComponentToRender wrappedComponentRef={formRef} initialValues={getInitialValues()}/>
+                    <ComponentToRender wrappedComponentRef={formRef} initialValues={profileData}/>
                 </div>}
 
             </div>
