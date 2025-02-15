@@ -4,6 +4,7 @@ import Axios from "axios";
 import {BASE_URL} from "../../config/Config";
 import BasicForm from "./BasicForm";
 import InitialMeasurementsForm from "./InitialMeasurementsForm";
+import HealthDetailsForm from "./HealthDetailsForm";
 
 const { Step } = Steps;
 
@@ -18,7 +19,7 @@ const steps = [
     },
     {
         title: 'Health Details',
-        content: 'Third-content',
+        content: HealthDetailsForm,
     },
     {
         title: 'Habits',
