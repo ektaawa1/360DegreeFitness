@@ -35,12 +35,12 @@ class InitialMeasurementsFormEl extends React.Component<any, any> {
         const { getFieldDecorator } = this.props.form;
         const formItemLayout = {
             labelCol: {
-                xs: { span: 3 },
-                sm: { span: 3 },
+                xs: { span: 6 },
+                sm: { span: 6 },
             },
             wrapperCol: {
-                xs: { span: 5 },
-                sm: { span: 5 },
+                xs: { span: 12 },
+                sm: { span: 12 },
             },
         };
         return (

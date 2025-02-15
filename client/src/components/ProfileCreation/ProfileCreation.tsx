@@ -5,6 +5,7 @@ import {BASE_URL} from "../../config/Config";
 import BasicForm from "./BasicForm";
 import InitialMeasurementsForm from "./InitialMeasurementsForm";
 import HealthDetailsForm from "./HealthDetailsForm";
+import HabitAssessmentForm from "./HabitAssessmentForm";
 
 const { Step } = Steps;
 
@@ -23,7 +24,7 @@ const steps = [
     },
     {
         title: 'Habits',
-        content: 'Fourth-content',
+        content: HabitAssessmentForm,
     },
     {
         title: 'Routine',

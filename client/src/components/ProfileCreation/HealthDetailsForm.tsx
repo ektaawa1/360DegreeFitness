@@ -1,6 +1,6 @@
 import styles from './ProfileCreation.module.css';
 import React from "react";
-import { Form, InputNumber, Row, Select, AutoComplete } from "antd";
+import { Form, Row, Select } from "antd";
 
 const { Option } = Select;
 
