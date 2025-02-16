@@ -6,6 +6,8 @@ import BasicForm from "./BasicForm";
 import InitialMeasurementsForm from "./InitialMeasurementsForm";
 import HealthDetailsForm from "./HealthDetailsForm";
 import HabitAssessmentForm from "./HabitAssessmentForm";
+import RoutineAssessmentForm from "./RoutineAssessmentForm";
+import {Debugger} from "inspector";
 
 const { Step } = Steps;
 
@@ -28,7 +30,7 @@ const steps = [
     },
     {
         title: 'Routine',
-        content: 'Last-content',
+        content: RoutineAssessmentForm,
     },
 ];
 const ProfileCreation = ({userData}) => {
@@ -60,6 +62,7 @@ const ProfileCreation = ({userData}) => {
     const handleValidateForm = () => {
         void formRef.current?.getFormattedValues((err, values) => {
             if (!err) {
+                debugger;
                 setProfile({...profileData, ...values});
                 next();
             } else {
@@ -71,7 +74,11 @@ const ProfileCreation = ({userData}) => {
 
 
     const next = () => {
-        setCurrentStep(current + 1 );
+        if (current === steps.length - 1) {
+            handleOk();
+        } else {
+            setCurrentStep(current + 1 );
+        }
     }
 
     const prev = () => {
@@ -81,7 +88,9 @@ const ProfileCreation = ({userData}) => {
 
     const handleOk = () => {
         setLoading(true);
+        debugger;
         setTimeout(() => {
+            console.log(profileData);
             setLoading(false);
             setVisible(false);
         }, 3000);
@@ -108,10 +117,10 @@ const ProfileCreation = ({userData}) => {
                 <Button onClick={prev} disabled={current === 0 || loading}>
                     Previous
                 </Button>,
-                <Button type="primary" onClick={handleValidateForm} disabled={loading}>
+                <Button type="primary" onClick={handleValidateForm} disabled={loading || current === 4}>
                     Next
                 </Button>,
-                <Button key="submit" type="primary" onClick={handleOk} disabled={current !== 4 || loading}>
+                <Button key="submit" type="primary" onClick={handleValidateForm} disabled={current !== 4 || loading}>
                     Submit
                 </Button>,
             ]}
