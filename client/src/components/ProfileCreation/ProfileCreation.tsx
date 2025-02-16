@@ -7,7 +7,6 @@ import InitialMeasurementsForm from "./InitialMeasurementsForm";
 import HealthDetailsForm from "./HealthDetailsForm";
 import HabitAssessmentForm from "./HabitAssessmentForm";
 import RoutineAssessmentForm from "./RoutineAssessmentForm";
-import {Debugger} from "inspector";
 
 const { Step } = Steps;
 
@@ -62,7 +61,6 @@ const ProfileCreation = ({userData}) => {
     const handleValidateForm = () => {
         void formRef.current?.getFormattedValues((err, values) => {
             if (!err) {
-                debugger;
                 setProfile({...profileData, ...values});
                 next();
             } else {
@@ -88,12 +86,10 @@ const ProfileCreation = ({userData}) => {
 
     const handleOk = () => {
         setLoading(true);
-        debugger;
         setTimeout(() => {
             console.log(profileData);
-            setLoading(false);
-            setVisible(false);
-        }, 3000);
+            // Make API call here
+        }, 200);
     };
 
     const ComponentToRender = steps[current].content;
