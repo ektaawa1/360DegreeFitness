@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 from .db.connection import Database
-from .routers import userFitnessProfileRouter, fitnessPlanRouter, authRouter
+from .routers import userFitnessProfileRouter, fitnessPlanRouter, authRouter, chatRouter
 
 app = FastAPI()
 
@@ -20,6 +20,10 @@ app.include_router(
     tags=["Fitness Profile"]
 )
 app.include_router(fitnessPlanRouter.plan_router)
+app.include_router(
+    chatRouter.chat_router,
+    tags=["Chat"]
+)
 
 # Data model for analysis input
 class DataAnalysisInput(BaseModel):

@@ -1,16 +1,25 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 
-class UserRegister(BaseModel):
+class UserBase(BaseModel):
     username: str
-    email: EmailStr
     name: str
+
+class UserRegister(UserBase):
     password: str
 
 class UserLogin(BaseModel):
     username: str
     password: str
 
-class UserResponse(BaseModel):
-    username: str
-    email: str
-    name: str 
+class UserResponse(UserBase):
+    id: str
+
+class ChatResponse(BaseModel):
+    response: str
+    sources: list[str]
+
+def return_chat_response(result):
+    return ChatResponse(
+        response=result["answer"],
+        sources=[doc.metadata["source"] for doc in result["source_documents"]]
+    ) 
