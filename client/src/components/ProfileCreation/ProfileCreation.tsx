@@ -69,6 +69,17 @@ const ProfileCreation = ({userData}) => {
         });
     };
 
+    const handleValidateFormPrev = () => {
+        void formRef.current?.getFormattedValues((err, values) => {
+            if (!err) {
+                setProfile({...profileData, ...values});
+                prev();
+            } else {
+                message.error("Please fix the form errors before proceeding.");
+            }
+        });
+    };
+
 
 
     const next = () => {
@@ -90,16 +101,20 @@ const ProfileCreation = ({userData}) => {
         };
         if (userData.profile_created) {
             const url = BASE_URL + "/api/profile/update-profile";
-             await Axios.put(url, profileData, {
+            const response = await Axios.put(url, profileData, {
                  headers
              });
+            message.success(response.data.message, 5);
+            setVisible(false);
             // set message
         } else {
             const url = BASE_URL + "/api/profile/create-profile";
-            await Axios.post(url, profileData, {
+            const response = await Axios.post(url, profileData, {
                 headers
             });
+            message.success(response.data.message, 5);
             // set message
+            setVisible(false);
         }
     }
 
@@ -122,16 +137,16 @@ const ProfileCreation = ({userData}) => {
         <Modal
             visible={visible}
             title="Profile"
-            closable={false}
-            maskClosable={false}
+            closable={userData.profile_created}
+            maskClosable={userData.profile_created}
             centered={true}
             width={'80vw'}
             bodyStyle={{height: '80vh', width: '80vw'}}
-            keyboard={false}
+            keyboard={userData.profile_created}
             onOk={handleOk}
             onCancel={() => setVisible(false)}
             footer={[
-                <Button onClick={prev} disabled={current === 0 || loading}>
+                <Button onClick={handleValidateFormPrev} disabled={current === 0 || loading}>
                     Previous
                 </Button>,
                 <Button type="primary" onClick={handleValidateForm} disabled={loading || current === 4}>

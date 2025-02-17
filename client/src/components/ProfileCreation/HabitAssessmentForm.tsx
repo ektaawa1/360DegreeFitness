@@ -21,9 +21,7 @@ class HealthAssessmentFormEl extends React.Component<any, any> {
                         daily_water_intake_in_liter: values.daily_water_intake_in_liter || null,
                         weekly_workout_frequency: values.weekly_workout_frequency ?? null, // Keep 0 if entered, else null
                         diet_preference: values.diet_preference || null,
-                        uncomfortable_foods: values.foods_uncomfortable && values.foods_uncomfortable.length > 0
-                            ? values.foods_uncomfortable
-                            : null,
+                        uncomfortable_foods: values.uncomfortable_foods || [],
                         activity_level: values.activity_level || null
                     }
                 };

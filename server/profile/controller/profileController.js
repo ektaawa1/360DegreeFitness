@@ -44,7 +44,7 @@ exports.createProfile = async (req, res) => {
             user_initial_measurements:  makeNullIfEmpty(data.user_initial_measurements),
             user_health_details:  makeNullIfEmpty(data.user_health_details),
             user_habits_assessment: makeNullIfEmpty(data.user_habits_assessment),
-            user_routine_assessment: null,
+            user_routine_assessment: data.user_routine_assessment,
             user_fitness_goals: data.user_basic_details.user_fitness_goals
         };
 
@@ -55,7 +55,7 @@ exports.createProfile = async (req, res) => {
             formattedData,
             { headers: { "Content-Type": "application/json" } }
         );
-
+        return res.json(response.data);
     } catch (error) {
         return res.json(false);
     }
