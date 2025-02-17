@@ -34,6 +34,7 @@ exports.createProfile = async (req, res) => {
             return res.json(false);
         }
         const formattedData = {
+            user_id: verified.id,
             user_basic_details: {
                 age: data.user_basic_details.age,
                 height_in_cm: data.user_basic_details.height_in_cm,

@@ -2,11 +2,18 @@ import styles from './ProfileCreation.module.css';
 import React from "react";
 import { Form, InputNumber, Row } from "antd";
 
-class InitialMeasurementsFormEl extends React.Component {
+class InitialMeasurementsFormEl extends React.Component<any, any> {
     componentDidMount() {
         const { form, initialValues } = this.props;
         if (initialValues) {
-            form.setFieldsValue(initialValues.user_initial_measurements);
+            form.setFieldsValue({
+                arms: initialValues.user_initial_measurements?.arms_in_cm || undefined,
+                neck: initialValues.user_initial_measurements?.neck_in_cm || undefined,
+                chest: initialValues.user_initial_measurements?.chest_in_cm || undefined,
+                waist: initialValues.user_initial_measurements?.waist_in_cm || undefined,
+                thighs: initialValues.user_initial_measurements?.thighs_in_cm || undefined,
+                hips: initialValues.user_initial_measurements?.hips_in_cm || undefined,
+            });
         }
     }
 
@@ -16,12 +23,12 @@ class InitialMeasurementsFormEl extends React.Component {
             if (!err) {
                 const formattedValues = {
                     user_initial_measurements: {
-                        arms_in_cm: values.arms || undefined,
-                        neck_in_cm: values.neck || undefined,
-                        chest_in_cm: values.chest || undefined,
-                        waist_in_cm: values.waist || undefined,
-                        thighs_in_cm: values.thighs || undefined,
-                        hips_in_cm: values.hips || undefined,
+                        arms_in_cm: values.arms || null,
+                        neck_in_cm: values.neck || null,
+                        chest_in_cm: values.chest || null,
+                        waist_in_cm: values.waist || null,
+                        thighs_in_cm: values.thighs || null,
+                        hips_in_cm: values.hips || null,
                     }
                 };
                 callback(null, formattedValues);
@@ -34,15 +41,10 @@ class InitialMeasurementsFormEl extends React.Component {
     render() {
         const { getFieldDecorator } = this.props.form;
         const formItemLayout = {
-            labelCol: {
-                xs: { span: 6 },
-                sm: { span: 6 },
-            },
-            wrapperCol: {
-                xs: { span: 12 },
-                sm: { span: 12 },
-            },
+            labelCol: { xs: { span: 6 }, sm: { span: 6 } },
+            wrapperCol: { xs: { span: 12 }, sm: { span: 12 } },
         };
+
         return (
             <Form {...formItemLayout} className={styles.basicForm}>
                 <Row gutter={24}>
