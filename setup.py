@@ -8,14 +8,21 @@ setup(
     install_requires=[
         "fastapi==0.104.1",
         "uvicorn==0.24.0",
-        "motor==3.3.1",
-        "pymongo==4.6.0",
-        "mongoengine==0.27.0",
-        "python-jose[cryptography]==3.3.0",
-        "passlib[bcrypt]==1.7.4",
-        "python-dotenv==1.0.0",
         "pydantic[email]>=2.4.2",
-        "typing-extensions==4.8.0"
+        "python-dotenv==1.0.0",
+        "motor==3.3.2",
+        "pymongo==4.6.1",
+        "mongoengine==0.27.0",
+        "passlib==1.7.4",
+        "python-jose==3.3.0",
+        "bcrypt==4.0.1",
+        "httpx==0.25.0",
+        "openai==1.3.0",
+        "langchain",
+        "langchain-core",
+        "langchain-community",
+        "pymongo[srv]==4.6.1",
+        "tiktoken==0.5.2"
     ],
     extras_require={
         "dev": [

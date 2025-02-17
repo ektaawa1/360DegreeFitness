@@ -10,9 +10,11 @@ from mongoengine import (
 from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel, EmailStr
 from typing import Optional
+from bson import ObjectId
 
 # Load environment variables
 load_dotenv()
+gemini_api_key = os.getenv("GEMINI_API_KEY")
 
 # Connect to MongoDB
 def connect_to_db():
@@ -22,15 +24,16 @@ def connect_to_db():
 connect_to_db()
 
 # Define a user model -> maps to the user collection
+# 
 class User(Document):
     username = StringField(required=True, unique=True)
-    email = EmailField(required=True, unique=True)
     name = StringField(required=True)
-    password_hash = StringField(required=True)
+    password = StringField(required=True)
     created_at = DateTimeField(default=datetime.utcnow)
-    is_active = BooleanField(default=True)
-    last_login = DateTimeField()
-    meta = {'collection': 'users'}
+
+    meta = {
+        'collection': 'users'  # This matches Express's collection
+    }
 
 # Lifestyle Current Model
 class LifestyleCurrent(Document):
@@ -42,38 +45,38 @@ class LifestyleCurrent(Document):
     height_in_cm = DecimalField(required=True, min_value=50, max_value=300)
     gender = StringField(required=True, choices=['Male', 'Female', 'Other'])
     
-    # InitialMeasurements
-    arms_in_cm = DecimalField(required=True, min_value=0)
-    neck_in_cm = DecimalField(required=True, min_value=0)
-    chest_in_cm = DecimalField(required=True, min_value=0)
-    waist_in_cm = DecimalField(required=True, min_value=0)
-    thighs_in_cm = DecimalField(required=True, min_value=0)
-    hips_in_cm = DecimalField(required=True, min_value=0)
+    # InitialMeasurements (Optional)
+    arms_in_cm = DecimalField(required=False, min_value=0)
+    neck_in_cm = DecimalField(required=False, min_value=0)
+    chest_in_cm = DecimalField(required=False, min_value=0)
+    waist_in_cm = DecimalField(required=False, min_value=0)
+    thighs_in_cm = DecimalField(required=False, min_value=0)
+    hips_in_cm = DecimalField(required=False, min_value=0)
     
-    # HealthDetails
-    family_history = StringField()
-    existing_conditions = ListField(StringField())
-    habitual_consumption = ListField(StringField())
-    current_medications = ListField(StringField())
-    current_supplements = ListField(StringField())
+    # HealthDetails (Optional)
+    family_history = StringField(required=False)
+    existing_conditions = ListField(StringField(), required=False)
+    habitual_consumption = ListField(StringField(), required=False)
+    current_medications = ListField(StringField(), required=False)
+    current_supplements = ListField(StringField(), required=False)
     
-    # HabitsAssessment
-    daily_water_intake_in_liter = StringField(required=True, 
+    # HabitsAssessment (Optional)
+    daily_water_intake_in_liter = StringField(required=False, 
         choices=['1 liter', '2 liters', '3 liters', '4 liters', '5 liters'])
-    weekly_workout_frequency = DecimalField(required=True, min_value=0, max_value=7)
-    diet_preference = StringField(required=True, 
+    weekly_workout_frequency = DecimalField(required=False, min_value=0, max_value=7)
+    diet_preference = StringField(required=False, 
         choices=['Vegetarian', 'Non-Vegetarian', 'Vegan', 'Gluten-Free', 'Keto'])
-    uncomfortable_foods = ListField(StringField())
-    activity_level = StringField(required=True, 
+    uncomfortable_foods = ListField(StringField(), required=False)
+    activity_level = StringField(required=False, 
         choices=['Sedentary', 'Lightly active', 'Moderately active', 'Very active', 'Super active'])
     
-    # RoutineAssessment
-    typical_meals = DictField()  # Stores breakfast, lunch, snacks, dinner
-    daily_routine = DictField()  # Stores various daily timings
-    stress_audit = DictField()   # Stores stress-related timings
+    # RoutineAssessment (Optional)
+    typical_meals = DictField(required=False)  # Stores breakfast, lunch, snacks, dinner
+    daily_routine = DictField(required=False)  # Stores various daily timings
+    stress_audit = DictField(required=False)   # Stores stress-related timings
     
-    # Fitness Goals
-    fitness_goals = StringField(required=True, 
+    # Fitness Goals (Optional)
+    fitness_goals = StringField(required=False, 
         choices=['Weight Loss', 'Weight Gain', 'Maintain Weight', 
                 'Muscle Gain', 'Endurance', 'Get Healthier'])
     
@@ -164,8 +167,21 @@ class MongoDB:
     # User operations
     @classmethod
     async def get_user(cls, username: str):
+        """Get user from Express's users collection"""
         await cls.ensure_db_connected()
         return await cls.db.users.find_one({"username": username})
+
+    @classmethod
+    async def get_user_by_id(cls, user_id: str):
+        """Get user by ID from Express's users collection"""
+        try:
+            await cls.ensure_db_connected()
+            # Convert string ID to ObjectId
+            object_id = ObjectId(user_id)
+            # This line checks if user exists in the users collection
+            return await cls.db.users.find_one({"_id": object_id})
+        except Exception:
+            return None
 
     @classmethod
     async def create_user(cls, user: UserDB):
@@ -176,4 +192,38 @@ class MongoDB:
     async def get_user_by_email(cls, email: str):
         await cls.ensure_db_connected()
         return await cls.db.users.find_one({"email": email})
+
+    @classmethod
+    async def get_fitness_data_for_rag(cls, user_id: str):
+        """Get all user fitness data and prepare for RAG"""
+        await cls.ensure_db_connected()
+        
+        # Debug: Print the user_id being queried
+        print("Querying for user_id:", user_id)
+        
+        # Get all user data
+        user = await cls.get_user_by_id(user_id)
+        fitness_profile = await cls.db.lifestyle_current.find_one({"user_id": user_id})
+        # fitness_plan = await cls.db.fitness_plans.find_one({"user_id": user_id})
+        
+        # Debug: Print the retrieved data
+        print("User Data:", user)
+        print("Fitness Profile:", fitness_profile)
+        # print("Fitness Plan:", fitness_plan)
+        
+        # Combine data into documents
+        documents = []
+        if user:
+            documents.append(f"User Profile: {user}")
+        if fitness_profile:
+            documents.append(f"Fitness Profile: {fitness_profile}")
+        # if fitness_plan:
+        #     documents.append(f"Fitness Plan: {fitness_plan}")
+            
+        return documents
+
+    headers = {
+        "Authorization": f"Bearer {gemini_api_key}",
+        "Content-Type": "application/json"
+    }
 

@@ -59,6 +59,7 @@ pip install -e .
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pip install -e .
 
 &nbsp;&nbsp;&nbsp;&nbsp;d. In VS Code:
+
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;• Press Cmd/Ctrl + Shift + P
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;• Type "Python: Select Interpreter"
