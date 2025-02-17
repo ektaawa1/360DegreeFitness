@@ -7,7 +7,7 @@ const { Option } = Select;
 class HealthDetailsFormEl extends React.Component<any, any> {
     componentDidMount() {
         const { form, initialValues } = this.props;
-        if (initialValues) {
+        if (initialValues && initialValues.user_health_details) {
             form.setFieldsValue(initialValues.user_health_details);
         }
     }
@@ -17,7 +17,13 @@ class HealthDetailsFormEl extends React.Component<any, any> {
         this.props.form.validateFields((err, values) => {
             if (!err) {
                 const formattedValues = {
-                    user_health_details: { ...values }
+                    user_health_details: {
+                        family_history: values.family_history || undefined,
+                        existing_conditions: values.existing_conditions || [],
+                        habitual_consumption: values.habitual_consumption || [],
+                        current_medications: values.current_medications || [],
+                        current_supplements: values.current_supplements || []
+                    }
                 };
                 callback(null, formattedValues);
             } else {
@@ -29,14 +35,8 @@ class HealthDetailsFormEl extends React.Component<any, any> {
     render() {
         const { getFieldDecorator } = this.props.form;
         const formItemLayout = {
-            labelCol: {
-                xs: { span: 6 },
-                sm: { span: 6 },
-            },
-            wrapperCol: {
-                xs: { span: 12 },
-                sm: { span: 12 },
-            },
+            labelCol: { xs: { span: 6 }, sm: { span: 6 } },
+            wrapperCol: { xs: { span: 12 }, sm: { span: 12 } },
         };
 
         const healthOptions = ["Diabetes", "Hypertension", "Heart Disease", "Asthma", "Stroke", "Cancer", "Kidney Disease", "Liver Disease", "Thyroid Disorder", "Arthritis", "Obesity", "COPD", "Alzheimer's", "Depression"];
@@ -48,33 +48,48 @@ class HealthDetailsFormEl extends React.Component<any, any> {
             <Form {...formItemLayout} className={styles.basicForm}>
                 <Row gutter={24}>
                     <Form.Item label="Family History">
-                        {getFieldDecorator("family_history", {
-                        })(
-                            <Select mode="multiple" placeholder="Select options">{healthOptions.map(option => <Option key={option} value={option}>{option}</Option>)}</Select>
+                        {getFieldDecorator("family_history")(
+                            <Select placeholder="Select one">
+                                {healthOptions.map(option => (
+                                    <Option key={option} value={option}>{option}</Option>
+                                ))}
+                            </Select>
                         )}
                     </Form.Item>
                     <Form.Item label="Existing Conditions">
-                        {getFieldDecorator("existing_conditions", {
-                        })(
-                            <Select mode="multiple" placeholder="Select options">{healthOptions.map(option => <Option key={option} value={option}>{option}</Option>)}</Select>
+                        {getFieldDecorator("existing_conditions")(
+                            <Select mode="multiple" placeholder="Select conditions">
+                                {healthOptions.map(option => (
+                                    <Option key={option} value={option}>{option}</Option>
+                                ))}
+                            </Select>
                         )}
                     </Form.Item>
                     <Form.Item label="Habitual Consumption">
-                        {getFieldDecorator("habitual_consumption", {
-                        })(
-                            <Select mode="multiple" placeholder="Select options">{consumptionOptions.map(option => <Option key={option} value={option}>{option}</Option>)}</Select>
+                        {getFieldDecorator("habitual_consumption")(
+                            <Select mode="multiple" placeholder="Select habits">
+                                {consumptionOptions.map(option => (
+                                    <Option key={option} value={option}>{option}</Option>
+                                ))}
+                            </Select>
                         )}
                     </Form.Item>
                     <Form.Item label="Current Medications">
-                        {getFieldDecorator("current_medications", {
-                        })(
-                            <Select mode="multiple" placeholder="Select options">{medicationOptions.map(option => <Option key={option} value={option}>{option}</Option>)}</Select>
+                        {getFieldDecorator("current_medications")(
+                            <Select mode="multiple" placeholder="Select medications">
+                                {medicationOptions.map(option => (
+                                    <Option key={option} value={option}>{option}</Option>
+                                ))}
+                            </Select>
                         )}
                     </Form.Item>
                     <Form.Item label="Current Supplements">
-                        {getFieldDecorator("current_supplements", {
-                        })(
-                            <Select mode="multiple" placeholder="Select options">{supplementOptions.map(option => <Option key={option} value={option}>{option}</Option>)}</Select>
+                        {getFieldDecorator("current_supplements")(
+                            <Select mode="multiple" placeholder="Select supplements">
+                                {supplementOptions.map(option => (
+                                    <Option key={option} value={option}>{option}</Option>
+                                ))}
+                            </Select>
                         )}
                     </Form.Item>
                 </Row>
