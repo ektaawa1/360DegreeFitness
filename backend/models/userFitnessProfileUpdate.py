@@ -20,7 +20,7 @@ class InitialMeasurementsUpdate(BaseModel):
     hips_in_cm: Optional[condecimal(ge=0)]
 
 class HealthDetailsUpdate(BaseModel):
-    family_history: Optional[str] #Can be None if no health history exists
+    family_history:  Optional[List[str]]  #Can be None if no health history exists
     existing_conditions: Optional[List[str]] #Can be None if no conditions exist
     habitual_consumption: Optional[List[str]] #Can be None if nothing to report
     current_medications: Optional[List[str]] #Can be None if not having any medications

@@ -18,7 +18,7 @@ class HealthDetailsFormEl extends React.Component<any, any> {
             if (!err) {
                 const formattedValues = {
                     user_health_details: {
-                        family_history: values.family_history || undefined,
+                        family_history: values.family_history || [],
                         existing_conditions: values.existing_conditions || [],
                         habitual_consumption: values.habitual_consumption || [],
                         current_medications: values.current_medications || [],
@@ -49,7 +49,7 @@ class HealthDetailsFormEl extends React.Component<any, any> {
                 <Row gutter={24}>
                     <Form.Item label="Family History">
                         {getFieldDecorator("family_history")(
-                            <Select placeholder="Select one">
+                            <Select placeholder="Select" mode="multiple" >
                                 {healthOptions.map(option => (
                                     <Option key={option} value={option}>{option}</Option>
                                 ))}
