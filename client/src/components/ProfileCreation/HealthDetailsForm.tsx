@@ -8,7 +8,7 @@ class HealthDetailsFormEl extends React.Component<any, any> {
     componentDidMount() {
         const { form, initialValues } = this.props;
         if (initialValues) {
-            form.setFieldsValue(initialValues.health_details);
+            form.setFieldsValue(initialValues.user_health_details);
         }
     }
 
@@ -17,7 +17,7 @@ class HealthDetailsFormEl extends React.Component<any, any> {
         this.props.form.validateFields((err, values) => {
             if (!err) {
                 const formattedValues = {
-                    health_details: { ...values }
+                    user_health_details: { ...values }
                 };
                 callback(null, formattedValues);
             } else {

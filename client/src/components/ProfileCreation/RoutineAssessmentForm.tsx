@@ -9,7 +9,7 @@ class RoutineAssessmentFormEl extends React.Component<any, any> {
     componentDidMount() {
         const { form, initialValues } = this.props;
         if (initialValues) {
-            form.setFieldsValue(initialValues.routine_assessment);
+            form.setFieldsValue(initialValues.user_routine_assessment);
         }
     }
 
@@ -17,7 +17,7 @@ class RoutineAssessmentFormEl extends React.Component<any, any> {
         this.props.form.validateFields((err, values) => {
             if (!err) {
                 const formattedValues = {
-                    routine_assessment: { ...values }
+                    user_routine_assessment: { ...values }
                 };
                 callback(null, formattedValues);
             } else {
@@ -40,12 +40,10 @@ class RoutineAssessmentFormEl extends React.Component<any, any> {
                         <Panel header="Typical Meals" key="1">
                             <Form.Item label="Breakfast">
                                 {getFieldDecorator("typical_meals.breakfast", {
-                                    rules: [{ required: true, message: "Please enter breakfast!" }],
                                 })(<Input placeholder="E.g., Oats with milk" />)}
                             </Form.Item>
                             <Form.Item label="Lunch">
                                 {getFieldDecorator("typical_meals.lunch", {
-                                    rules: [{ required: true, message: "Please enter lunch!" }],
                                 })(<Input placeholder="E.g., Salad with chickpeas" />)}
                             </Form.Item>
                             <Form.Item label="Snacks">

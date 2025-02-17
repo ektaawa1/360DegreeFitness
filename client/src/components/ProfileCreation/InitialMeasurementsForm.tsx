@@ -2,11 +2,11 @@ import styles from './ProfileCreation.module.css';
 import React from "react";
 import { Form, InputNumber, Row } from "antd";
 
-class InitialMeasurementsFormEl extends React.Component<any, any> {
+class InitialMeasurementsFormEl extends React.Component {
     componentDidMount() {
         const { form, initialValues } = this.props;
         if (initialValues) {
-            form.setFieldsValue(initialValues.initial_measurements);
+            form.setFieldsValue(initialValues.user_initial_measurements);
         }
     }
 
@@ -15,13 +15,13 @@ class InitialMeasurementsFormEl extends React.Component<any, any> {
         this.props.form.validateFields((err, values) => {
             if (!err) {
                 const formattedValues = {
-                    initial_measurements: {
-                        arms: Number(values.arms) || undefined,
-                        neck: Number(values.neck) || undefined,
-                        chest: Number(values.chest) || undefined,
-                        waist: Number(values.waist) || undefined,
-                        thighs: Number(values.thighs) || undefined,
-                        hips: Number(values.hips) || undefined,
+                    user_initial_measurements: {
+                        arms_in_cm: values.arms || undefined,
+                        neck_in_cm: values.neck || undefined,
+                        chest_in_cm: values.chest || undefined,
+                        waist_in_cm: values.waist || undefined,
+                        thighs_in_cm: values.thighs || undefined,
+                        hips_in_cm: values.hips || undefined,
                     }
                 };
                 callback(null, formattedValues);
@@ -52,30 +52,35 @@ class InitialMeasurementsFormEl extends React.Component<any, any> {
                         )}
                         <span className="ant-form-text"> cm</span>
                     </Form.Item>
+
                     <Form.Item label="Neck">
                         {getFieldDecorator("neck")(
                             <InputNumber min={10} max={60} />
                         )}
                         <span className="ant-form-text"> cm</span>
                     </Form.Item>
+
                     <Form.Item label="Chest">
                         {getFieldDecorator("chest")(
                             <InputNumber min={50} max={150} />
                         )}
                         <span className="ant-form-text"> cm</span>
                     </Form.Item>
+
                     <Form.Item label="Waist">
                         {getFieldDecorator("waist")(
                             <InputNumber min={50} max={150} />
                         )}
                         <span className="ant-form-text"> cm</span>
                     </Form.Item>
+
                     <Form.Item label="Thighs">
                         {getFieldDecorator("thighs")(
                             <InputNumber min={30} max={100} />
                         )}
                         <span className="ant-form-text"> cm</span>
                     </Form.Item>
+
                     <Form.Item label="Hips">
                         {getFieldDecorator("hips")(
                             <InputNumber min={50} max={150} />

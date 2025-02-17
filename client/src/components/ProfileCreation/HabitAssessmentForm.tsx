@@ -8,7 +8,7 @@ class HealthAssessmentFormEl extends React.Component<any, any> {
     componentDidMount() {
         const { form, initialValues } = this.props;
         if (initialValues) {
-            form.setFieldsValue(initialValues.habits_assessment);
+            form.setFieldsValue(initialValues.user_habits_assessment);
         }
     }
 
@@ -17,7 +17,7 @@ class HealthAssessmentFormEl extends React.Component<any, any> {
         this.props.form.validateFields((err, values) => {
             if (!err) {
                 const formattedValues = {
-                    habits_assessment: { ...values }
+                    user_habits_assessment: { ...values }
                 };
                 callback(null, formattedValues);
             } else {
@@ -45,7 +45,7 @@ class HealthAssessmentFormEl extends React.Component<any, any> {
                 <Row gutter={24}>
                     <Form.Item label="Daily Water Intake">
                         {getFieldDecorator("daily_water_intake", {
-                            rules: [{ required: true, message: "Please select water intake!" }],
+                            //rules: [{ required: true, message: "Please select water intake!" }],
                         })(
                             <Select>
                                 <Option value="1 liter">1 liter</Option>
@@ -57,7 +57,7 @@ class HealthAssessmentFormEl extends React.Component<any, any> {
                     </Form.Item>
                         <Form.Item label="Weekly Workout Frequency">
                             {getFieldDecorator("weekly_workout_frequency", {
-                                rules: [{ required: true, message: "Please enter workout frequency!" }],
+                                //rules: [{ required: true, message: "Please enter workout frequency!" }],
                             })(<InputNumber min={0} max={7} />)}
                         </Form.Item>
                         <Form.Item label="Diet Preference">
@@ -84,7 +84,7 @@ class HealthAssessmentFormEl extends React.Component<any, any> {
                         </Form.Item>
                         <Form.Item label="Activity Level">
                             {getFieldDecorator("activity_level", {
-                                rules: [{ required: true, message: "Please select activity level!" }],
+                                //rules: [{ required: true, message: "Please select activity level!" }],
                             })(
                                 <Select>
                                     <Option value="Sedentary">Sedentary</Option>
