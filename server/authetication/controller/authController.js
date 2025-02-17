@@ -9,7 +9,7 @@ const errorMessage = (res, error) => {
 
 exports.registerUser = async (req, res) => {
     try {
-        const {username, password, name} = req.body;
+        const {username, password, name, email} = req.body;
 
         if (!username || !password) {
             return res.status(200).json({
@@ -37,7 +37,7 @@ exports.registerUser = async (req, res) => {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        const newUser = new User({username, password: hashedPassword, name});
+        const newUser = new User({username, password: hashedPassword, name, email});
         const savedUser = await newUser.save();
         res.status(201).json(savedUser);
     } catch (error) {

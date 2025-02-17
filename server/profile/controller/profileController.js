@@ -17,25 +17,11 @@ exports.getProfile = async (req, res) => {
     }
 };
 
-function removeEmptyObjects(obj) {
-    if (typeof obj !== 'object' || obj === null) {
-        return obj;
+function makeNullIfEmpty(obj) {
+    if (Object.keys(obj).length === 0 && obj.constructor === Object) {
+        return null;
     }
-
-    if (Array.isArray(obj)) {
-        return obj.map(removeEmptyObjects).filter(item => !(typeof item === 'object' && Object.keys(item).length === 0));
-    }
-
-    const newObj = {};
-    for (const key in obj) {
-        if (obj.hasOwnProperty(key)) {
-            const value = removeEmptyObjects(obj[key]);
-            if (!(typeof value === 'object' && Object.keys(value).length === 0)) {
-                newObj[key] = value;
-            }
-        }
-    }
-    return Object.keys(newObj).length > 0 ? newObj : {};
+    return obj;
 }
 
 
@@ -54,10 +40,10 @@ exports.createProfile = async (req, res) => {
                 weight_in_kg: data.user_basic_details.weight_in_kg,
                 gender: data.user_basic_details.gender
             },
-            user_initial_measurements:  null,
-            user_health_details:  null,
-            user_habits_assessment: null,
-            user_routine_assessment: null,  // Added missing field
+            user_initial_measurements:  makeNullIfEmpty(data.user_initial_measurements),
+            user_health_details:  makeNullIfEmpty(data.user_health_details),
+            user_habits_assessment: makeNullIfEmpty(data.user_habits_assessment),
+            user_routine_assessment: null,
             user_fitness_goals: data.user_basic_details.user_fitness_goals
         };
 

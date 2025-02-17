@@ -20,6 +20,7 @@ const Register = () => {
 
   const [username, setUsername] = useState("");
   const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
   const [usernameError, setUsernameError] = useState("");
   const [password, setPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
@@ -51,10 +52,15 @@ const Register = () => {
     setName(name);
   };
 
+  const onChangeEmail = (e) => {
+    const email = e.target.value;
+    setEmail(email);
+  };
+
   const onSubmit = async (e) => {
     e.preventDefault();
     if (!usernameError && !passwordError) {
-      const newUser = { username, password, name };
+      const newUser = { username, password, name,email };
       const url = BASE_URL + "/api/auth/register";
       const registerRes = await Axios.post(url, newUser);
 
@@ -103,6 +109,19 @@ const Register = () => {
                     error={usernameError.length > 0 ? true : false}
                     value={name}
                     onChange={onChangeName}
+                />
+                <TextField
+                    variant="outlined"
+                    margin="normal"
+                    required
+                    fullWidth
+                    id="email"
+                    label="Email"
+                    name="email"
+                    autoComplete="test@test.com"
+                    error={email.length > 0 ? true : false}
+                    value={email}
+                    onChange={onChangeEmail}
                 />
                 <TextField
                   variant="outlined"
