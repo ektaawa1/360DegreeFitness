@@ -83,12 +83,33 @@ const ProfileCreation = ({userData}) => {
         setCurrentStep(current - 1 );
     }
 
+    const handleAction = async () => {
+        let token = localStorage.getItem("auth-token");
+        const headers = {
+            "x-auth-token": token,
+        };
+        if (userData.profile_created) {
+            const url = BASE_URL + "/api/profile/update-profile";
+             await Axios.put(url, profileData, {
+                 headers
+             });
+            // set message
+        } else {
+            const url = BASE_URL + "/api/profile/create-profile";
+            await Axios.post(url, profileData, {
+                headers
+            });
+            // set message
+        }
+    }
+
 
     const handleOk = () => {
-        setLoading(true);
+       // setLoading(true);
         setTimeout(() => {
             console.log(profileData);
             // Make API call here
+            void handleAction();
         }, 200);
     };
 
