@@ -44,12 +44,12 @@ async def get_fitness_profile(user_id: str):
     # Get collection inside the handler
     fitness_profiles_collection = get_fitness_profile_collection()
 
+#     try:
+#         user_id = ObjectId(user_id)
+#     except Exception as e:
+#         return JSONResponse(status_code=400, content= {"message": "Invalid user id format"})
     try:
-        user_id = ObjectId(user_id)
-    except Exception as e:
-        return JSONResponse(status_code=400, content= {"message": "Invalid user id format"})
-    try:
-        user_profile = await fitness_profiles_collection.find_one({"_id": user_id})
+        user_profile = await fitness_profiles_collection.find_one({"user_id": user_id})
         print("----User Profile----:", user_profile)
 
         if user_profile is None:
@@ -69,13 +69,13 @@ async def edit_fitness_profile(user_id: str, updated_profile: UserFitnessProfile
     # Get collection inside the handler
     fitness_profiles_collection = get_fitness_profile_collection()
 
-    try:
-        user_id = ObjectId(user_id)
-    except Exception as e:
-        return JSONResponse(status_code=400, content= {"message": "Invalid user id format"})
+#     try:
+#         user_id = ObjectId(user_id)
+#     except Exception as e:
+#         return JSONResponse(status_code=400, content= {"message": "Invalid user id format"})
     try:
         #Fetching user's existing profile
-        existing_profile = await fitness_profiles_collection.find_one({"_id": user_id})
+        existing_profile = await fitness_profiles_collection.find_one({"user_id": user_id})
 
         print("----Existing User Profile----:", existing_profile)
         if not existing_profile:
@@ -102,7 +102,7 @@ async def edit_fitness_profile(user_id: str, updated_profile: UserFitnessProfile
 
         # Perform the partial update in the database
         result = await fitness_profiles_collection.update_one(
-            {"_id": user_id}, {"$set": updated_data}
+            {"user_id": user_id}, {"$set": updated_data}
         )
 
         if result.modified_count > 0:
@@ -120,15 +120,15 @@ async def delete_fitness_profile(user_id: str):
     # Get collection inside the handler
     fitness_profiles_collection = get_fitness_profile_collection()
 
-    try:
-        user_id = ObjectId(user_id)
-    except Exception as e:
-        return JSONResponse(status_code=400, content={"message": "Invalid user id format"})
+#     try:
+#         user_id = ObjectId(user_id)
+#     except Exception as e:
+#         return JSONResponse(status_code=400, content={"message": "Invalid user id format"})
     try:
         print("----Attempting to delete profile with user_id:----:", user_id)
         #do we need to check here if the user profile exists or not?
         # MongoDB access to delete the fitness profile
-        result = await fitness_profiles_collection.delete_one({"_id": user_id})
+        result = await fitness_profiles_collection.delete_one({"user_id": user_id})
         print("----Delete result----", {result.deleted_count})
         if result.deleted_count == 0:
             print("Profile not found for user_id:", user_id)
@@ -148,13 +148,13 @@ async def delete_fitness_profile(user_id: str):
 async def check_profile_complete(user_id: str):
     # Get collection inside the handler
     fitness_profiles_collection = get_fitness_profile_collection()
-    try:
-        user_id = ObjectId(user_id)
-    except Exception as e:
-        return JSONResponse(status_code=400, content= {"message": "Invalid user id format"})
+#     try:
+#         user_id = ObjectId(user_id)
+#     except Exception as e:
+#         return JSONResponse(status_code=400, content= {"message": "Invalid user id format"})
     try:
         # Fetch User Profile from DB
-        user_profile = await fitness_profiles_collection.find_one({"_id": user_id})
+        user_profile = await fitness_profiles_collection.find_one({"user_id": user_id})
         print("----User Profile----:", user_profile)
 
         # If user profile doesn't exist then return False
