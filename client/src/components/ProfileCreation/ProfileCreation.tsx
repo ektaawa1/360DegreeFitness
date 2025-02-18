@@ -109,7 +109,7 @@ const ProfileCreation = ({userData}) => {
             setVisible(false);
             // set message
         } else {
-            const url = BASE_URL + "/api/profile/create-profile1";
+            const url = BASE_URL + "/api/profile/create-profile";
             const response = await Axios.post(url, data, {
                 headers
             });
