@@ -19,24 +19,23 @@ class RoutineAssessmentFormEl extends React.Component<any, any> {
                 const formattedValues = {
                     user_routine_assessment: {
                         typical_meals: {
-                            breakfast: values["typical_meals.breakfast"] ?? null,
-                            lunch: values["typical_meals.lunch"] ?? null,
-                            snacks: values["typical_meals.snacks"] ?? null,
-                            dinner: values["typical_meals.dinner"] ?? null,
+                            breakfast: values["typical_meals"]["breakfast"] ?? null,
+                            lunch: values["typical_meals"]["lunch"] ?? null,
+                            snacks: values["typical_meals"]["snacks"] ?? null,
+                            dinner: values["typical_meals"]["dinner"] ?? null,
                         },
                         daily_routine: {
-                            wakeup_time: values["daily_routine.wakeup_time"] ?? null,
-                            breakfast_time: values["daily_routine.breakfast_time"] ?? null,
-                            lunch_time: values["daily_routine.lunch_time"] ?? null,
-                            evening_snacks_time: values["daily_routine.evening_snacks_time"] ?? null,
-                            dinner_time: values["daily_routine.dinner_time"] ?? null,
-                            bed_time: values["daily_routine.bed_time"] ?? null,
+                            wakeup_time: values["daily_routine"]["wakeup_time"] ?? null,
+                            breakfast_time: values["daily_routine"]["breakfast_time"] ?? null,
+                            lunch_time: values["daily_routine"]["lunch_time"] ?? null,
+                            evening_snacks_time: values["daily_routine"]["evening_snacks_time"] ?? null,
+                            dinner_time: values["daily_routine"]["dinner_time"] ?? null,
+                            bed_time: values["daily_routine"]["bed_time"] ?? null,
                         },
                         stress_audit: {
-                            stress_factors: values["stress_audit.stress_factors"]?.length ? values["stress_audit.stress_factors"] : null,
-                            time_sitting_stretch: values["stress_audit.time_sitting_stretch"] ?? null,
-                            time_standing_stretch: values["stress_audit.time_standing_stretch"] ?? null,
-                            time_driving: values["stress_audit.time_driving"] ?? null,
+                            time_sitting_stretch: values["stress_audit"]["time_sitting_at_a_stretch"] ?? null,
+                            time_standing_stretch: values["stress_audit"]["time_standing_at_a_stretch"] ?? null,
+                            time_driving: values["stress_audit"]["time_travelling_per_day"] ?? null,
                         },
                     }
                 };
@@ -90,19 +89,8 @@ class RoutineAssessmentFormEl extends React.Component<any, any> {
                         </Panel>
 
                         <Panel header="Stress Audit" key="3">
-                            <Form.Item label="Stress Factors">
-                                {getFieldDecorator("stress_audit.stress_factors")(
-                                    <Select mode="multiple" placeholder="Select factors">
-                                        <Option value="Work">Work</Option>
-                                        <Option value="Finances">Finances</Option>
-                                        <Option value="Family">Family</Option>
-                                        <Option value="Health">Health</Option>
-                                        <Option value="Social Commitments">Social Commitments</Option>
-                                    </Select>
-                                )}
-                            </Form.Item>
                             <Form.Item label="Time Sitting & Stretching">
-                                {getFieldDecorator("stress_audit.time_sitting_stretch")(
+                                {getFieldDecorator("stress_audit.time_sitting_at_a_stretch")(
                                     <Select>
                                         <Option value="30 minutes">30 minutes</Option>
                                         <Option value="1 hour">1 hour</Option>
@@ -112,7 +100,7 @@ class RoutineAssessmentFormEl extends React.Component<any, any> {
                                 )}
                             </Form.Item>
                             <Form.Item label="Time Standing & Stretching">
-                                {getFieldDecorator("stress_audit.time_standing_stretch")(
+                                {getFieldDecorator("stress_audit.time_standing_at_a_stretch")(
                                     <Select>
                                         <Option value="30 minutes">30 minutes</Option>
                                         <Option value="1 hour">1 hour</Option>
@@ -122,7 +110,7 @@ class RoutineAssessmentFormEl extends React.Component<any, any> {
                                 )}
                             </Form.Item>
                             <Form.Item label="Time Driving">
-                                {getFieldDecorator("stress_audit.time_driving")(
+                                {getFieldDecorator("stress_audit.time_travelling_per_day")(
                                     <Select>
                                         <Option value="15 minutes">15 minutes</Option>
                                         <Option value="30 minutes">30 minutes</Option>

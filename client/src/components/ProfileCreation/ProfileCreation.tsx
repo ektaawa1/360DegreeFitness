@@ -61,8 +61,9 @@ const ProfileCreation = ({userData}) => {
     const handleValidateForm = () => {
         void formRef.current?.getFormattedValues((err, values) => {
             if (!err) {
-                setProfile({...profileData, ...values});
-                next();
+                const data = {...profileData, ...values};
+                setProfile(data);
+                next(data);
             } else {
                 message.error("Please fix the form errors before proceeding.");
             }
@@ -82,9 +83,9 @@ const ProfileCreation = ({userData}) => {
 
 
 
-    const next = () => {
+    const next = (data) => {
         if (current === steps.length - 1) {
-            handleOk();
+            handleOk(data);
         } else {
             setCurrentStep(current + 1 );
         }
@@ -94,22 +95,22 @@ const ProfileCreation = ({userData}) => {
         setCurrentStep(current - 1 );
     }
 
-    const handleAction = async () => {
+    const handleAction = async (data) => {
         let token = localStorage.getItem("auth-token");
         const headers = {
             "x-auth-token": token,
         };
         if (userData.profile_created) {
             const url = BASE_URL + "/api/profile/update-profile";
-            const response = await Axios.put(url, profileData, {
+            const response = await Axios.put(url, data, {
                  headers
              });
             message.success(response.data.message, 5);
             setVisible(false);
             // set message
         } else {
-            const url = BASE_URL + "/api/profile/create-profile";
-            const response = await Axios.post(url, profileData, {
+            const url = BASE_URL + "/api/profile/create-profile1";
+            const response = await Axios.post(url, data, {
                 headers
             });
             message.success(response.data.message, 5);
@@ -119,12 +120,11 @@ const ProfileCreation = ({userData}) => {
     }
 
 
-    const handleOk = () => {
-       // setLoading(true);
+    const handleOk = (data) => {
+        setLoading(true);
         setTimeout(() => {
-            console.log(profileData);
             // Make API call here
-            void handleAction();
+            void handleAction(data);
         }, 200);
     };
 
