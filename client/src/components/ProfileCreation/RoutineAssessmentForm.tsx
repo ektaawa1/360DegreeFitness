@@ -33,9 +33,9 @@ class RoutineAssessmentFormEl extends React.Component<any, any> {
                             bed_time: values["daily_routine"]["bed_time"] ?? null,
                         },
                         stress_audit: {
-                            time_sitting_stretch: values["stress_audit"]["time_sitting_at_a_stretch"] ?? null,
-                            time_standing_stretch: values["stress_audit"]["time_standing_at_a_stretch"] ?? null,
-                            time_driving: values["stress_audit"]["time_travelling_per_day"] ?? null,
+                            time_sitting_at_a_stretch: values["stress_audit"]["time_sitting_at_a_stretch"] ?? null,
+                            time_standing_at_a_stretch: values["stress_audit"]["time_standing_at_a_stretch"] ?? null,
+                            time_travelling_per_day: values["stress_audit"]["time_travelling_per_day"] ?? null,
                         },
                     }
                 };

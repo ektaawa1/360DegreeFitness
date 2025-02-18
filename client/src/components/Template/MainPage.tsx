@@ -3,13 +3,15 @@ import {useNavigate} from "react-router-dom";
 import UserContext from "../../context/UserContext";
 import 'antd/dist/antd.css';
 import './index.css';
-import {Layout, Menu, Breadcrumb, Popconfirm, PageHeader} from 'antd';
+import {Layout, Menu, Breadcrumb, Popconfirm, PageHeader, Dropdown} from 'antd';
 import {
     DashboardOutlined,
     ExitToApp, HomeOutlined, KeyboardBackspaceOutlined,
     Menu as MenuIcon,
     MenuOpenOutlined,
-    SearchOutlined
+    SearchOutlined,
+    PersonOutlineOutlined,
+    ArrowDropDownOutlined
 } from "@material-ui/icons";
 import Copyright from "./Copyright";
 import {Search} from "../index";
@@ -33,6 +35,7 @@ const MainPage = () => {
     const [collapsed, setCollapse] = useState(true);
     const [selectedPage, setSelectedPage] = useState<PAGES>('landing');
     const [selectedWatchlist, setSelectedWatchlist] = useState(null);
+    const [isEditProfile, setEditProfile] = useState(false);
 
     const onCollapse = collapsed => {
         console.log(collapsed);
@@ -78,9 +81,9 @@ const MainPage = () => {
                     {selectedPage === "dashboard" && (
                         <Dashboard/>
                     )}
-                
+
                     {selectedPage === "search" && (
-                        <Search />
+                        <Search/>
                     )}
                 </div>
             </div>)
@@ -110,12 +113,12 @@ const MainPage = () => {
                             <DashboardOutlined fontSize={'28px'}/>
                             <span className={'item'}>{PAGE_TEXTS["dashboard"]}</span>
                         </Menu.Item>
-                        
+
                         <Menu.Item key="search" onClick={() => setPage('search')}>
                             <SearchOutlined fontSize={'28px'}/>
                             <span className={'item'}>{PAGE_TEXTS["search"]}</span>
                         </Menu.Item>
-                        
+
 
                         <Menu.Item key="logout">
                             <Popconfirm placement="right" title={'Are you sure you want to logout?'} onConfirm={logout}
@@ -128,26 +131,40 @@ const MainPage = () => {
                     </Menu>
                 </Sider>
                 <Layout className="site-layout">
-                    <Header className="site-layout-background header-text"
-                            style={{padding: 0}}>
+                    <Header className="site-layout-background header-text" style={{padding: 0}}>
                         <div style={{display: 'flex'}}>
                             <div style={{display: 'inline-flex', height: '60px', alignItems: 'center'}}>
                                 <div className="logo"/>
                                 <span className={'logo-text'}>360° Fitness</span>
                             </div>
-                            <div style={{marginLeft: 'auto'}}>
-                                {`Hello, ${userData.user.name}`}
+                            <div style={{marginLeft: 'auto', marginRight: '20px'}}>
+                                <Dropdown
+                                    overlay={
+                                        <Menu>
+                                            <Menu.Item key="updateProfile" onClick={() => {
+                                                setEditProfile(true);
+                                            }}>
+                                                <PersonOutlineOutlined style={{ verticalAlign: 'middle'}}/> Update Profile
+                                            </Menu.Item>
+                                        </Menu>
+                                    }
+                                    trigger={['click']}
+                                >
+                                    <div style={{cursor: 'pointer'}}>
+                                        <span>{`Hello, ${userData.user.name}`}</span>
+                                        <ArrowDropDownOutlined style={{ verticalAlign: 'middle'}}/>
+                                    </div>
+                                </Dropdown>
                             </div>
                         </div>
-
                     </Header>
                     <Content style={{margin: '0 16px'}}>
                         <Breadcrumb style={{margin: '16px 0'}}>
                             <Breadcrumb.Item>Home</Breadcrumb.Item>
                             <Breadcrumb.Item onClick={() => {
-                                
+
                             }}>{PAGE_TEXTS[selectedPage]}</Breadcrumb.Item>
-                         
+
                         </Breadcrumb>
                         {renderContent()}
                     </Content>
@@ -155,7 +172,7 @@ const MainPage = () => {
                         <Copyright/>
                     </Footer>
                 </Layout>
-                {!userData?.profile_created && <ProfileCreation userData={userData}/>}
+                {(!userData?.profile_created || isEditProfile) && <ProfileCreation userData={userData} editMode={true} onClose={() => setEditProfile(false)}/>}
             </Layout>
 
         </div>

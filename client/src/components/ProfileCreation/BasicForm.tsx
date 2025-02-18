@@ -8,7 +8,9 @@ class BasicFormEl extends React.Component<any, any> {
     componentDidMount() {
         const {form, initialValues} = this.props;
         if (initialValues) {
-            form.setFieldsValue(initialValues?.user_basic_details);
+            const values = initialValues?.user_basic_details || {};
+            values.user_fitness_goals = values.user_basic_details?.user_fitness_goals || initialValues.user_fitness_goals;
+            form.setFieldsValue(values);
         }
     }
 

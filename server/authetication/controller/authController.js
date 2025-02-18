@@ -82,9 +82,9 @@ exports.loginUser = async (req, res) => {
                 name: user.name,
                 id: user._id,
                 balance: user.balance,
-                profile_created: response.data.profile_exists,
-                profile_completed: response.data.profile_complete
             },
+            profile_created: response.data.profile_exists,
+            profile_completed: response.data.profile_complete
         });
     } catch (error) {
         return errorMessage(res, error);

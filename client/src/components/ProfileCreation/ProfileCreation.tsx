@@ -32,7 +32,7 @@ const steps = [
         content: RoutineAssessmentForm,
     },
 ];
-const ProfileCreation = ({userData}) => {
+const ProfileCreation = ({userData, editMode, onClose}) => {
 
     const [loading, setLoading] = useState(true);
     const [visible, setVisible] = useState(true);
@@ -44,11 +44,15 @@ const ProfileCreation = ({userData}) => {
 
         if (userData.profile_created) {
             // fetch current profile
-
+            let token = localStorage.getItem("auth-token");
+            const headers = {
+                "x-auth-token": token,
+            };
             const fetchProfile = async () => {
                 const url = BASE_URL + "/api/profile/get-profile";
-                const profile = await Axios.get(url);
+                const profile = await Axios.get(url, {headers}  );
                 setProfile(profile.data);
+                setLoading(false);
             }
 
             void fetchProfile();
@@ -107,6 +111,7 @@ const ProfileCreation = ({userData}) => {
              });
             message.success(response.data.message, 5);
             setVisible(false);
+            onClose();
             // set message
         } else {
             const url = BASE_URL + "/api/profile/create-profile";
@@ -116,6 +121,7 @@ const ProfileCreation = ({userData}) => {
             message.success(response.data.message, 5);
             // set message
             setVisible(false);
+            onClose();
         }
     }
 
@@ -144,7 +150,10 @@ const ProfileCreation = ({userData}) => {
             bodyStyle={{height: '80vh', width: '80vw'}}
             keyboard={userData.profile_created}
             onOk={handleOk}
-            onCancel={() => setVisible(false)}
+            onCancel={() => {
+                setVisible(false);
+                onClose();
+            }}
             footer={[
                 <Button onClick={handleValidateFormPrev} disabled={current === 0 || loading}>
                     Previous
