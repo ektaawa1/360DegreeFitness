@@ -74,6 +74,7 @@ class RoutineAssessment(BaseModel):
     }
 
 class UserFitnessProfile(BaseModel):
+    user_id = str
     user_basic_details: UserDetails
     user_initial_measurements: Optional[InitialMeasurements] = None
     user_health_details: Optional[HealthDetails] = None

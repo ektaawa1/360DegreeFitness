@@ -74,7 +74,7 @@ class RoutineAssessmentUpdate(BaseModel):
     }
 
 class UserFitnessProfileUpdate(BaseModel):
-    #user_id: str # A unique identifier for the user
+    user_id: str # A unique identifier for the user
     user_basic_details: Optional[UserDetailsUpdate]
     user_initial_measurements: Optional[InitialMeasurementsUpdate]
     user_health_details: Optional[HealthDetailsUpdate]
