@@ -27,7 +27,10 @@ async def create_fitness_profile(user_profile: UserFitnessProfile):
         profile_dict = json.loads(
             json.dumps(user_profile.dict(), cls=DecimalEncoder)
         )
-        
+        # Make sure that user_id is passed correctly from the upstream
+        if not profile_dict.get("user_id"):
+            return JSONResponse(status_code=400, content={"message": "user_id is required"})
+
         result = await fitness_profiles_collection.insert_one(profile_dict)
         return {"message": "User fitness profile created successfully!", "profile_id": str(result.inserted_id)}
     except PyMongoError as e:
