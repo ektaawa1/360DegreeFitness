@@ -1,11 +1,13 @@
-import React, { useState } from "react";
-import { Input, Button, Card, Typography, message } from "antd";
-import { useParams } from "react-router-dom";
+import React, {useState} from "react";
+import {Input, Button, Card, Typography, message} from "antd";
+import {useParams} from "react-router-dom";
 import Axios from "axios";
-import { BASE_URL } from "../../config/Config";
-
+import {BASE_URL} from "../../config/Config";
+import styles from "./Authentication.module.css";
+import { useNavigate } from "react-router-dom";
 const ResetPassword = () => {
-    const { token } = useParams();
+    const navigate = useNavigate();
+    const {token} = useParams();
     const [newPassword, setNewPassword] = useState("");
     const [loading, setLoading] = useState(false);
 
@@ -14,8 +16,9 @@ const ResetPassword = () => {
         setLoading(true);
 
         try {
-            const res = await Axios.post(`${BASE_URL}/api/auth/reset-password/${token}`, { newPassword });
+            const res = await Axios.post(`${BASE_URL}/api/auth/reset-password/${token}`, {newPassword});
             message.success(res.data.message);
+            navigate("/");
         } catch (error) {
             message.error("Error resetting password. Try again.");
         }
@@ -24,22 +27,24 @@ const ResetPassword = () => {
     };
 
     return (
-        <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
-            <Card style={{ width: 400, textAlign: "center" }}>
-                <Typography.Title level={2}>Set New Password</Typography.Title>
-                <form onSubmit={handleSubmit} style={{ marginTop: 20 }}>
-                    <Input.Password
-                        placeholder="Enter new password"
-                        value={newPassword}
-                        onChange={(e) => setNewPassword(e.target.value)}
-                        required
-                        style={{ marginBottom: 10 }}
-                    />
-                    <Button type="primary" htmlType="submit" block loading={loading}>
-                        Reset Password
-                    </Button>
-                </form>
-            </Card>
+        <div className={styles.background}>
+            <div style={{display: "flex", justifyContent: "center", alignItems: "center", height: "100vh"}}>
+                <Card style={{width: 400, textAlign: "center"}}>
+                    <Typography.Title level={2}>Set New Password</Typography.Title>
+                    <form onSubmit={handleSubmit} style={{marginTop: 20}}>
+                        <Input.Password
+                            placeholder="Enter new password"
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
+                            required
+                            style={{marginBottom: 10}}
+                        />
+                        <Button type="primary" htmlType="submit" block loading={loading}>
+                            Reset Password
+                        </Button>
+                    </form>
+                </Card>
+            </div>
         </div>
     );
 };
