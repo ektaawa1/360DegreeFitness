@@ -1,184 +1,102 @@
 import React, { useState } from "react";
-import {
-  Box,
-  Typography,
-  TextField,
-  CssBaseline,
-  Button,
-  Card,
-  CardContent,
-  Grid,
-  Link,
-} from "@material-ui/core";
-import { useNavigate } from "react-router-dom";
+import { Input, Button, Card, Typography, Row, Col } from "antd";
+import { Link, useNavigate } from "react-router-dom";
 import Axios from "axios";
-import {BASE_URL} from "../../config/Config";
+import { BASE_URL } from "../../config/Config";
 import styles from "./Authentication.module.css";
 
 const Register = () => {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    username: "",
+    password: "",
+  });
+  const [errors, setErrors] = useState({});
 
-  const [username, setUsername] = useState("");
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [usernameError, setUsernameError] = useState("");
-  const [password, setPassword] = useState("");
-  const [passwordError, setPasswordError] = useState("");
+  const onChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
 
-  const onChangeUsername = (e) => {
-    const newUsername = e.target.value;
-    setUsername(newUsername);
-
-    if (newUsername.length < 4 || newUsername.length > 15) {
-      setUsernameError("Username must be between 4 and 15 characters.");
-    } else {
-      setUsernameError("");
+  const validate = () => {
+    let errors = {};
+    if (formData.username.length < 4 || formData.username.length > 15) {
+      errors.username = "Username must be between 4 and 15 characters.";
     }
-  };
-
-  const onChangePassword = (e) => {
-    const newPassword = e.target.value;
-    setPassword(newPassword);
-
-    if (newPassword.length < 6 || newPassword.length > 20) {
-      setPasswordError("Password must be between 6 and 20 characters.");
-    } else {
-      setPasswordError("");
+    if (formData.password.length < 6 || formData.password.length > 20) {
+      errors.password = "Password must be between 6 and 20 characters.";
     }
-  };
-
-  const onChangeName = (e) => {
-    const name = e.target.value;
-    setName(name);
-  };
-
-  const onChangeEmail = (e) => {
-    const email = e.target.value;
-    setEmail(email);
+    return errors;
   };
 
   const onSubmit = async (e) => {
     e.preventDefault();
-    if (!usernameError && !passwordError) {
-      const newUser = { username, password, name,email };
-      const url = BASE_URL + "/api/auth/register";
-      const registerRes = await Axios.post(url, newUser);
+    const validationErrors = validate();
+    setErrors(validationErrors);
 
-      if (registerRes.data.status === "fail") {
-        if (!registerRes.data.type) {
-          setPasswordError(registerRes.data.message);
-          setUsernameError(registerRes.data.message);
-        } else if (registerRes.data.type === "username") {
-          setUsernameError(registerRes.data.message);
-        } else if (registerRes.data.type === "password") {
-          setPasswordError(registerRes.data.message);
+    if (Object.keys(validationErrors).length === 0) {
+      setLoading(true);
+      try {
+        const response = await Axios.post(`${BASE_URL}/api/auth/register`, formData);
+        if (response.data.status === "fail") {
+          alert(response.data.message);
+        } else {
+          navigate("/login");
         }
-      } else {
-        navigate("/login");
+      } catch (error) {
+        alert("Registration failed. Please try again.");
       }
+      setLoading(false);
     }
   };
 
   return (
-    <div className={styles.background}>
-      <CssBaseline />
-      <Grid
-        container
-        spacing={0}
-        direction="column"
-        alignItems="flex-end"
-        justify="flex-start"
-        style={{ minHeight: "100vh", padding: 30 }}
-      >
-        <Box width="70vh" boxShadow={1}>
-          <Card className={styles.paper}>
-            <CardContent>
-              <Typography component="h1" variant="h5">
-                Register
-              </Typography>
-              <form className={styles.form} onSubmit={onSubmit}>
-                <TextField
-                    variant="outlined"
-                    margin="normal"
-                    required
-                    fullWidth
-                    id="name"
-                    label="Name"
-                    name="name"
-                    autoComplete="FirstName LastName"
-                    error={usernameError.length > 0 ? true : false}
-                    value={name}
-                    onChange={onChangeName}
-                />
-                <TextField
-                    variant="outlined"
-                    margin="normal"
-                    required
-                    fullWidth
-                    id="email"
-                    label="Email"
-                    name="email"
-                    autoComplete="test@test.com"
-                    error={email.length > 0 ? true : false}
-                    value={email}
-                    onChange={onChangeEmail}
-                />
-                <TextField
-                  variant="outlined"
-                  margin="normal"
-                  required
-                  fullWidth
-                  id="username"
-                  label="Username"
-                  name="username"
-                  autoComplete="username"
-                  error={usernameError.length > 0 ? true : false}
-                  helperText={usernameError}
-                  value={username}
-                  onChange={onChangeUsername}
-                />
-                <TextField
-                  variant="outlined"
-                  margin="normal"
-                  required
-                  fullWidth
-                  name="password"
-                  label="Password"
-                  type="password"
-                  id="password"
-                  autoComplete="current-password"
-                  error={passwordError.length > 0 ? true : false}
-                  helperText={passwordError}
-                  value={password}
-                  onChange={onChangePassword}
-                />
-                <Box display="flex" justifyContent="center">
-                  <Button
-                    type="submit"
-                    variant="contained"
-                    color="primary"
-                    className={styles.submit}
-                  >
+      <div className={styles.background}>
+        <Row justify="center" align="middle" style={{ minHeight: "100vh" }}>
+          <Col span={8} style={{float: "right"}}>
+            <Card style={{ boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.2)", borderRadius: "10px", padding: "20px" }}>
+              <Typography.Title level={2} style={{ textAlign: "center", color: "#1890ff" }}>
+                Create an Account
+              </Typography.Title>
+              <Typography.Text style={{ display: "block", textAlign: "center", marginBottom: "20px", color: "#555" }}>
+                Fill in the details to register.
+              </Typography.Text>
+              <form onSubmit={onSubmit}>
+                <div>
+                  <label style={{ fontWeight: "bold", color: "#333" }}>Name</label>
+                  <Input name="name" placeholder="Enter your full name" required onChange={onChange} style={{ borderRadius: "8px", padding: "10px" }} />
+                </div>
+                <div style={{ marginTop: "15px" }}>
+                  <label style={{ fontWeight: "bold", color: "#333" }}>Email</label>
+                  <Input name="email" type="email" placeholder="Enter your email" required onChange={onChange} style={{ borderRadius: "8px", padding: "10px" }} />
+                </div>
+                <div style={{ marginTop: "15px" }}>
+                  <label style={{ fontWeight: "bold", color: "#333" }}>Username</label>
+                  <Input name="username" placeholder="Choose a username" required onChange={onChange} style={{ borderRadius: "8px", padding: "10px" }} />
+                  {errors.username && <Typography.Text type="danger">{errors.username}</Typography.Text>}
+                </div>
+                <div style={{ marginTop: "15px" }}>
+                  <label style={{ fontWeight: "bold", color: "#333" }}>Password</label>
+                  <Input.Password name="password" placeholder="Create a password" required onChange={onChange} style={{ borderRadius: "8px", padding: "10px" }} />
+                  {errors.password && <Typography.Text type="danger">{errors.password}</Typography.Text>}
+                </div>
+                <div style={{ marginTop: "20px" }}>
+                  <Button type="primary" htmlType="submit" block loading={loading} style={{ borderRadius: "8px", fontSize: "16px", padding: "10px", paddingTop: 4 }}>
                     Register
                   </Button>
-                </Box>
+                </div>
               </form>
-              <Grid container justify="center">
-                <Grid item>
-                  <Link href="/login" variant="body2" style={{paddingRight: 20}}>
-                    Sign In
-                  </Link>
-                  |
-                  <Link href="/login" variant="body2" style={{paddingLeft: 20}}>
-                    Forgot Password
-                  </Link>
-                </Grid>
-              </Grid>
-            </CardContent>
-          </Card>
-        </Box>
-      </Grid>
-    </div>
+              <Row justify="center" style={{ marginTop: 16 }}>
+                <Link to="/login" style={{ color: "#1890ff", fontWeight: "bold", marginRight: 20 }}>Sign In</Link>
+                |
+                <Link to="/forgot-password" style={{ color: "#1890ff", fontWeight: "bold", marginLeft: 20 }}>Forgot Password?</Link>
+              </Row>
+            </Card>
+          </Col>
+        </Row>
+      </div>
   );
 };
 

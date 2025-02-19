@@ -1,130 +1,76 @@
 import React, { useState, useContext } from "react";
-import {
-  Box,
-  Typography,
-  TextField,
-  CssBaseline,
-  Button,
-  Card,
-  CardContent,
-  Grid,
-  Link,
-} from "@material-ui/core";
-import { useNavigate } from "react-router-dom";
+import { Input, Button, Card, Typography, Row, Col } from "antd";
+import { Link, useNavigate } from "react-router-dom";
 import UserContext from "../../context/UserContext";
 import Axios from "axios";
-import {BASE_URL} from "../../config/Config";
+import { BASE_URL } from "../../config/Config";
 import styles from "./Authentication.module.css";
 
 const Login = () => {
   const navigate = useNavigate();
   const { setUserData } = useContext(UserContext);
-
-  const [username, setUsername] = useState("");
-  const [usernameError, setUsernameError] = useState("");
-  const [password, setPassword] = useState("");
-  const [passwordError, setPasswordError] = useState("");
-
-  const onChangeUsername = (e) => {
-    const newUsername = e.target.value;
-    setUsername(newUsername);
-  };
-
-  const onChangePassword = (e) => {
-    const newPassword = e.target.value;
-    setPassword(newPassword);
-  };
+  const [loading, setLoading] = useState(false);
 
   const onSubmit = async (e) => {
     e.preventDefault();
-    const newUser = { username, password };
-    const url = BASE_URL + "/api/auth/login";
-    const loginRes = await Axios.post(url, newUser);
-
-    if (loginRes.data.status === "fail") {
-      setUsernameError(loginRes.data.message);
-      setPasswordError(loginRes.data.message);
-    } else {
-      setUserData(loginRes.data);
-      localStorage.setItem("auth-token", loginRes.data.token);
-      navigate("/");
+    const values = {
+      username: e.target.username.value,
+      password: e.target.password.value,
+    };
+    setLoading(true);
+    const url = `${BASE_URL}/api/auth/login`;
+    try {
+      const loginRes = await Axios.post(url, values);
+      if (loginRes.data.status === "fail") {
+        alert(loginRes.data.message);
+      } else {
+        setUserData(loginRes.data);
+        localStorage.setItem("auth-token", loginRes.data.token);
+        navigate("/");
+      }
+    } catch (error) {
+      alert("Login failed. Please try again.");
     }
+    setLoading(false);
   };
 
   return (
-    <div className={styles.background}>
-      <CssBaseline />
-      <Grid
-        container
-        spacing={0}
-        direction="column"
-        alignItems="flex-end"
-        justify="flex-start"
-        style={{ minHeight: "100vh", padding: 30 }}
-      >
-        <Box width="70vh" boxShadow={1}>
-          <Card className={styles.paper}>
-            <CardContent>
-              <Typography component="h1" variant="h5">
-                Login
-              </Typography>
-              <form className={styles.form} onSubmit={onSubmit}>
-                <TextField
-                  variant="outlined"
-                  margin="normal"
-                  required
-                  fullWidth
-                  id="username"
-                  label="Username"
-                  name="username"
-                  autoComplete="username"
-                  error={usernameError.length > 0 ? true : false}
-                  helperText={usernameError}
-                  value={username}
-                  onChange={onChangeUsername}
-                />
-                <TextField
-                  variant="outlined"
-                  margin="normal"
-                  required
-                  fullWidth
-                  name="password"
-                  label="Password"
-                  type="password"
-                  id="password"
-                  autoComplete="current-password"
-                  error={passwordError.length > 0 ? true : false}
-                  helperText={passwordError}
-                  value={password}
-                  onChange={onChangePassword}
-                />
-                <Box display="flex" justifyContent="center">
-                  <Button
-                    type="submit"
-                    variant="contained"
-                    color="primary"
-                    className={styles.submit}
-                  >
+      <div className={styles.background}>
+        <Row justify="center" align="middle" style={{ minHeight: "100vh" }}>
+          <Col span={8} style={{float: "right"}}>
+            <Card style={{ boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.2)", borderRadius: "10px", padding: "20px" }}>
+              <Typography.Title level={2} style={{ textAlign: "center", color: "#1890ff" }}>
+                Welcome Back!
+              </Typography.Title>
+              <Typography.Text style={{ display: "block", textAlign: "center", marginBottom: "20px", color: "#555" }}>
+                Please enter your credentials to log in.
+              </Typography.Text>
+              <form onSubmit={onSubmit}>
+                <div>
+                  <label style={{ fontWeight: "bold", color: "#333" }}>Username</label>
+                  <Input name="username" placeholder="Enter your username" required style={{ borderRadius: "8px", padding: "10px" }} />
+                </div>
+
+                <div style={{ marginTop: "15px" }}>
+                  <label style={{ fontWeight: "bold", color: "#333" }}>Password</label>
+                  <Input.Password name="password" placeholder="Enter your password" required style={{ borderRadius: "8px", padding: "10px" }} />
+                </div>
+
+                <div style={{ marginTop: "20px" }}>
+                  <Button type="primary" htmlType="submit" block loading={loading} style={{ borderRadius: "8px", fontSize: "16px", padding: "10px", paddingTop: 4}}>
                     Login
                   </Button>
-                </Box>
+                </div>
               </form>
-              <Grid container justify="center">
-                <Grid item>
-                  <Link href="/register" variant="body2" style={{paddingRight: 20}}>
-                    Sign Up
-                  </Link>
-                  |
-                  <Link href="/login" variant="body2" style={{paddingLeft: 20}}>
-                    Forgot Password
-                  </Link>
-                </Grid>
-              </Grid>
-            </CardContent>
-          </Card>
-        </Box>
-      </Grid>
-    </div>
+              <Row justify="center" style={{ marginTop: 16, marginRight: "auto", marginLeft: "auto" }}>
+                <Link to="/register" style={{ color: "#1890ff", fontWeight: "bold", marginRight: 20 }}>Sign Up</Link>
+                |
+                <Link to="/forgot-password" style={{ color: "#1890ff", fontWeight: "bold", marginLeft: 20 }}>Forgot Password?</Link>
+              </Row>
+            </Card>
+          </Col>
+        </Row>
+      </div>
   );
 };
 

@@ -19,7 +19,6 @@
 
 .background {
   background-color: #4568dc;
-  animation: gradient 10s ease infinite;
   height: 100%;
   width: 100%;
   background-image: url("./unsplash.jpg");
