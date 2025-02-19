@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import Axios from "axios";
-import { Login, Register, PageNotFound, MainPage } from "./components";
+import { Login, Register, PageNotFound, MainPage, ForgotPassword, ResetPassword } from "./components";
 import UserContext from "./context/UserContext";
 import { BASE_URL } from './config/Config';
 
@@ -63,6 +63,8 @@ function App() {
                     )}
                     <Route path="/login" element={<Login/>}/>
                     <Route path="/register" element={<Register/>}/>
+                    <Route path="/forgot-password" element={<ForgotPassword />} />
+                    <Route path="/reset-password/:token" element={<ResetPassword />} />
                     <Route path="/*" element={<PageNotFound/>}/>
                 </Routes>
             </UserContext.Provider>

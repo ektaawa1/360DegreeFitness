@@ -1,5 +1,7 @@
 export { default as Login } from "./Authentication/Login";
 export { default as Register } from "./Authentication/Register";
+export { default as ForgotPassword } from "./Authentication/ForgotPassword";
+export { default as ResetPassword } from "./Authentication/ResetPassword";
 export { default as MainPage } from "./Template/MainPage";
 export { default as ProfileCreation } from "./ProfileCreation/ProfileCreation";
 
