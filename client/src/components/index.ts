@@ -8,3 +8,5 @@ export { default as ProfileCreation } from "./ProfileCreation/ProfileCreation";
 export { default as Search } from "./Search/Search";
 
 export { default as PageNotFound } from "./PageNotFound/PageNotFound";
+
+export { default as Chat } from './Chatbot/Chat';

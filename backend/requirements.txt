@@ -21,3 +21,7 @@ black==23.11.0
 flake8==6.1.0
 mypy==1.7.0
 google-auth
+google-generativeai
+rapidfuzz
+reportlab==4.0.4
+pytz==2024.1

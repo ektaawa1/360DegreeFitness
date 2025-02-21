@@ -6,6 +6,7 @@
 - Python 3.12.7 (recommended) or Python 3.12.x
 - Conda (recommended) or pip
 - Node.js and npm
+- MongoDB Atlas account and connection string
 
 ### • Clone Repository
 git clone https://github.com/tashigarg/360DegreeFitness.git
@@ -16,6 +17,10 @@ cd 360DegreeFitness
 cd client
 
 npm install -f
+
+npm install jspdf --legacy-peer-deps
+
+npm install @types/jspdf --legacy-peer-deps
 
 ### • Setup Server
 cd ../server
@@ -29,6 +34,19 @@ cd ../backend
 conda create -n 360fitness python=3.12.7
 
 conda activate 360fitness
+
+### • Setup Environment
+Create a `.env` file in the backend directory
+
+Add the following variables:
+
+MONGO_URI=your_mongodb_connection_string_here
+
+ACCESS_TOKEN_EXPIRE_MINUTES=your_access_token_expire_minutes_here
+
+SECRET_KEY=your_secret_key_here
+
+GEMINI_API_KEY=your_gemini_api_key_here
 
 #### 2. Install dependencies
 #### >> Install requirements from backend directory
@@ -86,5 +104,23 @@ cd client
 npm start
 
 
-### API Documentation
+### • API Documentation
 Visit http://localhost:8000/docs for interactive API documentation
+
+### • Features
+
+- AI-powered fitness coaching using Google's Gemini AI
+
+- Personalized workout plans
+
+- Diet recommendations
+
+- Chat history export (JSON/PDF)
+
+- Progress tracking
+
+- User authentication
+
+- Responsive chat interface
+
+- More to come...

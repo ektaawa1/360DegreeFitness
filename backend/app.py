@@ -1,9 +1,19 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from .db.connection import Database
 from .routers import userFitnessProfileRouter, fitnessPlanRouter, authRouter, chatRouter
 
 app = FastAPI()
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],  # Your React app URL
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
+)
 
 @app.on_event("startup")
 async def startup_db_client():
@@ -14,7 +24,7 @@ async def shutdown_db_client():
     await Database.close_db()
 
 # Include routers
-app.include_router(authRouter.auth_router, prefix="/auth", tags=["Authentication"])
+app.include_router(authRouter.auth_router, prefix="/api/auth", tags=["Authentication"])
 app.include_router(
     userFitnessProfileRouter.profile_router,
     tags=["Fitness Profile"]
