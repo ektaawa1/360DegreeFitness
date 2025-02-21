@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse, JSONResponse
+import orjson
 from pydantic import BaseModel
 from typing import List, Optional, Literal
 import google.generativeai as genai
@@ -411,6 +412,7 @@ async def chat_with_ai(chat_message: ChatMessage):
 async def get_chat_history(
     conversation_id: str,
     format: Literal["json", "pdf"] = "json",
+    pretty: bool = True,
     background_tasks: BackgroundTasks = BackgroundTasks()
 ):
     """Retrieve chat history for a given conversation ID in specified format."""
@@ -425,7 +427,7 @@ async def get_chat_history(
         )
 
     if format == "json":
-        return {
+        json_data = {
             "conversation_id": conversation_id,
             "total_messages": len(history),
             "messages": [
@@ -436,100 +438,9 @@ async def get_chat_history(
                 } for chat in history
             ]
         }
-    
-    elif format == "pdf":
-        # Create a PDF buffer
-        buffer = BytesIO()
-        
-        # Create the PDF document
-        doc = SimpleDocTemplate(
-            buffer,
-            pagesize=letter,
-            title=f"Chat History - {conversation_id}"
-        )
-        
-        # Define styles
-        styles = getSampleStyleSheet()
-        title_style = ParagraphStyle(
-            'CustomTitle',
-            parent=styles['Heading1'],
-            fontSize=16,
-            spaceAfter=30
-        )
-        
-        # Create the PDF content
-        content = []
-        
-        # Add title
-        content.append(Paragraph(f"Chat History - Conversation ID: {conversation_id}", title_style))
-        content.append(Spacer(1, 12))
-        
-        # Add chat messages with UTC time
-        for chat in history:
-            timestamp = chat["timestamp"].strftime("%Y-%m-%d %H:%M:%S UTC")
-            content.append(Paragraph(f"Time: {timestamp}", styles["Heading3"]))
-            content.append(Paragraph(f"User: {chat['message']}", styles["Normal"]))
-            content.append(Paragraph(f"AI: {chat['response']}", styles["Normal"]))
-            content.append(Spacer(1, 12))
-        
-        # Build the PDF
-        doc.build(content)
-        
-        # Get the value from the buffer
-        pdf = buffer.getvalue()
-        buffer.close()
-        
-        # Create a temporary file to serve
-        temp_pdf_path = f"temp_chat_history_{conversation_id}.pdf"
-        with open(temp_pdf_path, "wb") as f:
-            f.write(pdf)
-        
-        # Add the cleanup task to background tasks
-        background_tasks.add_task(os.unlink, temp_pdf_path)
-        
-        # Return the PDF file
-        return FileResponse(
-            temp_pdf_path,
-            media_type="application/pdf",
-            filename=f"chat_history_{conversation_id}.pdf",
-            background=background_tasks
-        )
-
-    else:
-        raise HTTPException(
-            status_code=400,
-            detail="Unsupported format. Available formats: json, pdf"
-        ) 
-
-@chat_router.get("/chat/history/{conversation_id}")
-async def get_chat_history(conversation_id: str, format: str = "json", pretty: bool = True):
-    if format == "json":
-        history = await conversation_history_collection.find(
-            {"conversation_id": conversation_id}
-        ).sort("timestamp", 1).to_list(length=None)
-        
-        if not history:
-            raise HTTPException(
-                status_code=404, 
-                detail="Conversation not found. Please ensure you're using a valid conversation ID."
-            )
-        
-        response_data = {
-            "conversation_id": conversation_id,
-            "messages": [
-                {
-                    "message": chat["message"],
-                    "response": chat["response"],
-                    "timestamp": chat["timestamp"].strftime("%Y-%m-%d %H:%M:%S UTC")
-                } for chat in history
-            ]
-        }
-        
-        # Return pretty-printed JSON if pretty=True
         return JSONResponse(
-            content=response_data,
-            headers={"Content-Type": "application/json"},
-            indent=2 if pretty else None
+            content=orjson.loads(orjson.dumps(json_data, option=orjson.OPT_INDENT_2) if pretty else orjson.dumps(json_data)),
+            media_type="application/json"
         )
     
     elif format == "pdf":
@@ -594,4 +505,4 @@ async def get_chat_history(conversation_id: str, format: str = "json", pretty: b
         raise HTTPException(
             status_code=400,
             detail="Unsupported format. Available formats: json, pdf"
-        ) 
+        )

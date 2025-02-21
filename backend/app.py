@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from .db.connection import Database
-from .routers import userFitnessProfileRouter, fitnessPlanRouter, authRouter, chatRouter
+from .routers import userFitnessProfileRouter, fitnessPlanRouter, authRouter, chatRouter, mealLoggerRouter
 
 app = FastAPI()
 
@@ -33,6 +33,11 @@ app.include_router(fitnessPlanRouter.plan_router)
 app.include_router(
     chatRouter.chat_router,
     tags=["Chat"]
+)
+app.include_router(
+    mealLoggerRouter.meal_log_router,
+    prefix="/api",
+    tags=["Meal Logger"]
 )
 
 # Data model for analysis input

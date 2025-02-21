@@ -27,6 +27,9 @@ def get_fitness_profile_collection():
 def get_fitness_plan_collection():
     return Database.get_db()['fitness_plans']
 
+def get_meals_logging_collection():
+    return Database.get_db()['meal_logger']
+
 def connect_to_db():
     uri = os.getenv("MONGO_URI")
     connect(db='360DegreeFitness', host=uri)  # Ensure this matches your production database 
