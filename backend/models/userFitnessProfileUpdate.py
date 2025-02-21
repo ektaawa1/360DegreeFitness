@@ -1,6 +1,8 @@
 from typing_extensions import Literal
 from pydantic import BaseModel, condecimal
 from typing import List, Dict, Optional
+import json
+from decimal import Decimal
 
 class UserDetailsUpdate(BaseModel):
     age: Optional[int]
@@ -88,3 +90,9 @@ class UserFitnessProfileUpdate(BaseModel):
         'Endurance',
         'Get Healthier'
     ]]
+
+class DecimalEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, Decimal):
+            return float(obj)
+        return super(DecimalEncoder, self).default(obj)

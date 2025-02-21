@@ -6,6 +6,7 @@
     "start": "node --env-file=config/.env server"
   },
   "dependencies": {
+    "@types/jspdf": "^2.0.0",
     "axios": "^1.7.2",
     "bcryptjs": "^2.4.3",
     "cookie-parser": "^1.4.6",
@@ -14,6 +15,7 @@
     "express": "^4.19.2",
     "express-session": "^1.18.0",
     "jsonwebtoken": "^9.0.2",
+    "jspdf": "^3.0.0",
     "mongoose": "^8.4.4",
     "nodemailer": "^6.10.0",
     "passport": "^0.7.0",

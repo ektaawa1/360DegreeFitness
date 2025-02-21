@@ -1,9 +1,9 @@
-import React, {useContext, useState} from "react";
-import {useNavigate} from "react-router-dom";
+import React, { useContext, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import UserContext from "../../context/UserContext";
 import 'antd/dist/antd.css';
 import './index.css';
-import {Layout, Menu, Breadcrumb, Popconfirm, PageHeader, Dropdown} from 'antd';
+import { Layout, Menu, Breadcrumb, Popconfirm, PageHeader, Dropdown } from 'antd';
 import {
     DashboardOutlined,
     ExitToApp, HomeOutlined, KeyboardBackspaceOutlined,
@@ -14,12 +14,13 @@ import {
     ArrowDropDownOutlined
 } from "@material-ui/icons";
 import Copyright from "./Copyright";
-import {Search} from "../index";
+import { Search } from "../index";
 import Dashboard from "../Dashboard/Dashboard";
 import LandingPage from "../LandingPage/LandingPage";
-import {ProfileCreation} from "../index";
+import { ProfileCreation } from "../index";
+import Chat from "../Chatbot/Chat";
 
-const {Header, Content, Footer, Sider} = Layout;
+const { Header, Content, Footer, Sider } = Layout;
 
 type PAGES = 'search' | 'dashboard' | 'landing';
 const PAGE_TEXTS = {
@@ -30,7 +31,7 @@ const PAGE_TEXTS = {
 }
 
 const MainPage = () => {
-    const {userData, setUserData} = useContext(UserContext);
+    const { userData, setUserData } = useContext(UserContext);
     const navigate = useNavigate();
     const [collapsed, setCollapse] = useState(true);
     const [selectedPage, setSelectedPage] = useState<PAGES>('landing');
@@ -65,7 +66,7 @@ const MainPage = () => {
         return <PageHeader
             title={`${PAGE_TEXTS[selectedPage]}`}
             onBack={() => setSelectedWatchlist(null)}
-            backIcon={<KeyboardBackspaceOutlined fontSize={'28px'}/>}
+            backIcon={<KeyboardBackspaceOutlined fontSize={'28px'} />}
         />
 
     }
@@ -73,17 +74,17 @@ const MainPage = () => {
     const renderContent = () => {
         return (
             <div className={'content'}>
-                <PageHeader title={getPageTitle()}/>
-                <div style={{height: 'calc(100vh - 255px)', background: 'white'}}>
+                <PageHeader title={getPageTitle()} />
+                <div style={{ height: 'calc(100vh - 255px)', background: 'white' }}>
                     {selectedPage === "landing" && (
-                        <LandingPage/>
+                        <LandingPage />
                     )}
                     {selectedPage === "dashboard" && (
-                        <Dashboard/>
+                        <Dashboard />
                     )}
 
                     {selectedPage === "search" && (
-                        <Search/>
+                        <Search />
                     )}
                 </div>
             </div>)
@@ -98,68 +99,68 @@ const MainPage = () => {
 
     return (
         <div className="App">
-            <Layout style={{height: 'calc(100vh)'}}>
+            <Layout style={{ height: 'calc(100vh)' }}>
                 <Sider collapsible collapsed={collapsed} onCollapse={onCollapse}>
                     <Menu theme="dark" defaultSelectedKeys={['1']} mode="inline">
-                        <Menu.Item key="menu" onClick={() => setCollapse(!collapsed)} style={{height: '50px'}}>
-                            {!collapsed && <MenuOpenOutlined fontSize={'28px'}/>}
-                            {collapsed && <MenuIcon fontSize={'28px'}/>}
+                        <Menu.Item key="menu" onClick={() => setCollapse(!collapsed)} style={{ height: '50px' }}>
+                            {!collapsed && <MenuOpenOutlined fontSize={'28px'} />}
+                            {collapsed && <MenuIcon fontSize={'28px'} />}
                         </Menu.Item>
                         <Menu.Item key="landing" onClick={() => setPage('landing')}>
-                            <HomeOutlined fontSize={'28px'}/>
+                            <HomeOutlined fontSize={'28px'} />
                             <span className={'item'}>{PAGE_TEXTS["landing"]}</span>
                         </Menu.Item>
                         <Menu.Item key="dashboard" onClick={() => setPage('dashboard')}>
-                            <DashboardOutlined fontSize={'28px'}/>
+                            <DashboardOutlined fontSize={'28px'} />
                             <span className={'item'}>{PAGE_TEXTS["dashboard"]}</span>
                         </Menu.Item>
 
                         <Menu.Item key="search" onClick={() => setPage('search')}>
-                            <SearchOutlined fontSize={'28px'}/>
+                            <SearchOutlined fontSize={'28px'} />
                             <span className={'item'}>{PAGE_TEXTS["search"]}</span>
                         </Menu.Item>
 
 
                         <Menu.Item key="logout">
                             <Popconfirm placement="right" title={'Are you sure you want to logout?'} onConfirm={logout}
-                                        okText="Logout"
-                                        cancelText="Cancel">
-                                <ExitToApp fontSize={'28px'}/>
+                                okText="Logout"
+                                cancelText="Cancel">
+                                <ExitToApp fontSize={'28px'} />
                                 <span className={'item'}>Logout</span>
                             </Popconfirm>
                         </Menu.Item>
                     </Menu>
                 </Sider>
                 <Layout className="site-layout">
-                    <Header className="site-layout-background header-text" style={{padding: 0}}>
-                        <div style={{display: 'flex'}}>
-                            <div style={{display: 'inline-flex', height: '60px', alignItems: 'center'}}>
-                                <div className="logo"/>
+                    <Header className="site-layout-background header-text" style={{ padding: 0 }}>
+                        <div style={{ display: 'flex' }}>
+                            <div style={{ display: 'inline-flex', height: '60px', alignItems: 'center' }}>
+                                <div className="logo" />
                                 <span className={'logo-text'}>360° Fitness</span>
                             </div>
-                            <div style={{marginLeft: 'auto', marginRight: '20px'}}>
+                            <div style={{ marginLeft: 'auto', marginRight: '20px' }}>
                                 <Dropdown
                                     overlay={
                                         <Menu>
                                             <Menu.Item key="updateProfile" onClick={() => {
                                                 setEditProfile(true);
                                             }}>
-                                                <PersonOutlineOutlined style={{ verticalAlign: 'middle'}}/> Update Profile
+                                                <PersonOutlineOutlined style={{ verticalAlign: 'middle' }} /> Update Profile
                                             </Menu.Item>
                                         </Menu>
                                     }
                                     trigger={['click']}
                                 >
-                                    <div style={{cursor: 'pointer'}}>
+                                    <div style={{ cursor: 'pointer' }}>
                                         <span>{`Hello, ${userData.user.name}`}</span>
-                                        <ArrowDropDownOutlined style={{ verticalAlign: 'middle'}}/>
+                                        <ArrowDropDownOutlined style={{ verticalAlign: 'middle' }} />
                                     </div>
                                 </Dropdown>
                             </div>
                         </div>
                     </Header>
-                    <Content style={{margin: '0 16px'}}>
-                        <Breadcrumb style={{margin: '16px 0'}}>
+                    <Content style={{ margin: '0 16px' }}>
+                        <Breadcrumb style={{ margin: '16px 0' }}>
                             <Breadcrumb.Item>Home</Breadcrumb.Item>
                             <Breadcrumb.Item onClick={() => {
 
@@ -169,10 +170,11 @@ const MainPage = () => {
                         {renderContent()}
                     </Content>
                     <Footer className={'footer'}>
-                        <Copyright/>
+                        <Copyright />
                     </Footer>
                 </Layout>
-                {(!userData?.profile_created || isEditProfile) && <ProfileCreation userData={userData} editMode={true} onClose={() => setEditProfile(false)}/>}
+                {(!userData?.profile_created || isEditProfile) && <ProfileCreation userData={userData} editMode={true} onClose={() => setEditProfile(false)} />}
+                {userData?.profile_created && <Chat />}
             </Layout>
 
         </div>

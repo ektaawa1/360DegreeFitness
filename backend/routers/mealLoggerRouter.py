@@ -5,8 +5,8 @@ from fastapi.responses import JSONResponse
 from pydantic import condecimal
 import requests  # For making external API calls
 from pymongo.errors import PyMongoError
-
-from backend.models import userMealLogger
+from ..models.userMealLogger import UserMealLogger
+from ..db.database import meals_logging_collection, add_meal, get_meal, update_meal, delete_meal
 
 meal_log_router = APIRouter()
 
@@ -57,7 +57,7 @@ async def search_food_item_by_name(food_name: str):
         return JSONResponse(status_code=500, content={"message": f"Error searching food: {str(e)}"})
 
 @meal_log_router.post("/v1/360_degree_fitness/add_meal")
-async def add_meal_log(user_meal: userMealLogger):
+async def add_meal_log(user_meal: UserMealLogger):
     try:
         user_food_data = {
             "food_id": user_meal.food_id,
