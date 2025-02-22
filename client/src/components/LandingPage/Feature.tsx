@@ -10,7 +10,7 @@ import styles from './LandingPage.module.css';
 import { Row, Col, Card } from 'antd';
 const { Meta } = Card;
 
-export const Feature = () => {
+export const Feature = ({onClick}) => {
   return (
     <div id="main-feature" className={styles.featureBlock}>
       <div className="container-fluid">
@@ -26,6 +26,11 @@ export const Feature = () => {
               <Meta title="Fitness at fingertips" />
             </Card>
           </Col>
+          <Col xs={{ span: 24 }} sm={{ span: 12 }} md={{ span: 8 }} onClick={() => onClick('search')}>
+            <Card hoverable cover={<img alt="Test" src={image66} />}>
+              <Meta title="Foods and Nutrition" />
+            </Card>
+          </Col>
           <Col xs={{ span: 24 }} sm={{ span: 12 }} md={{ span: 8 }}>
             <Card hoverable cover={<img alt="Test" src={image7} />}>
               <Meta title="Workout plan" />
@@ -39,11 +44,6 @@ export const Feature = () => {
           <Col xs={{ span: 24 }} sm={{ span: 12 }} md={{ span: 8 }}>
             <Card hoverable cover={<img alt="Test" src={image5} />}>
               <Meta title="Unlimited Features" />
-            </Card>
-          </Col>
-          <Col xs={{ span: 24 }} sm={{ span: 12 }} md={{ span: 8 }}>
-            <Card hoverable cover={<img alt="Test" src={image66} />}>
-              <Meta title="Meals and Receipe" />
             </Card>
           </Col>
           <Col xs={{ span: 24 }} sm={{ span: 12 }} md={{ span: 8 }}>

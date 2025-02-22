@@ -4,12 +4,12 @@ import {FAQ} from './FAQ';
 import {Feature} from './Feature';
 import styles from './LandingPage.module.css';
 
-const LandingPage = () => {
+const LandingPage = ({onClick}) => {
     return (
         <div className={styles.landing}>
             <div className="main">
                 <TopCards/>
-                <Feature/>
+                <Feature onClick={onClick}/>
                 <FAQ/>
             </div>
         </div>

@@ -26,7 +26,7 @@ type PAGES = 'search' | 'dashboard' | 'landing';
 const PAGE_TEXTS = {
 
     'dashboard': 'Dashboard',
-    'search': 'Explore',
+    'search': 'Search Food',
     'landing': 'Home'
 }
 
@@ -35,7 +35,6 @@ const MainPage = () => {
     const navigate = useNavigate();
     const [collapsed, setCollapse] = useState(true);
     const [selectedPage, setSelectedPage] = useState<PAGES>('landing');
-    const [selectedWatchlist, setSelectedWatchlist] = useState(null);
     const [isEditProfile, setEditProfile] = useState(false);
 
     const onCollapse = collapsed => {
@@ -59,14 +58,8 @@ const MainPage = () => {
     }
 
     const getPageTitle = () => {
-        if (!selectedWatchlist) {
-            return PAGE_TEXTS[selectedPage];
-        }
-
         return <PageHeader
             title={`${PAGE_TEXTS[selectedPage]}`}
-            onBack={() => setSelectedWatchlist(null)}
-            backIcon={<KeyboardBackspaceOutlined fontSize={'28px'} />}
         />
 
     }
@@ -77,7 +70,7 @@ const MainPage = () => {
                 <PageHeader title={getPageTitle()} />
                 <div style={{ height: 'calc(100vh - 255px)', background: 'white' }}>
                     {selectedPage === "landing" && (
-                        <LandingPage />
+                        <LandingPage onClick={(page) => setPage(page)}/>
                     )}
                     {selectedPage === "dashboard" && (
                         <Dashboard />
@@ -92,7 +85,6 @@ const MainPage = () => {
 
 
     const setPage = (page) => {
-        setSelectedWatchlist(null);
         setSelectedPage(page);
     }
 

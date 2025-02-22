@@ -1,47 +1,63 @@
-import React, {useState} from "react";
+import React, {useState, useEffect, useContext} from "react";
+import styles from "./Search.module.css";
 import Axios from "axios";
-import {BASE_URL} from "../../config/Config";
+import {BASE_URL, getHeaders} from "../../config/Config";
+import {Button, Dropdown, Icon, Input, Menu, notification} from 'antd';
+import UserContext from "../../context/UserContext";
+
+
 const Search = () => {
+    const [currentFood, setCurrentFood] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const {userData} = useContext(UserContext);
+    const [openAddFoodModal, setOpenAddFoodModal] = useState(false);
+    const [addForm, setForm] = useState();
 
 
-    const [numbers, setNumbers] = useState("");
-  interface AnalysisResult {
-    average: number;
-    count: number;
-  }
+    const onSearchChange = (value) => {
+        if (value) {
+            setCurrentFood(value);
+        } else {
+            setCurrentFood(null);
+        }
+    };
 
-  const [result, setResult] = useState<AnalysisResult | null>(null);
-
-  const analyzeData = async () => {
-    try {
-      const response = await Axios.post(BASE_URL + "/api/analyze", {
-        numbers: numbers.split(",").map(Number),
-      });
-      setResult(response.data);
-    } catch (error) {
-      console.error("Error analyzing data:", error);
+    const onAddToDiary = () => {
+        // add to diary and navigate to meal log page
     }
-  };
 
-  return (
-    <div>
-      <h1>Data Analysis</h1>
-      <input
-        type="text"
-        placeholder="Enter numbers separated by commas"
-        value={numbers}
-        onChange={(e) => setNumbers(e.target.value)}
-      />
-      <button onClick={analyzeData}>Analyze</button>
-      {result && (
-        <div>
-          <h3>Results:</h3>
-          <p>Average: {result.average}</p>
-          <p>Count: {result.count}</p>
+    return (
+        <div className={styles.search_page}>
+            <div className={styles.inputBox}>
+                <div style={{marginLeft: currentFood ? 'auto' : 'unset'}}>
+                    <Input.Search
+                        style={{width: 450, height: 50,}}
+                        placeholder="Type food name and press Enter"
+                        allowClear
+                        defaultValue={currentFood}
+                        onSearch={onSearchChange}
+                    />
+                </div>
+            </div>
+            <div className={styles.contentBox}>
+                <div className={styles.stockCard}>
+                    {currentFood && !loading && (
+                        <StockCard
+                            currentStock={currentFood}
+                        />
+                    )}
+                </div>
+            </div>
+            {openAddFoodModal && (
+                <AddWatchList wrappedComponentRef={(form) => setForm(form)}
+                              showAddWL={openAddFoodModal}
+                              setShowAddWL={setOpenAddFoodModal}
+                              onAdd={onAddToDiary}
+                />
+            )
+            }
         </div>
-      )}
-    </div>
-  );
+    );
 };
 
 
