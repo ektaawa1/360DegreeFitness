@@ -21,6 +21,7 @@ function App() {
             let token = localStorage.getItem("auth-token");
             if (!token) {
                 setUserData(baseState);
+                setLoading(false);
                 return;
             }
 
