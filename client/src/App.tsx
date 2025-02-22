@@ -4,6 +4,7 @@ import Axios from "axios";
 import { Login, Register, PageNotFound, MainPage, ForgotPassword, ResetPassword } from "./components";
 import UserContext from "./context/UserContext";
 import { BASE_URL } from './config/Config';
+import {Spin} from "antd";
 
 function App() {
     const baseState = {
@@ -13,6 +14,7 @@ function App() {
         profile_completed: false
     };
     const [userData, setUserData] = useState(baseState);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const loginCheck = async () => {
@@ -47,12 +49,22 @@ function App() {
             } else {
                 setUserData(baseState);
             }
+            setLoading(false);
         };
 
         loginCheck();
     }, []);
 
-    return (
+    return loading ?  <Spin size="large"
+    style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '90vh',
+        margin: 0
+    }}
+
+    />: (
         <Router>
             <UserContext.Provider value={{userData, setUserData}}>
                 <Routes>
