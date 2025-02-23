@@ -1,19 +1,19 @@
 import os
+from datetime import date
 from typing import Optional
 
 import requests
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
-from pydantic import condecimal
 from pymongo.errors import PyMongoError
 
 from ..db.database import add_meal, get_meal, update_meal, delete_meal
-from ..models.userMealLogger import UserMealLogger
+from ..models.userMealLogger import UserMealLogger, UserMealDiary
 
 meal_log_router = APIRouter()
 
 
-# Getting the food details from the external api
+# Getting the food list from the external api
 def get_food_list_from_fatsecret_api(food_name: str):
     fatsecret_api_url = "https://platform.fatsecret.com/rest/foods/search/v1"
     my_oauth_token = os.getenv("EXTERNAL_API_FATSECRET_OAUTH_TOKEN")
@@ -61,56 +61,116 @@ async def search_food_item_by_name(food_name: str):
         return JSONResponse(status_code=500, content={"message": f"Error searching food: {str(e)}"})
 
 
-@meal_log_router.post("/v1/360_degree_fitness/add_meal")
-async def add_meal_log(user_meal: UserMealLogger):
+@meal_log_router.get("/v1/360_degree_fitness/getDetailsByFoodId")
+async def get_details_by_food_id(food_id: str):
+    # external api url
+    fatsecret_api_url = "https://platform.fatsecret.com/rest/food/v4"
+    my_oauth_token = os.getenv("EXTERNAL_API_FATSECRET_OAUTH_TOKEN")
+    query_params = {
+        "food_id": food_id,  # The food ID to search for
+        "format": "json",    # Response format as JSON
+        "oauth_token": my_oauth_token  # OAuth token for authorization
+    }
+
     try:
-        user_food_data = {
-            "food_id": user_meal.food_id,
-            "food_name": user_meal.food_name,
-            "food_description": user_meal.food_description,
-            "calories_per_serving": condecimal(ge=0)(
-                user_meal.food_description.split("Calories: ")[1].split("kcal")[0].strip()),
-            "fat_per_serving": condecimal(ge=0)(user_meal.food_description.split("Fat: ")[1].split("g")[0].strip()),
-            "carbs_per_serving": condecimal(ge=0)(user_meal.food_description.split("Carbs: ")[1].split("g")[0].strip()),
-            "protein_per_serving": condecimal(ge=0)(
-                user_meal.food_description.split("Protein: ")[1].split("g")[0].strip())
+        # GET request to fetch food details by food_id
+        external_response = requests.get(fatsecret_api_url, params=query_params)
+
+        # Raise an HTTP exception if the external api call fails
+        if external_response.status_code != 200:
+            raise HTTPException(status_code=404, detail="Food not found")
+
+        # Return the raw response from the external API
+        return JSONResponse(content=external_response.json())
+
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"message":"Internal Server Error"})
+
+
+@meal_log_router.get("/v1/360_degree_fitness/getMyMealDiary")
+async def get_meal_diary(user_id: str, meal_date: date):
+    try:
+        meal_diary = meal_diary_collection.find_one(
+            {"user_id": user_id, "date": meal_date}
+        )
+
+        # If no meal diary is found, return a 404 error
+        if not meal_diary:
+            return JSONResponse(status_code=404, content={"message": "No meal diary found for this user on the given date"}
+            )
+
+        # Return the meal diary along with the user_id
+        return {
+            "user_id": user_id,
+            "meal_diary": meal_diary
         }
 
-        # Calculate the nutrition for the logged quantity
-        total_calories = user_food_data["calories_per_serving"] * user_meal.quantity_consumed
-        total_fat = user_food_data["fat_per_serving"] * user_meal.quantity_consumed
-        total_carbs = user_food_data["carbs_per_serving"] * user_meal.quantity_consumed
-        total_protein = user_food_data["protein_per_serving"] * user_meal.quantity_consumed
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"message": f"Internal Server Error: {str(e)}"})
 
-        # Creating the user meal log for the database
-        user_meal_log = {
-            "user_id": user_meal.user_id,
-            "meal_type": user_meal.meal_type,
-            "food_id": user_meal.food_id,
-            "food_name": user_meal.food_name,
-            "quantity": user_meal.quantity_consumed,
-            "food_description": user_meal.food_description,
-            "total_calories": total_calories,
-            "total_fat": total_fat,
-            "total_carbs": total_carbs,
-            "total_protein": total_protein,
-            "date": user_meal.meal_log_date
+@meal_log_router.post("/v1/360_degree_fitness/add_meal_log")
+async def add_meal_log(user_meal_log: UserMealLogger):
+    user_id = user_meal_log.user_id
+    meal_log_date = user_meal_log.meal_log_date
+    meal_type = user_meal_log.meal_type
+
+    try:
+
+        # Step 1: Check if the meal diary already exists for the user and date
+        existing_meal_diary = meal_diary_collection.find_one(
+            {"user_id": user_id, "date": meal_log_date}
+        )
+
+        # If the meal diary doesn't exist, create a new one
+        if not existing_meal_diary:
+            meal_diary_data = {
+                "user_id": user_id,
+                "date": meal_log_date,
+                "breakfast": [],
+                "lunch": [],
+                "dinner": [],
+                "snacks": [],
+            }
+            meal_diary_collection.insert_one(meal_diary_data)
+
+        # Step 2: Calculate total nutrition based on quantity consumed
+        total_calories = user_meal_log.calories_per_serving * user_meal_log.quantity_consumed
+        total_fat = user_meal_log.fat_per_serving * user_meal_log.quantity_consumed
+        total_carbs = user_meal_log.carbs_per_serving * user_meal_log.quantity_consumed
+        total_protein = user_meal_log.protein_per_serving * user_meal_log.quantity_consumed
+
+        # Step 3: Update User Meal Logger with total values
+        user_meal_log.total_calories = total_calories
+        user_meal_log.total_fat = total_fat
+        user_meal_log.total_carbs = total_carbs
+        user_meal_log.total_protein = total_protein
+
+        # Step 4: Append the meal log to a particular meal type
+        update_result = meal_diary_collection.update_one(
+            {"user_id": user_id, "date": meal_log_date},
+            {"$push": {meal_type: user_meal_log.dict()}}
+        )
+
+        #Check if the update was successful
+        if update_result.modified_count == 0:
+            raise HTTPException(status_code=500, detail="Failed to update meal diary")
+
+        # Step 5: Return the updated meal diary with the new meal log
+        updated_meal_diary = meal_diary_collection.find_one(
+            {"user_id": user_id, "date": meal_log_date}
+        )
+
+        return {
+            "message": "Meal log added successfully",
+            "meal_diary": updated_meal_diary
         }
-
-        # Save the meal log to the Meal log database
-        # meals_logging_collection = get_meals_logging_collection()
-        await add_meal(user_meal.user_id, user_meal_log)
-        # result = await meals_logging_collection.insert_one(user_meal_log)
-        return JSONResponse(status_code=200, content={
-            "message": "Meal added successfully", "meal_entry": user_meal_log})
-        # return JSONResponse(status_code=200, content={
-        #     "message": "Meal added successfully", "meal_entry": user_meal_log, "meal_id": str(result.inserted_id)})
-
     except PyMongoError as e:
         return JSONResponse(status_code=500, content={"message": f"Database error: {str(e)}"})
-    except Exception as e:
-        return JSONResponse(status_code=500, content={"message": f"Error adding meal: {str(e)}"})
 
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"message": f"Internal Server Error: {str(e)}"})
+
+# Note: Need to discuss the below APIs
 
 #  Get User Meal Log History API (GET /v1/360_degree_fitness/get_meal_log)
 @meal_log_router.get("/v1/360_degree_fitness/get_meal_log")
