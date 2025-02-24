@@ -10,7 +10,6 @@ app.use(cookieParser(process.env.JWT_SECRET));
 app.use(cors());
 app.use(express.urlencoded({extended: true}));
 app.use(express.json());
-const { analyzeData } = require("./data/aiIntegration");
 
 
 // Connect to Mongoose DB
@@ -40,19 +39,11 @@ app.use("/api/dashboard", dashboardRouter);
 const profileRouter = require("./profile/routes/profileRoutes");
 app.use("/api/profile", profileRouter);
 
+const foodRouter = require("./food/routes/foodRoutes");
+app.use("/api/food", foodRouter);
 
-// Route to analyze data
-app.post("/api/analyze", async (req, res) => {
-    try {
-      const inputData = req.body; // Input data from the client
-      const analysisResult = await analyzeData(inputData); // Call Python API
-      res.json(analysisResult); // Return analyzed data to the client
-    } catch (error) {
-      console.error("Error in analysis route:", error.message);
-      res.status(500).json({ error: "Failed to analyze data" });
-    }
-  });
-  
+
+
 // Serve UI
 if (process.env.NODE_ENV === "production") {
     app.use(express.static("client/build/index.html"));

@@ -34,7 +34,7 @@ def get_food_list_from_fatsecret_api(food_name: str):
     return external_response.json()
 
 
-@meal_log_router.post("/v1/360_degree_fitness/search_food")
+@meal_log_router.get("/v1/360_degree_fitness/search_food/{food_name}")
 async def search_food_item_by_name(food_name: str):
     if not food_name or food_name.strip() == "":
         return JSONResponse(status_code=400, content={"message": "Food name cannot be empty."})

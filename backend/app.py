@@ -36,7 +36,6 @@ app.include_router(
 )
 app.include_router(
     mealLoggerRouter.meal_log_router,
-    prefix="/api",
     tags=["Meal Logger"]
 )
 
