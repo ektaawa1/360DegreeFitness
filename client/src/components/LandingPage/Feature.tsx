@@ -31,6 +31,11 @@ export const Feature = ({onClick}) => {
               <Meta title="Foods and Nutrition" />
             </Card>
           </Col>
+          <Col xs={{ span: 24 }} sm={{ span: 12 }} md={{ span: 8 }} onClick={() => onClick('diary')}>
+            <Card hoverable cover={<img alt="Test" src={image55} />}>
+              <Meta title="Food Diary" />
+            </Card>
+          </Col>
           <Col xs={{ span: 24 }} sm={{ span: 12 }} md={{ span: 8 }}>
             <Card hoverable cover={<img alt="Test" src={image7} />}>
               <Meta title="Workout plan" />
@@ -46,12 +51,6 @@ export const Feature = ({onClick}) => {
               <Meta title="Unlimited Features" />
             </Card>
           </Col>
-          <Col xs={{ span: 24 }} sm={{ span: 12 }} md={{ span: 8 }}>
-            <Card hoverable cover={<img alt="Test" src={image55} />}>
-              <Meta title="Easy to customise" />
-            </Card>
-          </Col>
-
         </Row>
       </div>
     </div>

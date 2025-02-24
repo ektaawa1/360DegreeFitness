@@ -4,7 +4,7 @@ export { default as ForgotPassword } from "./Authentication/ForgotPassword";
 export { default as ResetPassword } from "./Authentication/ResetPassword";
 export { default as MainPage } from "./Template/MainPage";
 export { default as ProfileCreation } from "./ProfileCreation/ProfileCreation";
-
+export { default as FoodDiary } from './FoodDiary/FoodDiary';
 export { default as Search } from "./Search/Search";
 
 export { default as PageNotFound } from "./PageNotFound/PageNotFound";
