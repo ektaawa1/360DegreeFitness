@@ -1,46 +1,56 @@
 import os
 from datetime import date
 from typing import Optional
-
 import requests
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
 from pymongo.errors import PyMongoError
 
-from ..db.database import add_meal, get_meal, update_meal, delete_meal
-from ..models.userMealLogger import UserMealLogger, UserMealDiary
+from backend.db.database import update_meal, delete_meal, get_meal
+from backend.models.userMealLogger import UserMealLogger
+from backend.core.oauth2 import FatSecretAuthorization
 
 meal_log_router = APIRouter()
 
 
-# Getting the food list from the external api
-def get_food_list_from_fatsecret_api(food_name: str):
-    fatsecret_api_url = "https://platform.fatsecret.com/rest/foods/search/v1"
-    my_oauth_token = os.getenv("EXTERNAL_API_FATSECRET_OAUTH_TOKEN")
+class FatSecretAPI:  # Utility class for making requests to FatSecret API.
+    BASE_URL = os.getenv("FATSECRET_BASE_URL")
+    HEADERS = {"Connection": "keep-alive"}
 
-    query_params = {
-        "search_expression": food_name,
-        "format": "json",
-        "page_number": 0,
-        "max_results": 10,
-        "oauth_token": my_oauth_token
-    }
+    @staticmethod
+    def make_request(endpoint, params):
+        access_token = FatSecretAuthorization.get_access_token()
 
-    external_response = requests.get(fatsecret_api_url, params=query_params)
+        headers = {
+            **FatSecretAPI.HEADERS,  # for unpacking dictionaries
+            "Authorization": f"Bearer {access_token}",
+        }
 
-    if external_response.status_code != 200:
-        raise HTTPException(status_code=500, detail="Failed to fetch food details info from FatSecret API")
+        auth_response = requests.get(f"{FatSecretAPI.BASE_URL}/{endpoint}", params=params, headers=headers)
 
-    return external_response.json()
+        if auth_response.status_code != 200:
+            raise HTTPException(status_code=500, detail="Failed to fetch data from FatSecret API")
+
+        return auth_response.json()
 
 
 @meal_log_router.get("/v1/360_degree_fitness/search_food/{food_name}")
 async def search_food_item_by_name(food_name: str):
     if not food_name or food_name.strip() == "":
         return JSONResponse(status_code=400, content={"message": "Food name cannot be empty."})
+
     try:
         # Retrieve food details from external API (FatSecret)
-        food_data = get_food_list_from_fatsecret_api(food_name)
+        food_data = FatSecretAPI.make_request(
+            endpoint="foods/search/v1",
+            params={
+                "search_expression": food_name,
+                "format": "json",
+                "page_number": 0,
+                "max_results": 10,
+                "oauth_token": FatSecretAuthorization.get_access_token()
+            }
+        )
 
         if not food_data.get("foods") or len(food_data["foods"]["food"]) == 0:
             return JSONResponse(status_code=400, content={"message": "Food not found in external database."})
@@ -63,28 +73,20 @@ async def search_food_item_by_name(food_name: str):
 
 @meal_log_router.get("/v1/360_degree_fitness/getDetailsByFoodId")
 async def get_details_by_food_id(food_id: str):
-    # external api url
-    fatsecret_api_url = "https://platform.fatsecret.com/rest/food/v4"
-    my_oauth_token = os.getenv("EXTERNAL_API_FATSECRET_OAUTH_TOKEN")
-    query_params = {
-        "food_id": food_id,  # The food ID to search for
-        "format": "json",    # Response format as JSON
-        "oauth_token": my_oauth_token  # OAuth token for authorization
-    }
+    if not food_id or food_id.strip() == "":
+        return JSONResponse(status_code=400, content={"message": "Food ID cannot be empty."})
 
     try:
-        # GET request to fetch food details by food_id
-        external_response = requests.get(fatsecret_api_url, params=query_params)
-
-        # Raise an HTTP exception if the external api call fails
-        if external_response.status_code != 200:
-            raise HTTPException(status_code=404, detail="Food not found")
-
-        # Return the raw response from the external API
-        return JSONResponse(content=external_response.json())
+        food_data = FatSecretAPI.make_request(
+            endpoint="food/v4",
+            params={
+                "food_id": food_id,
+                "format": "json"}
+        )
+        return JSONResponse(content=food_data)
 
     except Exception as e:
-        return JSONResponse(status_code=500, content={"message":"Internal Server Error"})
+        return JSONResponse(status_code=500, content={"message": "Internal Server Error"})
 
 
 @meal_log_router.get("/v1/360_degree_fitness/getMyMealDiary")
@@ -96,8 +98,9 @@ async def get_meal_diary(user_id: str, meal_date: date):
 
         # If no meal diary is found, return a 404 error
         if not meal_diary:
-            return JSONResponse(status_code=404, content={"message": "No meal diary found for this user on the given date"}
-            )
+            return JSONResponse(status_code=404,
+                                content={"message": "No meal diary found for this user on the given date"}
+                                )
 
         # Return the meal diary along with the user_id
         return {
@@ -107,6 +110,7 @@ async def get_meal_diary(user_id: str, meal_date: date):
 
     except Exception as e:
         return JSONResponse(status_code=500, content={"message": f"Internal Server Error: {str(e)}"})
+
 
 @meal_log_router.post("/v1/360_degree_fitness/add_meal_log")
 async def add_meal_log(user_meal_log: UserMealLogger):
@@ -151,7 +155,7 @@ async def add_meal_log(user_meal_log: UserMealLogger):
             {"$push": {meal_type: user_meal_log.dict()}}
         )
 
-        #Check if the update was successful
+        # Check if the update was successful
         if update_result.modified_count == 0:
             raise HTTPException(status_code=500, detail="Failed to update meal diary")
 
@@ -170,6 +174,7 @@ async def add_meal_log(user_meal_log: UserMealLogger):
     except Exception as e:
         return JSONResponse(status_code=500, content={"message": f"Internal Server Error: {str(e)}"})
 
+
 # Note: Need to discuss the below APIs
 
 #  Get User Meal Log History API (GET /v1/360_degree_fitness/get_meal_log)
@@ -185,8 +190,9 @@ async def get_user_meal_log(user_id: str, start_date: Optional[str] = None, end_
     except Exception as e:
         return JSONResponse(status_code=500, content={"message": f"Error getting meal: {str(e)}"})
 
+
 #  Update Meal Log API (PUT /v1/360_degree_fitness/update_meal_log)
-@meal_log_router.put("/v1/360_degree_fitness/update_meal/{log_id}")
+@meal_log_router.put("/v1/360_degree_fitness/update_meal_log/{log_id}")
 async def update_user_meal_log(meal_log_id: str, user_meal: UserMealLogger):
     try:
         if not meal_log_id:
@@ -196,15 +202,17 @@ async def update_user_meal_log(meal_log_id: str, user_meal: UserMealLogger):
 
         await update_meal(meal_log_id, updated_data)
 
-        return JSONResponse(status_code=200, content={"message": "Meal log updated successfully", "log_id": meal_log_id})
+        return JSONResponse(status_code=200,
+                            content={"message": "Meal log updated successfully", "log_id": meal_log_id})
 
     except PyMongoError as e:
         return JSONResponse(status_code=500, content={"message": f"Database error: {str(e)}"})
     except Exception as e:
         return JSONResponse(status_code=500, content={"message": f"Error updating meal log: {str(e)}"})
 
+
 #  Delete Meal Log API (DELETE /v1/360_degree_fitness/delete_meal_log)
-@meal_log_router.delete("/v1/360_degree_fitness/delete_meal/{log_id}")
+@meal_log_router.delete("/v1/360_degree_fitness/delete_meal_log/{log_id}")
 async def delete_meal_log(meal_log_id: str):
     try:
         if not meal_log_id:
@@ -212,7 +220,8 @@ async def delete_meal_log(meal_log_id: str):
 
         await delete_meal(meal_log_id)
 
-        return JSONResponse(status_code=200, content={"message": "Meal log deleted successfully", "log_id": meal_log_id})
+        return JSONResponse(status_code=200,
+                            content={"message": "Meal log deleted successfully", "log_id": meal_log_id})
 
     except PyMongoError as e:
         return JSONResponse(status_code=500, content={"message": f"Database error: {str(e)}"})
@@ -253,11 +262,12 @@ async def get_nutritional_summary(user_id: str, start_date: str, end_date: str, 
     except Exception as e:
         return JSONResponse(status_code=500, content={"message": f"Error fetching nutritional summary: {str(e)}"})
 
+
 #  Get Calorie Chart for the Day (GET /v1/360_degree_fitness/calorie_chart)
 @meal_log_router.get("/v1/360_degree_fitness/calorie_chart")
 async def get_calorie_chart(user_id: str, date: str):
     try:
-        user_meal_logs = await get_meal(user_id, date, date) # fetching meal log for a particular day
+        user_meal_logs = await get_meal(user_id, date, date)  # fetching meal log for a particular day
 
         # Initializing the total calories consumed
         total_calories_consumed = 0
@@ -285,7 +295,6 @@ async def get_calorie_chart(user_id: str, date: str):
 
     except Exception as e:
         return JSONResponse(status_code=500, content={"message": f"Error fetching calorie chart: {str(e)}"})
-
 
 #  Get Nutritional Info for Food API (GET /v1/360_degree_fitness/food_nutrition_info)
 #  Get Calorie Intake vs Burnt Tracker (GET /v1/360_degree_fitness/calorie_tracker)
