@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from .db.connection import Database
+from .db.database import init_db
 from .routers import userFitnessProfileRouter, fitnessPlanRouter, authRouter, chatRouter, mealLoggerRouter
 
 app = FastAPI()
@@ -18,6 +19,7 @@ app.add_middleware(
 @app.on_event("startup")
 async def startup_db_client():
     await Database.connect_db()
+    await init_db()
 
 @app.on_event("shutdown")
 async def shutdown_db_client():

@@ -5,10 +5,13 @@ import requests
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
 from pymongo.errors import PyMongoError
+import json
+from decimal import Decimal
+from bson import ObjectId
 
-from backend.db.database import update_meal, delete_meal, get_meal
-from backend.models.userMealLogger import UserMealLogger
-from backend.core.oauth2 import FatSecretAuthorization
+from ..db.database import meal_diary_collection, get_meal, update_meal_log, delete_meal_log
+from ..models.userMealLogger import UserMealLogger
+from ..core.oauth2 import FatSecretAuthorization
 
 meal_log_router = APIRouter()
 
@@ -92,8 +95,11 @@ async def get_details_by_food_id(food_id: str):
 @meal_log_router.get("/v1/360_degree_fitness/getMyMealDiary")
 async def get_meal_diary(user_id: str, meal_date: date):
     try:
-        meal_diary = meal_diary_collection.find_one(
-            {"user_id": user_id, "date": meal_date}
+        # Convert date to ISO format string
+        meal_date_str = meal_date.isoformat()
+        
+        meal_diary = await meal_diary_collection.find_one(
+            {"user_id": user_id, "date": meal_date_str}
         )
 
         # If no meal diary is found, return a 404 error
@@ -112,16 +118,40 @@ async def get_meal_diary(user_id: str, meal_date: date):
         return JSONResponse(status_code=500, content={"message": f"Internal Server Error: {str(e)}"})
 
 
+# Update the encoder to handle both Decimal and date objects
+class CustomEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, Decimal):
+            return float(obj)
+        elif isinstance(obj, date):
+            return obj.isoformat()
+        return super(CustomEncoder, self).default(obj)
+
+
+# Add this function to handle MongoDB document serialization
+def serialize_mongo_doc(doc):
+    if doc is None:
+        return None
+    
+    if isinstance(doc, dict):
+        return {k: serialize_mongo_doc(v) for k, v in doc.items()}
+    elif isinstance(doc, list):
+        return [serialize_mongo_doc(item) for item in doc]
+    elif isinstance(doc, ObjectId):
+        return str(doc)
+    else:
+        return doc
+
+
 @meal_log_router.post("/v1/360_degree_fitness/add_meal_log")
 async def add_meal_log(user_meal_log: UserMealLogger):
     user_id = user_meal_log.user_id
-    meal_log_date = user_meal_log.meal_log_date
+    meal_log_date = user_meal_log.meal_log_date.isoformat()  # Convert date to ISO format string
     meal_type = user_meal_log.meal_type
 
     try:
-
         # Step 1: Check if the meal diary already exists for the user and date
-        existing_meal_diary = meal_diary_collection.find_one(
+        existing_meal_diary = await meal_diary_collection.find_one(
             {"user_id": user_id, "date": meal_log_date}
         )
 
@@ -134,25 +164,36 @@ async def add_meal_log(user_meal_log: UserMealLogger):
                 "lunch": [],
                 "dinner": [],
                 "snacks": [],
+                "daily_nutrition_summary": {
+                    "total_calories": 0,
+                    "total_fat": 0,
+                    "total_carbs": 0,
+                    "total_protein": 0
+                }
             }
-            meal_diary_collection.insert_one(meal_diary_data)
+            await meal_diary_collection.insert_one(meal_diary_data)
 
-        # Step 2: Calculate total nutrition based on quantity consumed
-        total_calories = user_meal_log.calories_per_serving * user_meal_log.quantity_consumed
-        total_fat = user_meal_log.fat_per_serving * user_meal_log.quantity_consumed
-        total_carbs = user_meal_log.carbs_per_serving * user_meal_log.quantity_consumed
-        total_protein = user_meal_log.protein_per_serving * user_meal_log.quantity_consumed
-
-        # Step 3: Update User Meal Logger with total values
-        user_meal_log.total_calories = total_calories
-        user_meal_log.total_fat = total_fat
-        user_meal_log.total_carbs = total_carbs
-        user_meal_log.total_protein = total_protein
+        # Convert meal log to dict and handle Decimal and date values
+        meal_log_dict = json.loads(json.dumps(user_meal_log.dict(), cls=CustomEncoder))
+        
+        # Get the computed totals (these are calculated automatically)
+        total_calories = user_meal_log.total_calories
+        total_fat = user_meal_log.total_fat
+        total_carbs = user_meal_log.total_carbs
+        total_protein = user_meal_log.total_protein
 
         # Step 4: Append the meal log to a particular meal type
-        update_result = meal_diary_collection.update_one(
+        update_result = await meal_diary_collection.update_one(
             {"user_id": user_id, "date": meal_log_date},
-            {"$push": {meal_type: user_meal_log.dict()}}
+            {
+                "$push": {meal_type: meal_log_dict},  # Use the updated dict
+                "$inc": {
+                    "daily_nutrition_summary.total_calories": total_calories,
+                    "daily_nutrition_summary.total_fat": total_fat,
+                    "daily_nutrition_summary.total_carbs": total_carbs,
+                    "daily_nutrition_summary.total_protein": total_protein
+                }
+            }
         )
 
         # Check if the update was successful
@@ -160,13 +201,16 @@ async def add_meal_log(user_meal_log: UserMealLogger):
             raise HTTPException(status_code=500, detail="Failed to update meal diary")
 
         # Step 5: Return the updated meal diary with the new meal log
-        updated_meal_diary = meal_diary_collection.find_one(
+        updated_meal_diary = await meal_diary_collection.find_one(
             {"user_id": user_id, "date": meal_log_date}
         )
 
+        # Serialize the MongoDB document before returning
+        serialized_meal_diary = serialize_mongo_doc(updated_meal_diary)
+
         return {
             "message": "Meal log added successfully",
-            "meal_diary": updated_meal_diary
+            "meal_diary": serialized_meal_diary
         }
     except PyMongoError as e:
         return JSONResponse(status_code=500, content={"message": f"Database error: {str(e)}"})
@@ -179,11 +223,11 @@ async def add_meal_log(user_meal_log: UserMealLogger):
 
 #  Get User Meal Log History API (GET /v1/360_degree_fitness/get_meal_log)
 @meal_log_router.get("/v1/360_degree_fitness/get_meal_log")
-async def get_user_meal_log(user_id: str, start_date: Optional[str] = None, end_date: Optional[str] = None):
+async def get_user_meal_log(user_id: str, date: Optional[str] = None, start_date: Optional[str] = None, end_date: Optional[str] = None):
     if not user_id:
         return JSONResponse(status_code=400, content={"message": "User Id is required"})
     try:
-        meal_logs = await get_meal(user_id, start_date, end_date)
+        meal_logs = await get_meal(user_id, date, start_date, end_date)
         return JSONResponse(status_code=200, content={"message": "Meal retrieved successfully", "meal_logs": meal_logs})
     except PyMongoError as e:
         return JSONResponse(status_code=500, content={"message": f"Database error: {str(e)}"})
@@ -192,15 +236,15 @@ async def get_user_meal_log(user_id: str, start_date: Optional[str] = None, end_
 
 
 #  Update Meal Log API (PUT /v1/360_degree_fitness/update_meal_log)
-@meal_log_router.put("/v1/360_degree_fitness/update_meal_log/{log_id}")
+@meal_log_router.put("/v1/360_degree_fitness/update_meal_log/{meal_log_id}")
 async def update_user_meal_log(meal_log_id: str, user_meal: UserMealLogger):
     try:
         if not meal_log_id:
-            return JSONResponse(status_code=400, content={"message": "log_id is required for updating meal"})
+            return JSONResponse(status_code=400, content={"message": "meal_log_id is required for updating meal"})
 
         updated_data = user_meal.dict(exclude_unset=True)  # Only send the fields that are provided by the user
 
-        await update_meal(meal_log_id, updated_data)
+        await update_meal_log(meal_log_id, updated_data)
 
         return JSONResponse(status_code=200,
                             content={"message": "Meal log updated successfully", "log_id": meal_log_id})
@@ -212,13 +256,13 @@ async def update_user_meal_log(meal_log_id: str, user_meal: UserMealLogger):
 
 
 #  Delete Meal Log API (DELETE /v1/360_degree_fitness/delete_meal_log)
-@meal_log_router.delete("/v1/360_degree_fitness/delete_meal_log/{log_id}")
-async def delete_meal_log(meal_log_id: str):
+@meal_log_router.delete("/v1/360_degree_fitness/delete_meal_log/{meal_log_id}")
+async def delete_user_meal_log(meal_log_id: str):
     try:
         if not meal_log_id:
-            return JSONResponse(status_code=400, content={"message": "log_id is required for deleting a meal"})
+            return JSONResponse(status_code=400, content={"message": "meal_log_id is required for deleting a meal"})
 
-        await delete_meal(meal_log_id)
+        await delete_meal_log(meal_log_id)
 
         return JSONResponse(status_code=200,
                             content={"message": "Meal log deleted successfully", "log_id": meal_log_id})

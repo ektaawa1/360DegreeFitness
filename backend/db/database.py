@@ -25,7 +25,7 @@ profiles_collection = db['fitness_profiles']
 changes_collection = db['fitness_profile_changes']
 key_recommendations_collection = db["key_recommendations"] # for chatbot to store key recommendations
 conversation_history_collection = db["conversation_history"] # for chatbot to store conversation history
-meals_logging_collection = db["meal_logger"] # for meal logger to store meal log
+meal_diary_collection = db["meal_diary"] # for storing users' meal diary and meal logs
 
 # Decimal handling
 class DecimalEncoder(json.JSONEncoder):
@@ -52,31 +52,49 @@ async def log_profile_change(user_id, change_data):
     change_data['timestamp'] = datetime.utcnow()
     await changes_collection.insert_one(change_data)
 
-# Meal logger functions
-async def add_meal(user_id, meal_data):
-    # Convert Decimal objects to float if needed
-    meal_data = json.loads(json.dumps(meal_data, cls=DecimalEncoder))
-    meal_data['user_id'] = user_id
-    meal_data['timestamp'] = datetime.utcnow()
-    await meals_logging_collection.insert_one(meal_data)
 
-async def get_meal(user_id, start_date=None, end_date=None):
+# CRUD operations for meal diary
+async def get_meal(user_id, date=None, start_date=None, end_date=None): # Used for retrieving meal logs within a date range.
     query = {"user_id": user_id}
-    if start_date and end_date:
-        query["timestamp"] = {
-            "$gte": start_date,
-            "$lte": end_date
-        }
-    return await meals_logging_collection.find(query).sort("timestamp", -1).to_list(length=None)
+    
+    if date:
+        query["date"] = date
+    elif start_date and end_date:
+        query["date"] = {"$gte": start_date, "$lte": end_date}
+    
+    return await meal_diary_collection.find(query).to_list(length=None)
 
-async def update_meal(log_id, update_data):
-    update_data = json.loads(json.dumps(update_data, cls=DecimalEncoder))
+async def update_meal_log(log_id, update_data): # Used for updating a meal log.
     update_data['updated_at'] = datetime.utcnow()
-    await meals_logging_collection.update_one(
+    await meal_diary_collection.update_one(
         {"_id": ObjectId(log_id)},
         {"$set": update_data}
     )
 
-async def delete_meal(log_id):
-    await meals_logging_collection.delete_one({"_id": ObjectId(log_id)})
+async def delete_meal_log(log_id): # Used for deleting a meal log.
+    await meal_diary_collection.delete_one({"_id": ObjectId(log_id)})
 
+# This creates an index to make queries faster when searching by user_id and date
+# Your mealLoggerRouter.py uses these fields frequently in queries like:
+# meal_diary = meal_diary_collection.find_one({"user_id": user_id, "date": meal_date})
+# Index for querying user's meals by date
+async def setup_meal_diary_indexes():
+    await meal_diary_collection.create_index([
+        ("user_id", 1),
+        ("date", 1)
+    ])
+
+    # Index for meal type queries
+    await meal_diary_collection.create_index([
+        ("user_id", 1),
+        ("date", 1),
+        ("meal_type", 1)
+    ])
+
+# This function runs when your app starts (called from app.py)
+# It ensures your database indexes are set up
+async def init_db():
+    try:
+        await setup_meal_diary_indexes()
+    except Exception as e:
+        print(f"Error setting up database indexes: {e}")
