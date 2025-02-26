@@ -62,12 +62,19 @@ class FatSecretAuthorization:
 
     @staticmethod
     def get_access_token():
-        if not ACCESS_TOKEN or datetime.now() > TOKEN_EXPIRY_TIME:
-            print("Access token expired, refreshing...")
+        try:
+            print("Getting access token...")
+            if not ACCESS_TOKEN or datetime.now() > TOKEN_EXPIRY_TIME:
+                print("Access token expired, refreshing...")
 
-            # If no access token, fetch a new one; otherwise, refresh the existing token
-            if not ACCESS_TOKEN:
-                FatSecretAuthorization.fetch_oauth2_token()
-            else:
-                FatSecretAuthorization.refresh_oauth2_token()
-        return ACCESS_TOKEN
+                # If no access token, fetch a new one; otherwise, refresh the existing token
+                if not ACCESS_TOKEN:
+                    FatSecretAuthorization.fetch_oauth2_token()
+                else:
+                    FatSecretAuthorization.refresh_oauth2_token()
+            access_token = ACCESS_TOKEN
+            print(f"Token obtained: {access_token[:10]}...")
+            return access_token
+        except Exception as e:
+            print(f"Error getting access token: {str(e)}")
+            raise
