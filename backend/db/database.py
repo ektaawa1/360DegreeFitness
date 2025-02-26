@@ -79,10 +79,11 @@ async def delete_meal_log(log_id): # Used for deleting a meal log.
 # meal_diary = meal_diary_collection.find_one({"user_id": user_id, "date": meal_date})
 # Index for querying user's meals by date
 async def setup_meal_diary_indexes():
-    await meal_diary_collection.create_index([
-        ("user_id", 1),
-        ("date", 1)
-    ])
+    # Create a unique compound index on user_id and date
+    await meal_diary_collection.create_index(
+        [("user_id", 1), ("date", 1)],
+        unique=True
+    )
 
     # Index for meal type queries
     await meal_diary_collection.create_index([
