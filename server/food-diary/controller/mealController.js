@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken");
 const FASTAPI_BASE_URL = process.env.FASTAPI_BASE_URL;
 
 function meal_data(data) {
+    console.log(JSON.stringify(data));
     if (!data || !data.meal_diary) {
         return {
             meal_diary: [],
@@ -31,12 +32,7 @@ function meal_data(data) {
 
     return {
         meal_diary: transformedData,
-        "daily_nutrition_summary": {
-            "total_calories": 250,
-            "total_fat": 250,
-            "total_carbs": 250,
-            "total_protein": 250
-        }
+        daily_nutrition_summary: data.meal_diary.daily_nutrition_summary
     };
 }
 
@@ -45,16 +41,23 @@ exports.get_meal_details = async (req, res) => {
     const token = req.header('x-auth-token');
     const verified = jwt.verify(token, process.env.JWT_SECRET);
     if (!verified) {
-        return res.json(false);
+        return res.json({
+            meal_diary: [],
+            daily_nutrition_summary: {}
+        });
     }
     try {
         const user_id = '67b57586bc77bfb5e9e46025';
         // const user_id = verified.id;
         const response = await axios.get(`${FASTAPI_BASE_URL}/getMyMealDiary?user_id=${user_id}&meal_date=${date}`);
-        const data = meal_data(response.data)
+        const data = meal_data(response.data);
+        console.log(data);
         return res.json(data);
     } catch (error) {
-        return res.json([]);
+        return res.json({
+            meal_diary: [],
+            daily_nutrition_summary: {}
+        });
     }
 };
 
