@@ -108,10 +108,13 @@ async def get_meal_diary(user_id: str, meal_date: date):
                                 content={"message": "No meal diary found for this user on the given date"}
                                 )
 
+        # Serialize the MongoDB document before returning
+        serialized_meal_diary = serialize_mongo_doc(meal_diary)
+
         # Return the meal diary along with the user_id
         return {
             "user_id": user_id,
-            "meal_diary": meal_diary
+            "meal_diary": serialized_meal_diary
         }
 
     except Exception as e:
@@ -228,7 +231,11 @@ async def get_user_meal_log(user_id: str, date: Optional[str] = None, start_date
         return JSONResponse(status_code=400, content={"message": "User Id is required"})
     try:
         meal_logs = await get_meal(user_id, date, start_date, end_date)
-        return JSONResponse(status_code=200, content={"message": "Meal retrieved successfully", "meal_logs": meal_logs})
+        
+        # Serialize the MongoDB documents before returning
+        serialized_meal_logs = serialize_mongo_doc(meal_logs)
+        
+        return JSONResponse(status_code=200, content={"message": "Meal retrieved successfully", "meal_logs": serialized_meal_logs})
     except PyMongoError as e:
         return JSONResponse(status_code=500, content={"message": f"Database error: {str(e)}"})
     except Exception as e:
@@ -279,6 +286,9 @@ async def get_nutritional_summary(user_id: str, start_date: str, end_date: str, 
     try:
         # Query the database to get meal logs for the given user and date range
         user_meal_logs = await get_meal(user_id, start_date, end_date)
+        
+        # Serialize the MongoDB documents
+        serialized_meal_logs = serialize_mongo_doc(user_meal_logs)
 
         # Initializing the total nutritional values
         tot_calories = 0
@@ -286,7 +296,7 @@ async def get_nutritional_summary(user_id: str, start_date: str, end_date: str, 
         tot_carbs = 0
         tot_protein = 0
 
-        for log in user_meal_logs:
+        for log in serialized_meal_logs:
             tot_calories += log.get("total_calories", 0)
             tot_fat += log.get("total_fat", 0)
             tot_carbs += log.get("total_carbs", 0)
