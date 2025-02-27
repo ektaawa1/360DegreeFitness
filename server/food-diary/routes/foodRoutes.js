@@ -11,7 +11,7 @@ const {
 } = require('../controller/mealController');
 
 router.get('/search-food/:name', search_food);
-router.get('/food-nutrition', details_by_id);
+router.get('/food-nutrition/:id', details_by_id);
 
 router.post('/add-meal', add_meal);
 router.get('/get-diary', get_meal_details);

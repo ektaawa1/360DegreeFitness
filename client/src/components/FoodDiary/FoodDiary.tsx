@@ -5,7 +5,7 @@ import {BASE_URL} from "../../config/Config";
 import Axios from "axios";
 import Highcharts from "highcharts";
 import HighchartsReact from "highcharts-react-official";
-import {ArrowLeftOutlined, ArrowLeftRounded, ArrowRightOutlined, ArrowRightRounded} from "@material-ui/icons";
+import {ArrowLeftRounded, ArrowRightRounded} from "@material-ui/icons";
 
 type FoodEntry = {
     key: string;

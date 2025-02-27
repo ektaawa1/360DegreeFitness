@@ -38,14 +38,96 @@
   padding: 5px;
 }
 
-.sider {
-  padding: 5px;
-  background: white;
-  border-radius: 10px;
-  border: 1px solid gray;
-  margin-right: 20px;
+div.nutrition_facts {
+  border: 2px solid #BCBCBC;
+  font-family: "Arial", sans-serif;
+  padding: 15px 9px 24px;
+  text-align: left;
 }
-
+div.nutrition_facts table {
+  border-collapse: collapse;
+  border-spacing: 0;
+  width: 100%;
+}
+div.nutrition_facts .black {
+  font-weight: 900;
+}
+div.nutrition_facts .heading {
+  font-size: 22px;
+  line-height: 22px;
+  padding-bottom: 10px;
+}
+div.nutrition_facts .left {
+  float: left;
+}
+div.nutrition_facts .right {
+  float: right;
+}
+div.nutrition_facts .tRight {
+  text-align: right;
+}
+div.nutrition_facts .divider {
+  border-bottom: solid rgba(0, 0, 0, 0.38);
+  clear: both;
+}
+div.nutrition_facts .divider.thin {
+  border-width: 1px;
+}
+div.nutrition_facts .divider.medium {
+  border-width: 4px;
+}
+div.nutrition_facts .divider.thick {
+  border-width: 11px;
+}
+div.nutrition_facts .serving_size {
+  font-size: 13px;
+  line-height: 15px;
+}
+div.nutrition_facts .serving_size.serving_size_label {
+  padding-top:8px;
+}
+div.nutrition_facts .serving_size.serving_size_value {
+  padding: 6px 0 11px;
+  text-align: right;
+}
+div.nutrition_facts .per_serve::first-letter {
+  text-transform: uppercase;
+}
+div.nutrition_facts .nutrient {
+  font-size: 11px;
+  line-height: 11px;
+  padding: 4px 0;
+}
+div.nutrition_facts .nutrient.header {
+  padding: 8px 0;
+}
+div.nutrition_facts .nutrient.sub {
+  text-indent: 11px;
+}
+div.nutrition_facts .nutrient.value {
+  padding-left:8px;
+}
+div.nutrition_facts .footnote {
+  font-size: 9px;
+  line-height: 11px;
+  padding-top: 10px;
+}
+div.nutrition_facts.us .serving_size {
+  padding: 8px 0 10px;
+}
+div.nutrition_facts.us .serving_size.serving_size_label {
+  vertical-align: bottom;
+}
+div.nutrition_facts .hero_label {
+  font-size: 19px;
+  line-height: 22px;
+  padding-bottom: 5px;
+}
+div.nutrition_facts .hero_value {
+  font-size: 26px;
+  line-height: 28px;
+  padding: 11px 0 5px;
+}
 .ant-statistic-title {
   color: cadetblue !important;
 }

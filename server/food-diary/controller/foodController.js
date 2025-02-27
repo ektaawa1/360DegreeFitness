@@ -12,14 +12,13 @@ exports.search_food = async (req, res) => {
      }
 };
 
-
 exports.details_by_id = async (req, res) => {
+    const { id } = req.params;
     console.log(req);
     try {
-        const response = await axios.get(`${FASTAPI_BASE_URL}/getDetailsByFoodId/${req.id}`);
+        const response = await axios.get(`${FASTAPI_BASE_URL}/getDetailsByFoodId?food_id=${id}`);
         return res.json(response.data);
     } catch (error) {
-        return res.json(false);
+        return res.json(null);
     }
 };
-

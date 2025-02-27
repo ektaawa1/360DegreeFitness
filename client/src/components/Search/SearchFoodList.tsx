@@ -10,13 +10,14 @@ const { Content } = Layout;
 const SearchFoodList = ({ searchedFood }) => {
     const [responseList, setResponseList] = useState([]);
     const [selectedFood, setSelectedFood] = useState(null);
+    const [visible, setVisible] = useState(false);
 
     useEffect(() => {
         const getData = async () => {
             const url = BASE_URL + `/api/food/search-food/${searchedFood}`;
             const response = await Axios.get(url);
             if (response.status === 200) {
-                setResponseList(response.data.foods.food);
+                setResponseList(response.data.food_options);
             }
         };
 
@@ -28,22 +29,23 @@ const SearchFoodList = ({ searchedFood }) => {
             <Layout className={styles.mainLayout}>
                 <Content className={styles.sider}>
                     <List
-                        dataSource={responseList}
+                        itemLayout="horizontal"
+                        dataSource={responseList.filter(food => food.food_name.toLowerCase().includes(searchedFood.toLowerCase()))}
                         renderItem={(item) => (
-                            <List.Item
-                                className={styles.foodItem}
-                                onClick={() => setSelectedFood(item)}
-                                style={{ cursor: "pointer", padding: "10px", borderBottom: "1px solid #ddd" }}
-                            >
-                                <div>
-                                    <b>{item.food_name}</b> {item.brand_name ? `(${item.brand_name})` : ""}
-                                </div>
+                            <List.Item onClick={() => {
+                                setSelectedFood(item)
+                                setVisible(true);
+                            }} style={{ cursor: "pointer"}}>
+                                <List.Item.Meta
+                                    title={<span className={styles.foodName}>{item.food_name}</span>}
+                                    description={<span className={styles.foodDescription}>{item.food_description}</span>}
+                                />
                             </List.Item>
                         )}
                     />
                 </Content>
-                {selectedFood && <NutritionSider food={selectedFood} />}
             </Layout>
+            {visible && <NutritionSider selectedFood={selectedFood} onClose={() => setVisible(false)}/> }
         </div>
     );
 };
