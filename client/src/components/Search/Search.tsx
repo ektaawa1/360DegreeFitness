@@ -9,8 +9,6 @@ import SearchFoodList  from './SearchFoodList';
 
 const Search = () => {
     const [currentFood, setCurrentFood] = useState(null);
-    const [openAddFoodModal, setOpenAddFoodModal] = useState(false);
-    const [addForm, setForm] = useState();
 
 
     const onSearchChange = (value) => {
@@ -21,9 +19,6 @@ const Search = () => {
         }
     };
 
-    const onAddToDiary = () => {
-        // add to diary and navigate to meal log page
-    }
 
     return (
         <div className={styles.search_page}>
@@ -47,14 +42,6 @@ const Search = () => {
                     )}
                 </div>
             </div>
-            {openAddFoodModal && (
-                <AddWatchList wrappedComponentRef={(form) => setForm(form)}
-                              showAddWL={openAddFoodModal}
-                              setShowAddWL={setOpenAddFoodModal}
-                              onAdd={onAddToDiary}
-                />
-            )
-            }
         </div>
     );
 };

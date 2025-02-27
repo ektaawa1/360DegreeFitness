@@ -14,6 +14,11 @@ const SearchFoodList = ({ searchedFood }) => {
 
     useEffect(() => {
         const getData = async () => {
+            setVisible(false);
+            if (!searchedFood) {
+                setResponseList([]);
+                return;
+            }
             const url = BASE_URL + `/api/food/search-food/${searchedFood}`;
             const response = await Axios.get(url);
             if (response.status === 200) {
