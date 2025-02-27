@@ -24,6 +24,7 @@ if not gemini_api_key:
     raise ValueError("GEMINI_API_KEY environment variable not set.")
 
 # Configure the Generative AI client
+print(f"Initializing Gemini with API key: {gemini_api_key[:5]}...")
 genai.configure(api_key=gemini_api_key)
 
 chat_router = APIRouter()
@@ -306,7 +307,7 @@ async def chat_with_ai(chat_message: ChatMessage):
 
         try:
             # Generate response using Gemini AI
-            model = genai.GenerativeModel('gemini-pro')
+            model = genai.GenerativeModel('gemini-1.5-pro')
             prompt = f"""
                 You are a professional fitness and health advisor. Based on the following user profile, provide a brief answer to the user's question (limited 300 characters):
                 {profile_summary}
