@@ -79,7 +79,7 @@ const MainPage = () => {
                     )}
 
                     {selectedPage === "diary" && (
-                        <FoodDiary/>
+                        <FoodDiary onAdd={() => setPage('search')}/>
                     )}
 
                     {selectedPage === "search" && (

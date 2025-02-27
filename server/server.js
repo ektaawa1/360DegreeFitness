@@ -39,7 +39,7 @@ app.use("/api/dashboard", dashboardRouter);
 const profileRouter = require("./profile/routes/profileRoutes");
 app.use("/api/profile", profileRouter);
 
-const foodRouter = require("./food/routes/foodRoutes");
+const foodRouter = require("./food-diary/routes/foodRoutes");
 app.use("/api/food", foodRouter);
 
 

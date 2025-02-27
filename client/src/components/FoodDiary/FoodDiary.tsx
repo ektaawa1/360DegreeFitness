@@ -1,6 +1,8 @@
-import React, { useState } from "react";
+import React, {useEffect, useState} from "react";
 import { DatePicker, Table, Button } from "antd";
 import moment from "moment";
+import {BASE_URL} from "../../config/Config";
+import Axios from "axios";
 
 type FoodEntry = {
     key: string;
@@ -14,9 +16,29 @@ type FoodEntry = {
     children?: FoodEntry[];
 };
 
-const FoodDiary: React.FC = () => {
+
+
+const FoodDiary = ({onAdd}) => {
     const [date, setDate] = useState(moment());
+    const [data, setResponseList] = useState({});
     const styles = { color: "#1890ff", fontWeight: 600 };
+
+    useEffect(() => {
+        const getData = async () => {
+            const renderedDate = moment.utc(date).local().format('YYYY-MM-DD');
+            let token = localStorage.getItem("auth-token");
+            const headers = {
+                "x-auth-token": token,
+            };
+            const url = BASE_URL + `/api/food/get-diary?date=${renderedDate}`;
+            const response = await Axios.get(url, {headers});
+            if (response.status === 200) {
+                setResponseList(response.data);
+            }
+        };
+
+        getData();
+    }, [date]);
 
     const columns = [
         { title: <span style={styles}>Food Item</span>, dataIndex: "name", key: "name",
@@ -29,48 +51,19 @@ const FoodDiary: React.FC = () => {
         { title: <span style={styles}>Protein (g)</span>, dataIndex: "protein", key: "protein" },
     ];
 
-    const data: FoodEntry[] = [
-        {
-            key: "1",
-            name: "Breakfast",
-            children: [
-                { key: "1-1", name: "Diet Omelette - 1/2 Large", calories: 210, carbs: 5, fat: 9, protein: 27, quantity: 361 },
-            ],
-        },
-        {
-            key: "2",
-            name: "Lunch",
-            children: [
-                { key: "2-1", name: "Home Made - Chapati, 2 piece", calories: 136, carbs: 22, fat: 1, protein: 6, quantity: 110 },
-                { key: "2-2", name: "Paul's Quinoa - 0.13 cup", calories: 78, carbs: 13, fat: 1, protein: 3, quantity: 0 },
-            ],
-        },
-        {
-            key: "3",
-            name: "Dinner",
-            children: [
-                { key: "3-1", name: "quinoa khichdi - 1 cup", calories: 250, carbs: 40, fat: 10, protein: 10, quantity: 0 },
-            ],
-        },
-        {
-            key: "4",
-            name: "Snacks",
-            children: [],
-        },
-    ];
 
     return (
         <div style={{ padding: 20 }}>
             <DatePicker value={date} onChange={(d) => setDate(d || moment())} />
             <Table
-                expandedRowKeys={data.map(o => o.key)}
+                expandedRowKeys={data.meal_diary?.map(o => o.key)}
                 columns={columns}
-                dataSource={data}
+                dataSource={data.meal_diary}
                 pagination={false}
                 expandable={{ defaultExpandAllRows: true }}
                 size={"small"}
             />
-            <Button type="primary" style={{ marginTop: 10 }}>
+            <Button type="primary" style={{ marginTop: 10 }} onClick={onAdd}>
                 Add Food
             </Button>
         </div>
