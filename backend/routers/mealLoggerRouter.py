@@ -221,9 +221,6 @@ async def add_meal_log(user_meal_log: UserMealLogger):
     except Exception as e:
         return JSONResponse(status_code=500, content={"message": f"Internal Server Error: {str(e)}"})
 
-
-# Note: Need to discuss the below APIs
-
 #  Get User Meal Log History API (GET /v1/360_degree_fitness/get_meal_log)
 @meal_log_router.get("/v1/360_degree_fitness/get_meal_log")
 async def get_user_meal_log(user_id: str, date: Optional[str] = None, start_date: Optional[str] = None, end_date: Optional[str] = None):
@@ -231,7 +228,10 @@ async def get_user_meal_log(user_id: str, date: Optional[str] = None, start_date
         return JSONResponse(status_code=400, content={"message": "User Id is required"})
     try:
         meal_logs = await get_meal(user_id, date, start_date, end_date)
-        
+
+        if not meal_logs:
+            return JSONResponse(status_code=404, content={"message": "No meal logs found..."})
+
         # Serialize the MongoDB documents before returning
         serialized_meal_logs = serialize_mongo_doc(meal_logs)
         
@@ -241,7 +241,7 @@ async def get_user_meal_log(user_id: str, date: Optional[str] = None, start_date
     except Exception as e:
         return JSONResponse(status_code=500, content={"message": f"Error getting meal: {str(e)}"})
 
-
+# Note: Need to discuss the below APIs
 #  Update Meal Log API (PUT /v1/360_degree_fitness/update_meal_log)
 @meal_log_router.put("/v1/360_degree_fitness/update_meal_log/{meal_log_id}")
 async def update_user_meal_log(meal_log_id: str, user_meal: UserMealLogger):
