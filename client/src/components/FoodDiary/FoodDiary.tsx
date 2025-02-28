@@ -76,7 +76,7 @@ const FoodDiary = ({onAdd}) => {
             {
                 name: "Nutrients",
                 data: [
-                    {name: "Calories", y: nutritionSummary.total_calories},
+                    // {name: "Calories", y: nutritionSummary.total_calories},
                     {name: "Carbs", y: nutritionSummary.total_carbs},
                     {name: "Fat", y: nutritionSummary.total_fat},
                     {name: "Protein", y: nutritionSummary.total_protein},

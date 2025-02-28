@@ -132,6 +132,18 @@ div.nutrition_facts .hero_value {
   color: cadetblue !important;
 }
 
+.add_diary_form {
+  border: 2px solid #BCBCBC;
+  font-family: "Arial", sans-serif;
+  padding: 15px 9px 24px;
+  text-align: left;
+  margin-top: 20px;
+}
+
+.add_diary_form .ant-form-item {
+  margin: 0 !important;
+}
+
 .centerGrid {
   margin: 0 auto !important;
 }

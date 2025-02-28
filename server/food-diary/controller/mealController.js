@@ -47,8 +47,7 @@ exports.get_meal_details = async (req, res) => {
         });
     }
     try {
-        const user_id = '67b57586bc77bfb5e9e46025';
-        // const user_id = verified.id;
+        const user_id = verified.id;
         const response = await axios.get(`${FASTAPI_BASE_URL}/getMyMealDiary?user_id=${user_id}&meal_date=${date}`);
         const data = meal_data(response.data);
         console.log(data);
@@ -63,12 +62,19 @@ exports.get_meal_details = async (req, res) => {
 
 
 exports.add_meal = async (req, res) => {
-    console.log(req);
+    let data = req.body;
+    const token = req.header('x-auth-token');
+    const verified = jwt.verify(token, process.env.JWT_SECRET);
     try {
-        const response = await axios.get(`${FASTAPI_BASE_URL}/getDetailsByFoodId/${req.id}`);
-        return res.json(response.data);
+        data.user_id = verified.id
+        const response = await axios.post(`${FASTAPI_BASE_URL}/add_meal_log`, data);
+        console.log(response);
+        return res.json(response);
     } catch (error) {
-        return res.json(false);
+        return res.json({
+            meal_diary: [],
+            daily_nutrition_summary: {}
+        });
     }
 };
 

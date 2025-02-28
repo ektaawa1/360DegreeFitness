@@ -2,7 +2,10 @@ import styles from "./Search.module.css";
 import React, { useEffect, useState } from "react";
 import { BASE_URL } from "../../config/Config";
 import Axios from "axios";
-import { Drawer } from 'antd';
+import {Drawer, message, Select} from 'antd';
+import ServingForm from "./ServingForm";
+
+const { Option } = Select;
 
 const DAILY_VALUES = {
     fat: 78, // g
@@ -26,6 +29,7 @@ const getDailyValue = (nutrient, amount) => {
 
 const NutritionSider = ({ selectedFood, onClose }) => {
     const [foodDetails, setFoodDetails] = useState(null);
+    const [selectedServing, setSelectedServing] = useState(null);
 
     useEffect(() => {
         const getData = async () => {
@@ -38,6 +42,7 @@ const NutritionSider = ({ selectedFood, onClose }) => {
                 const response = await Axios.get(url);
                 if (response.status === 200) {
                     setFoodDetails(response.data.food);
+                    setSelectedServing(response.data.food.servings.serving[0]); // Default to the first serving
                 } else {
                     setFoodDetails(null);
                 }
@@ -48,9 +53,30 @@ const NutritionSider = ({ selectedFood, onClose }) => {
         getData();
     }, [selectedFood]);
 
-    if (!foodDetails) return null;
+    const onSubmitMeal = async (data) => {
+        try {
+            let token = localStorage.getItem("auth-token");
+            const headers = {
+                "x-auth-token": token,
+            };
+            const url = `${BASE_URL}/api/food/add-meal`;
+            const response = await Axios.post(url, data, {headers});
+            if (response.status === 200) {
+                message.success((<div>Meal Added Successfully!!</div>), 10);
+            } else {
+                setFoodDetails(null);
+            }
+        } catch (error) {
+            setFoodDetails(null);
+        }
+    };
 
-    const serving = foodDetails.servings.serving[0];
+    const handleServingChange = (servingId) => {
+        const selected = foodDetails.servings.serving.find(serving => serving.serving_id === servingId);
+        setSelectedServing(selected);
+    };
+
+    if (!foodDetails || !selectedServing) return null;
 
     return (
         <Drawer className={styles.nutrition_facts} onClose={onClose}
@@ -64,22 +90,28 @@ const NutritionSider = ({ selectedFood, onClose }) => {
             <div className={styles.nutrition_facts}>
                 <div className={`${styles.heading} ${styles.black}`}>Nutrition Facts</div>
                 <div className={`${styles.divider} ${styles.thin}`}/>
-                <table className={styles.serving_size}>
-                    <tbody>
-                    <tr>
-                        <td className={`${styles.serving_size} ${styles.black}`}>Serving Size</td>
-                        <td className={`${styles.serving_size} ${styles.black}`}>
-                            {serving.serving_description} ({serving.metric_serving_amount}{serving.metric_serving_unit})
-                        </td>
-                    </tr>
-                    </tbody>
-                </table>
+                <div className={styles.serving_selector}>
+                    <span className={`${styles.serving_size} ${styles.black}`}>Serving Size: </span>
+                    <Select
+                        defaultValue={selectedServing.serving_id}
+                        key={selectedServing.serving_id}
+                        size={"small"}
+                        dropdownMatchSelectWidth={true}
+                        onChange={handleServingChange}
+                    >
+                        {foodDetails.servings.serving.map((serving) => (
+                            <Option key={serving.serving_id} value={serving.serving_id}>
+                                {serving.serving_description} ({serving.metric_serving_amount}{serving.metric_serving_unit})
+                            </Option>
+                        ))}
+                    </Select>
+                </div>
                 <div className={`${styles.divider} ${styles.thick}`}/>
                 <div className={styles.left}>
                     <div className={`${styles.nutrient} ${styles.black}`}>Amount Per Serving</div>
                     <div className={`${styles.hero_label} ${styles.black}`}>Calories</div>
                 </div>
-                <div className={`${styles.hero_value} ${styles.black} ${styles.right}`}>{serving.calories}</div>
+                <div className={`${styles.hero_value} ${styles.black} ${styles.right}`}>{selectedServing.calories}</div>
                 <div className={`${styles.divider} ${styles.medium}`}/>
                 <div className={`${styles.nutrient} ${styles.left}`}>&nbsp;</div>
                 <div className={`${styles.nutrient} ${styles.black} ${styles.right}`}>% Daily Values*</div>
@@ -96,7 +128,7 @@ const NutritionSider = ({ selectedFood, onClose }) => {
                     { label: "Sugars", key: "sugar", unit: "g", isSub: true },
                     { label: "Protein", key: "protein", unit: "g" }
                 ].map((item, index) => {
-                    const value = serving[item.key] || 0;
+                    const value = selectedServing[item.key] || 0;
                     return (
                         <React.Fragment key={index}>
                             <div className={`${styles.nutrient} ${item.isSub ? styles.sub : styles.black} ${styles.left}`}>{item.label}</div>
@@ -117,7 +149,7 @@ const NutritionSider = ({ selectedFood, onClose }) => {
                     { label: "Iron", key: "iron", unit: "mg" },
                     { label: "Potassium", key: "potassium", unit: "mg" }
                 ].map((item, index) => {
-                    const value = serving[item.key] || 0;
+                    const value = selectedServing[item.key] || 0;
                     return (
                         <React.Fragment key={index}>
                             <div className={`${styles.nutrient} ${styles.left}`}>{item.label}</div>
@@ -134,6 +166,7 @@ const NutritionSider = ({ selectedFood, onClose }) => {
                     2,000 calories a day is used for general nutrition advice.
                 </div>
             </div>
+            <ServingForm foodData={foodDetails} onSubmit={onSubmitMeal}/>
         </Drawer>
     );
 };

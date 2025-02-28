@@ -1,9 +1,6 @@
 import React, {useState, useEffect, useContext} from "react";
 import styles from "./Search.module.css";
-import Axios from "axios";
-import {BASE_URL, getHeaders} from "../../config/Config";
-import {Button, Dropdown, Icon, Input, Menu, notification} from 'antd';
-import UserContext from "../../context/UserContext";
+import {Input,} from 'antd';
 import SearchFoodList  from './SearchFoodList';
 
 
