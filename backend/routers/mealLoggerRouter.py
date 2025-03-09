@@ -1,6 +1,6 @@
 import os
 from datetime import date
-from typing import Optional
+from typing import Optional, Dict
 import requests
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
@@ -243,36 +243,103 @@ async def get_user_meal_log(user_id: str, date: Optional[str] = None, start_date
 
 # Note: Need to discuss the below APIs
 #  Update Meal Log API (PUT /v1/360_degree_fitness/update_meal_log)
-@meal_log_router.put("/v1/360_degree_fitness/update_meal_log/{meal_log_id}")
-async def update_user_meal_log(meal_log_id: str, user_meal: UserMealLogger):
-    try:
-        if not meal_log_id:
-            return JSONResponse(status_code=400, content={"message": "meal_log_id is required for updating meal"})
+# @meal_log_router.put("/v1/360_degree_fitness/update_meal_log/{meal_log_id}")
+# async def update_user_meal_log(meal_log_id: str, user_meal: UserMealLogger):
+#     try:
+#         if not meal_log_id:
+#             return JSONResponse(status_code=400, content={"message": "meal_log_id is required for updating meal"})
+#
+#         updated_data = user_meal.dict(exclude_unset=True)  # Only send the fields that are provided by the user
+#
+#         await update_meal_log(meal_log_id, updated_data)
+#
+#         return JSONResponse(status_code=200,
+#                             content={"message": "Meal log updated successfully", "log_id": meal_log_id})
 
-        updated_data = user_meal.dict(exclude_unset=True)  # Only send the fields that are provided by the user
+    # except PyMongoError as e:
+    #     return JSONResponse(status_code=500, content={"message": f"Database error: {str(e)}"})
+    # except Exception as e:
+    #     return JSONResponse(status_code=500, content={"message": f"Error updating meal log: {str(e)}"})
 
-        await update_meal_log(meal_log_id, updated_data)
 
-        return JSONResponse(status_code=200,
-                            content={"message": "Meal log updated successfully", "log_id": meal_log_id})
+def update_nutrition_summary(meal_diary):
+    total_calories = 0
+    total_fat = 0
+    total_carbs = 0
+    total_protein = 0
 
-    except PyMongoError as e:
-        return JSONResponse(status_code=500, content={"message": f"Database error: {str(e)}"})
-    except Exception as e:
-        return JSONResponse(status_code=500, content={"message": f"Error updating meal log: {str(e)}"})
+    for meal_type in ["breakfast", "lunch", "dinner", "snacks"]:
+        meal_list = meal_diary.get(meal_type, [])
+        for meal in meal_list:
+            total_calories += meal.get("total_calories", 0)
+            total_fat += meal.get("total_fat", 0)
+            total_carbs += meal.get("total_carbs", 0)
+            total_protein += meal.get("total_protein", 0)
 
+    meal_diary["daily_nutrition_summary"] = {
+        "total_calories": total_calories,
+        "total_fat": total_fat,
+        "total_carbs": total_carbs,
+        "total_protein": total_protein,
+    }
 
 #  Delete Meal Log API (DELETE /v1/360_degree_fitness/delete_meal_log)
-@meal_log_router.delete("/v1/360_degree_fitness/delete_meal_log/{meal_log_id}")
-async def delete_user_meal_log(meal_log_id: str):
+@meal_log_router.delete("/v1/360_degree_fitness/delete_meal_log")
+async def delete_user_meal_log(delete_meal_request: Dict):
     try:
-        if not meal_log_id:
-            return JSONResponse(status_code=400, content={"message": "meal_log_id is required for deleting a meal"})
+        user_id = delete_meal_request.get("user_id")
+        meal_log_date = delete_meal_request.get("date")
+        meal_type = delete_meal_request.get("meal_type")
+        index = delete_meal_request.get("index")
 
-        await delete_meal_log(meal_log_id)
+        if not user_id or not meal_log_date or not meal_type or index is None:
+            return JSONResponse(status_code=400, content={"message": "user_id, date, meal_type, and index are required"})
 
-        return JSONResponse(status_code=200,
-                            content={"message": "Meal log deleted successfully", "log_id": meal_log_id})
+        #  Check if the meal diary already exists for the user and date
+        existing_meal_diary = await meal_diary_collection.find_one(
+            {"user_id": user_id, "date": meal_log_date}
+        )
+        if not existing_meal_diary:
+            return JSONResponse(status_code=404, content={"message": f"No meal diary found for {user_id} on {meal_log_date}"})
+
+        existing_meal_list = existing_meal_diary.get(meal_type)
+
+        if existing_meal_list is None:
+            return JSONResponse(status_code=400, content={"message": f"Invalid meal type: {meal_type}"})
+
+        if index < 0 or index >= len(existing_meal_list):
+            return JSONResponse(status_code=400, content={"message": f"Invalid index: {index}"})
+
+        deleted_meal = existing_meal_list.pop(index)
+
+        #  Recalculate the Nutrition Summary
+        update_nutrition_summary(existing_meal_diary)
+
+        #  Save the updated meal diary back to mongoDB
+        update_result = await meal_diary_collection.update_one(
+            {"user_id": user_id, "date": meal_log_date},
+            {
+                "$set": {
+                    f"{meal_type}": existing_meal_list,
+                    "daily_nutrition_summary": existing_meal_diary["daily_nutrition_summary"]
+                }
+            }
+        )
+
+        if update_result.modified_count == 0:
+            return JSONResponse(status_code=500, content={"message": "Failed to update this meal diary"})
+
+        # Fetch the updated meal diary (optional, if you want to return it)
+        updated_meal_diary = await meal_diary_collection.find_one(
+            {"user_id": user_id, "date": meal_log_date}
+        )
+
+        serialized_meal_diary = serialize_mongo_doc(updated_meal_diary)
+
+        return JSONResponse(status_code=200, content={
+            "message": "Meal log deleted successfully",
+            "meal_diary": serialized_meal_diary
+        })
 
     except PyMongoError as e:
         return JSONResponse(status_code=500, content={"message": f"Database error: {str(e)}"})
@@ -281,74 +348,74 @@ async def delete_user_meal_log(meal_log_id: str):
 
 
 #  Get Daily/Weekly Nutritional Summary API (GET /v1/360_degree_fitness/nutritional_summary)
-@meal_log_router.get("/v1/360_degree_fitness/nutritional_summary")
-async def get_nutritional_summary(user_id: str, start_date: str, end_date: str, period: Optional[str]):
-    try:
-        # Query the database to get meal logs for the given user and date range
-        user_meal_logs = await get_meal(user_id, start_date, end_date)
-        
-        # Serialize the MongoDB documents
-        serialized_meal_logs = serialize_mongo_doc(user_meal_logs)
-
-        # Initializing the total nutritional values
-        tot_calories = 0
-        tot_fat = 0
-        tot_carbs = 0
-        tot_protein = 0
-
-        for log in serialized_meal_logs:
-            tot_calories += log.get("total_calories", 0)
-            tot_fat += log.get("total_fat", 0)
-            tot_carbs += log.get("total_carbs", 0)
-            tot_protein += log.get("total_protein", 0)
-
-        # The nutritional summary is being returned
-        return {
-            "user_id": user_id,
-            "start_date": start_date,
-            "end_date": end_date,
-            "total_calories": tot_calories,
-            "total_fat": tot_fat,
-            "total_carbs": tot_carbs,
-            "total_protein": tot_protein,
-            "period": period
-        }
-    except Exception as e:
-        return JSONResponse(status_code=500, content={"message": f"Error fetching nutritional summary: {str(e)}"})
+# @meal_log_router.get("/v1/360_degree_fitness/nutritional_summary")
+# async def get_nutritional_summary(user_id: str, start_date: str, end_date: str, period: Optional[str]):
+#     try:
+#         # Query the database to get meal logs for the given user and date range
+#         user_meal_logs = await get_meal(user_id, start_date, end_date)
+#
+#         # Serialize the MongoDB documents
+#         serialized_meal_logs = serialize_mongo_doc(user_meal_logs)
+#
+#         # Initializing the total nutritional values
+#         tot_calories = 0
+#         tot_fat = 0
+#         tot_carbs = 0
+#         tot_protein = 0
+#
+#         for log in serialized_meal_logs:
+#             tot_calories += log.get("total_calories", 0)
+#             tot_fat += log.get("total_fat", 0)
+#             tot_carbs += log.get("total_carbs", 0)
+#             tot_protein += log.get("total_protein", 0)
+#
+#         # The nutritional summary is being returned
+#         return {
+#             "user_id": user_id,
+#             "start_date": start_date,
+#             "end_date": end_date,
+#             "total_calories": tot_calories,
+#             "total_fat": tot_fat,
+#             "total_carbs": tot_carbs,
+#             "total_protein": tot_protein,
+#             "period": period
+#         }
+#     except Exception as e:
+#         return JSONResponse(status_code=500, content={"message": f"Error fetching nutritional summary: {str(e)}"})
 
 
 #  Get Calorie Chart for the Day (GET /v1/360_degree_fitness/calorie_chart)
-@meal_log_router.get("/v1/360_degree_fitness/calorie_chart")
-async def get_calorie_chart(user_id: str, date: str):
-    try:
-        user_meal_logs = await get_meal(user_id, date, date)  # fetching meal log for a particular day
-
-        # Initializing the total calories consumed
-        total_calories_consumed = 0
-        for log in user_meal_logs:
-            total_calories_consumed += log.get("total_calories", 0)
-
-        # Note: Later include this part
-        # Retrieve user's exercise data (calories burnt) from an external API (assuming a function exists)
-        # total_calories_burnt
-
-        # Retrieve the user's base goal (target calories)
-        # How to calculate the base goal of the user?
-        user_base_goal = 2000
-
-        # Calculate the remaining calories
-        calories_left = user_base_goal - total_calories_consumed
-
-        return {
-            "user_id": user_id,
-            "date": date,
-            "total_calories_consumed": total_calories_consumed,
-            "calories_left": calories_left,
-            "user_base_goal": user_base_goal
-        }
-
-    except Exception as e:
-        return JSONResponse(status_code=500, content={"message": f"Error fetching calorie chart: {str(e)}"})
+# @meal_log_router.get("/v1/360_degree_fitness/calorie_chart")
+# async def get_calorie_chart(user_id: str, date: str):
+#     try:
+#         user_meal_logs = await get_meal(user_id, date, date)  # fetching meal log for a particular day
+#
+#         # Initializing the total calories consumed
+#         total_calories_consumed = 0
+#         for log in user_meal_logs:
+#             total_calories_consumed += log.get("total_calories", 0)
+#
+#         # Note: Later include this part
+#         # Retrieve user's exercise data (calories burnt) from an external API (assuming a function exists)
+#         # total_calories_burnt
+#
+#         # Retrieve the user's base goal (target calories)
+#         # How to calculate the base goal of the user?
+#         user_base_goal = 2000
+#
+#         # Calculate the remaining calories
+#         calories_left = user_base_goal - total_calories_consumed
+#
+#         return {
+#             "user_id": user_id,
+#             "date": date,
+#             "total_calories_consumed": total_calories_consumed,
+#             "calories_left": calories_left,
+#             "user_base_goal": user_base_goal
+#         }
+#
+#     except Exception as e:
+#         return JSONResponse(status_code=500, content={"message": f"Error fetching calorie chart: {str(e)}"})
 
 #  Get Nutritional Info for Food API (GET /v1/360_degree_fitness/food_nutrition_info)
 #  Get Calorie Intake vs Burnt Tracker (GET /v1/360_degree_fitness/calorie_tracker)
