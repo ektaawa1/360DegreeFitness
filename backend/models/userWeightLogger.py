@@ -1,0 +1,1 @@
+#  Pydantic Model class for Weight Logger
