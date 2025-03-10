@@ -1,8 +1,10 @@
 import json
+import os
 from datetime import date
 from decimal import Decimal
 from typing import Dict
 
+import httpx
 from bson import ObjectId
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
@@ -11,6 +13,13 @@ from pymongo.errors import PyMongoError
 from ..models.userExerciseLogger import UserExerciseLogger
 
 exercise_log_router = APIRouter()
+
+#  External API to fetch exercise details
+NUTRITIONIX_API_URL = os.getenv("NUTRITIONIX_API_URL")
+NUTRITIONIX_APP_ID = os.getenv("NUTRITIONIX_APP_ID")
+NUTRITIONIX_API_KEY = os.getenv("NUTRITIONIX_API_KEY")
+
+
 
 # Update the encoder to handle both Decimal and date objects
 class CustomEncoder(json.JSONEncoder):
@@ -210,3 +219,56 @@ async def delete_user_exercise_log(delete_exercise_request: Dict):
 
     except Exception as e:
         return JSONResponse(status_code=500, content={"message": f"Error deleting exercise log: {str(e)}"})
+
+
+@exercise_log_router.post("/v1/360_degree_fitness/calculateCaloriesBurnt")
+async def calculate_calories_burnt(exercise_info_req: Dict):
+    try:
+        exercise_type = exercise_info_req.get("exercise_type")
+        duration_minutes = exercise_info_req.get("duration_minutes")
+        user_id = exercise_info_req.get("user_id")
+        date_logged = exercise_info_req.get("date_logged")
+
+        if not exercise_type or not duration_minutes:
+            return JSONResponse(status_code=400, content={"message": "exercise_type and duration_minutes are required"})
+
+        # Make the external call to the Nutritionix API
+        async with httpx.AsyncClient() as client:
+            exercise_response = await client.post(
+                NUTRITIONIX_API_URL,
+                json={"query": f"{exercise_type} for {duration_minutes} minutes"},  # Body with exercise description
+                headers={
+                    "x-app-id": NUTRITIONIX_APP_ID,  # app_id header
+                    "x-app-key": NUTRITIONIX_API_KEY,  # app_key header
+                    "Content-Type": "application/json"  # Content-Type header
+                }
+            )
+
+        # Check if the response status is successful
+        if exercise_response.status_code != 200:
+            return JSONResponse(status_code=500, content={"message": "Error calling Nutritionix API"})
+
+        # Parse the response data
+        exercise_data = exercise_response.json()
+
+        # Check if the response contains the exercise data
+        if "exercises" not in exercise_data or len(exercise_data["exercises"]) == 0:
+            return JSONResponse(status_code=404, content={"message": "No exercise data found"})
+
+        exercise = exercise_data["exercises"][0]
+
+        # Return the calories burnt info from the response
+        return JSONResponse(status_code=200, content={
+            "message": "Calories burnt calculated successfully",
+            "data": {
+            "user_id": user_id,
+            "date_logged": date_logged,
+            "exercise_type": exercise_type,
+            "duration_minutes": duration_minutes,
+            "intensity_type": exercise_info_req.get("intensity_type"),
+            "calories_burnt": round(exercise["nf_calories"], 2)  # Calories burnt from response
+        }
+    })
+
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"message": f"Error calculating calories: {str(e)}"})
