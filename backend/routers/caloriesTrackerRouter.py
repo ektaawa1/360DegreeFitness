@@ -14,7 +14,6 @@ calorie_tracker_router = APIRouter()
 # assumption
 NUTRITION_GOAL_API_URL = "http://localhost:8000/v1/360_degree_fitness/calculate_nutritional_goals/{user_id}"
 
-
 @calorie_tracker_router.get("/v1/360_degree_fitness/calorie_intake_vs_burnt")
 async def calorie_intake_vs_burnt(user_id: str, date: date):
     try:
@@ -27,8 +26,14 @@ async def calorie_intake_vs_burnt(user_id: str, date: date):
 
         total_calories_consumed = user_meal_diary.get("daily_nutrition_summary", {}).get("total_calories", 0)
 
-        # Step 2: Get Calories Burnt (From external exercise tracking API)
-        total_calories_burnt = 500  # await xxxx(user_id, date)
+        # Step 2: Get Calories Burnt
+        user_exercise_diary = await exercise_diary_collection.find_one({"user_id": user_id, "date": date.isoformat()})
+
+        if not user_exercise_diary:
+            return JSONResponse(status_code=404,
+                                content={"message": "Exercise diary not found for this user on the given date"})
+
+        total_calories_burnt = user_exercise_diary.get("daily_exercise_summary", {}).get("total_calories_burnt", 0)
 
         # Step 3: Fetch User's Daily Caloric Requirement from Nutrition Goals API
         try:
