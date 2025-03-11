@@ -26,6 +26,9 @@ changes_collection = db['fitness_profile_changes']
 key_recommendations_collection = db["key_recommendations"] # for chatbot to store key recommendations
 conversation_history_collection = db["conversation_history"] # for chatbot to store conversation history
 meal_diary_collection = db["meal_diary"] # for storing users' meal diary and meal logs
+exercise_diary_collection = db["exercise_diary"] # for storing users' exercise diary and exercise logs
+weight_diary_collection = db["weight_diary"] # for storing users' weight diary and weight logs
+nutrition_goals_collection = db["nutrition_goals"]
 
 # Decimal handling
 class DecimalEncoder(json.JSONEncoder):

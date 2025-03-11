@@ -1,7 +1,8 @@
 from typing import Dict
 from fastapi import APIRouter, HTTPException
-from backend.db.connection import get_fitness_profile_collection
-from backend.models.nutritionalGoals import NutritionalGoals
+from ..db.connection import get_fitness_profile_collection
+from ..db.database import nutrition_goals_collection
+from ..models.nutritionalGoals import NutritionalGoals
 
 nutrition_goal_router = APIRouter()
 
@@ -71,8 +72,14 @@ async def calculate_nutritional_goals(user_id: str):
 
         # Calculate the nutritional goals based on the user profile details
         nutrition_goals = nutritional_goals_calculator(age, gender, weight, height, activity_level)
-        return NutritionalGoals(**nutrition_goals)
         # where to save this data? which collection??
+        await nutrition_goals_collection.update_one(
+            {"user_id": user_id},
+            {"$set": nutrition_goals},
+            upsert=True
+        )
+        return NutritionalGoals(**nutrition_goals)
+
     except ValueError as e:
         return HTTPException(status_code=400, detail=str(e))
 

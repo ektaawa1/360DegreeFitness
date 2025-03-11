@@ -11,6 +11,7 @@ from fastapi.responses import JSONResponse
 from pymongo.errors import PyMongoError
 
 from ..models.userExerciseLogger import UserExerciseLogger
+from ..db.database import exercise_diary_collection
 
 exercise_log_router = APIRouter()
 
