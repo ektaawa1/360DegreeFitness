@@ -3,7 +3,7 @@ from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from datetime import date
 
-from backend.db.database import meal_diary_collection
+from ..db.database import meal_diary_collection, exercise_diary_collection
 
 #  get calories consumed from the Meal Logger
 #  get calories burnt from the Exercise Logger
