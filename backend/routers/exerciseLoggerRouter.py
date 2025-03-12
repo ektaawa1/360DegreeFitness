@@ -10,7 +10,7 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
 from pymongo.errors import PyMongoError
 
-from ..models.userExerciseLogger import UserExerciseLogger
+from ..models.userExerciseLogger import UserExerciseDiary
 from ..db.database import exercise_diary_collection
 
 exercise_log_router = APIRouter()
@@ -90,9 +90,18 @@ def update_exercise_summary(exercise_diary):
     return exercise_diary
 
 @exercise_log_router.post("/v1/360_degree_fitness/addExerciseLog")
-async def add_exercise_log(user_exercise_log: UserExerciseLogger):
-    user_id = user_exercise_log.user_id
-    exercise_log_date = user_exercise_log.exercise_log_date
+async def add_exercise_log(exercise_log_request: UserExerciseDiary):
+    print("Inside add exercise Log function")
+    user_id = exercise_log_request.user_id
+    exercise_log_date = exercise_log_request.date.isoformat()
+    user_exercise_log = exercise_log_request.exercises[0] if exercise_log_request.exercises else None
+
+    if not user_id or not exercise_log_date or not user_exercise_log:
+        return JSONResponse(status_code=400, content={"message": "Missing required fields."})
+
+    print(f"user_id is: {user_id}")
+    print(f"exercise log date: {exercise_log_date}")
+    print(f"exercise log details: {user_exercise_log}")
     try:
         # Fetch the existing exercise diary from MongoDB
         existing_exercise_diary = await exercise_diary_collection.find_one(
@@ -178,15 +187,28 @@ async def delete_user_exercise_log(delete_exercise_request: Dict):
         if existing_exercises is None:
             return JSONResponse(status_code=400, content={"message": "No exercises found for this user on this date"})
 
+        # Log the current exercises before deletion
+        print(f"Existing exercises before deletion: {existing_exercises}")
+        print(f"Index to delete: {index}")
+
         # Validate the index
         if index < 0 or index >= len(existing_exercises):
             return JSONResponse(status_code=400, content={"message": f"Invalid index: {index}"})
 
         # Remove the exercise from the list
-        existing_exercises.pop(index)
+        deleted_exercise = existing_exercises.pop(index)
+        print(f"Deleted exercise: {deleted_exercise}")
 
         # Recalculate the Exercise Summary
-        updated_exercise_diary = update_exercise_summary(existing_exercise_diary)
+        # updated_exercise_diary = update_exercise_summary(existing_exercise_diary)
+        # Recalculate the Exercise Summary **after** modifying the exercises list
+        updated_exercise_diary = update_exercise_summary({
+            "exercises": existing_exercises,  # Only pass the updated exercises list
+            "daily_exercise_summary": existing_exercise_diary.get("daily_exercise_summary", {})
+        })
+
+        # Log the updated exercise summary
+        print(f"Updated exercise summary: {updated_exercise_diary['daily_exercise_summary']}")
 
         # Save the updated exercise diary back to MongoDB
         update_result = await exercise_diary_collection.update_one(
@@ -198,6 +220,9 @@ async def delete_user_exercise_log(delete_exercise_request: Dict):
                 }
             }
         )
+
+        # Log the result of the update operation
+        print(f"Update result: {update_result.modified_count}")
 
         if update_result.modified_count == 0:
             return JSONResponse(status_code=500, content={"message": "Failed to update exercise diary"})
@@ -228,7 +253,7 @@ async def calculate_calories_burnt(exercise_info_req: Dict):
         exercise_type = exercise_info_req.get("exercise_type")
         duration_minutes = exercise_info_req.get("duration_minutes")
         user_id = exercise_info_req.get("user_id")
-        date_logged = exercise_info_req.get("date_logged")
+        date_logged = exercise_info_req.get("date")
 
         if not exercise_type or not duration_minutes:
             return JSONResponse(status_code=400, content={"message": "exercise_type and duration_minutes are required"})
@@ -263,7 +288,7 @@ async def calculate_calories_burnt(exercise_info_req: Dict):
             "message": "Calories burnt calculated successfully",
             "data": {
             "user_id": user_id,
-            "date_logged": date_logged,
+            "date": date_logged,
             "exercise_type": exercise_type,
             "duration_minutes": duration_minutes,
             "intensity_type": exercise_info_req.get("intensity_type"),
