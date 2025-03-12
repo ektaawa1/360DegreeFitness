@@ -615,7 +615,12 @@ async def find_similar_questions(user_id: str, current_question: str, threshold:
     
     return None
 
-# Add a feedback endpoint to learn from user interactions
+# Add this before the feedback endpoint
+class ChatFeedback(BaseModel):
+    conversation_id: str
+    feedback_rating: int
+    feedback_text: str = None
+
 @chat_router.post("/v1/360_degree_fitness/chat/feedback")
 async def provide_chat_feedback(feedback: ChatFeedback):
     """Endpoint for users to provide feedback on AI responses"""
