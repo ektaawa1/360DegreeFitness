@@ -1,10 +1,11 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, UploadFile, File, BackgroundTasks
 from fastapi.responses import FileResponse, JSONResponse
 import orjson
 from pydantic import BaseModel
-from typing import List, Optional, Literal
+from typing import List, Optional, Literal, Union
 import google.generativeai as genai
 import os
+import json
 from dotenv import load_dotenv
 from ..db.database import profiles_collection, key_recommendations_collection, conversation_history_collection, meal_diary_collection
 from datetime import datetime, timedelta, date
@@ -15,12 +16,14 @@ from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from io import BytesIO
-from fastapi import BackgroundTasks
 import calendar
-from enum import Enum, auto
+from enum import Enum
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
+import pytesseract
+from PIL import Image
+import base64
 
 load_dotenv()
 gemini_api_key = os.getenv("GEMINI_API_KEY")
@@ -32,6 +35,7 @@ if not gemini_api_key:
 print(f"Initializing Gemini with API key: {gemini_api_key[:5]}...")
 genai.configure(api_key=gemini_api_key)
 
+# No need for a separate client - we'll use the standard genai module
 chat_router = APIRouter()
 
 class ChatMessage(BaseModel):
@@ -961,3 +965,333 @@ async def get_chat_history(
             status_code=400,
             detail="Unsupported format. Available formats: json, pdf"
         )
+    
+@chat_router.post("/v1/360_degree_fitness/process_food_image")
+async def process_food_image(
+    image_file: UploadFile = File(...), 
+    user_id: Optional[str] = None, 
+    image_type: str = "auto",
+    return_ocr_text: bool = False
+):
+    """
+    Process a food image, extract text, and identify food items with nutrition information
+    
+    Parameters:
+    - image_file: The uploaded image file
+    - user_id: Optional user ID for personalization
+    - image_type: Type of image - "label" (nutrition label), "food" (actual food), or "auto" (detect automatically)
+    - return_ocr_text: Whether to return the raw OCR text in the response
+    """
+    try:
+        # Read the image file
+        image_content = await image_file.read()
+        
+        # First determine if this is a nutrition label or actual food
+        detected_type = image_type
+        ocr_text = None
+        
+        if image_type == "auto" or return_ocr_text:
+            # We'll use the enhanced OCR first to check if it's a nutrition label
+            # Reset file position for OCR
+            await image_file.seek(0)
+            
+            # Try enhanced OCR first
+            ocr_result = await enhanced_ocr(image_file)
+            
+            if ocr_result["success"]:
+                ocr_text = ocr_result["text"]
+                
+                if image_type == "auto":
+                    text = ocr_text.lower()
+                    nutrition_keywords = ["calories", "protein", "carbohydrate", "fat", "sodium", "serving", "nutrition facts"]
+                    
+                    # Count how many nutrition keywords are found
+                    keyword_count = sum(1 for keyword in nutrition_keywords if keyword in text)
+                    
+                    # If multiple nutrition keywords are found, it's likely a nutrition label
+                    detected_type = "label" if keyword_count >= 2 else "food"
+                    print(f"Auto-detected image type: {detected_type} (found {keyword_count} nutrition keywords)")
+            elif image_type == "auto":
+                # If OCR failed, assume it's a food image
+                detected_type = "food"
+                print(f"OCR failed, assuming image type: {detected_type}")
+        
+        # Process based on detected type
+        result = None
+        if detected_type == "label":
+            result = await process_nutrition_label_with_gemini(image_content, image_file.content_type)
+        else:
+            result = await process_actual_food_with_gemini(image_content, image_file.content_type)
+        
+        # Add OCR text to the result if requested
+        if return_ocr_text and result["success"] and ocr_text:
+            result["ocr_text"] = ocr_text
+            
+            # If it's a label, also add cleaned text using Gemini
+            if detected_type == "label":
+                # Use Gemini to clean and structure the OCR text
+                model = genai.GenerativeModel('gemini-1.5-pro')
+                
+                prompt = f"""
+                The following text was extracted from a food label using OCR, but it may contain errors or be poorly formatted:
+                
+                {ocr_text}
+                
+                Please clean up this text and extract the following information if present:
+                1. Product name
+                2. Brand name
+                3. Health claims (like "Heart Healthy", "Low Fat", "Gluten Free", etc.)
+                4. Nutrition facts (calories, fat, protein, etc.)
+                5. Ingredients
+                
+                Format the output as clean, readable text with appropriate sections.
+                """
+                
+                response = model.generate_content(prompt)
+                result["cleaned_ocr_text"] = response.text
+            
+        return result
+            
+    except Exception as e:
+        print(f"Food image processing error: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "message": f"Error processing food image: {str(e)}"}
+        )
+
+async def process_nutrition_label_with_gemini(image_content: bytes, mime_type: str):
+    """Process a nutrition label image using Gemini's multimodal capabilities"""
+    try:
+        # Convert image to base64 for Gemini
+        base64_image = base64.b64encode(image_content).decode('utf-8')
+        
+        # Use Gemini to extract structured nutrition information
+        model = genai.GenerativeModel('gemini-1.5-pro')
+        
+        prompt = """
+        This is a nutrition label. Please extract the following nutrition information:
+        
+        1. Food name/product name
+        2. Serving size
+        3. Calories per serving
+        4. Total fat (g)
+        5. Saturated fat (g)
+        6. Trans fat (g)
+        7. Cholesterol (mg)
+        8. Sodium (mg)
+        9. Total carbohydrates (g)
+        10. Dietary fiber (g)
+        11. Sugars (g)
+        12. Protein (g)
+        13. Any vitamins or minerals listed with percentages
+        
+        Return a JSON object with these nutrition facts. Use null for values that aren't found.
+        Example format:
+        {
+          "food_name": "Product Name",
+          "serving_size": "1 cup (240ml)",
+          "calories": 150,
+          "total_fat": 5,
+          "saturated_fat": 2,
+          "trans_fat": 0,
+          "cholesterol": 0,
+          "sodium": 160,
+          "total_carbohydrates": 25,
+          "dietary_fiber": 3,
+          "sugars": 10,
+          "protein": 5,
+          "vitamins_minerals": {"Vitamin D": "10%", "Calcium": "20%", "Iron": "4%", "Potassium": "2%"}
+        }
+        """
+        
+        # Create multipart request with image
+        response = model.generate_content([
+            prompt,
+            {
+                "mime_type": mime_type or "image/jpeg",
+                "data": base64_image
+            }
+        ])
+        
+        try:
+            # Parse the response to get nutrition information
+            response_text = response.text.strip()
+            
+            # Handle case where response might include markdown code blocks
+            if "```json" in response_text:
+                response_text = response_text.split("```json")[1].split("```")[0].strip()
+            elif "```" in response_text:
+                response_text = response_text.split("```")[1].split("```")[0].strip()
+                
+            nutrition_info = json.loads(response_text)
+            return {
+                "success": True, 
+                "image_type": "label",
+                "nutrition_info": nutrition_info
+            }
+        except Exception as parse_error:
+            print(f"Error parsing Gemini response for nutrition label: {str(parse_error)}")
+            print(f"Response text: {response.text}")
+            return {"success": False, "message": "Failed to extract nutrition information"}
+    
+    except Exception as e:
+        print(f"Nutrition label processing error: {str(e)}")
+        return {"success": False, "message": f"Error processing nutrition label: {str(e)}"}
+
+async def process_actual_food_with_gemini(image_content: bytes, mime_type: str):
+    """Process an image of actual food using Gemini's multimodal capabilities"""
+    try:
+        # Convert image to base64 for Gemini
+        base64_image = base64.b64encode(image_content).decode('utf-8')
+        
+        # Use Gemini to identify food items and estimate nutrition
+        model = genai.GenerativeModel('gemini-1.5-pro')
+        
+        prompt = """
+        This is an image of food. Please:
+        
+        1. Identify all visible food items in the image
+        2. Estimate portion sizes where possible
+        3. Provide estimated nutrition information for each item:
+           - Calories
+           - Protein (g)
+           - Carbohydrates (g)
+           - Fat (g)
+        4. Calculate total nutrition values for the entire meal
+        
+        Return a JSON object with the following structure:
+        {
+          "meal_description": "Brief description of the overall meal",
+          "food_items": [
+            {
+              "food_name": "Item name",
+              "portion_size": "Estimated portion (e.g., '1 cup', '3 oz')",
+              "calories": 150,
+              "protein": 5,
+              "carbohydrates": 20,
+              "fat": 6
+            },
+            // Additional items...
+          ],
+          "total_nutrition": {
+            "calories": 450,
+            "protein": 15,
+            "carbohydrates": 60,
+            "fat": 18
+          }
+        }
+        """
+        
+        # Create multipart request with image
+        response = model.generate_content([
+            prompt,
+            {
+                "mime_type": mime_type or "image/jpeg",
+                "data": base64_image
+            }
+        ])
+        
+        try:
+            # Parse the response to get food items and nutrition
+            response_text = response.text.strip()
+            
+            # Handle case where response might include markdown code blocks
+            if "```json" in response_text:
+                response_text = response_text.split("```json")[1].split("```")[0].strip()
+            elif "```" in response_text:
+                response_text = response_text.split("```")[1].split("```")[0].strip()
+                
+            food_analysis = json.loads(response_text)
+            return {
+                "success": True, 
+                "image_type": "food",
+                "food_analysis": food_analysis
+            }
+        except Exception as parse_error:
+            print(f"Error parsing Gemini response for food image: {str(parse_error)}")
+            print(f"Response text: {response.text}")
+            return {"success": False, "message": "Failed to analyze food image"}
+    
+    except Exception as e:
+        print(f"Food image analysis error: {str(e)}")
+        return {"success": False, "message": f"Error analyzing food image: {str(e)}"}
+
+async def enhanced_ocr(image_file: UploadFile = File(...)):
+    """Extract text from an image with enhanced preprocessing for better OCR results"""
+    try:
+        # Read the image file
+        image_content = await image_file.read()
+        
+        # Use PIL to open the image
+        image = Image.open(BytesIO(image_content))
+        
+        # Convert to grayscale for better OCR
+        gray_image = image.convert('L')
+        
+        # Apply multiple preprocessing techniques and combine results
+        results = []
+        
+        # 1. Basic grayscale OCR
+        custom_config = r'--oem 3 --psm 6 -l eng --dpi 300'  # Page segmentation mode 6: Assume a single uniform block of text
+        basic_text = pytesseract.image_to_string(gray_image, config=custom_config)
+        if basic_text.strip():
+            results.append(basic_text)
+        
+        # 2. Try with different page segmentation mode
+        custom_config = r'--oem 3 --psm 4 -l eng --dpi 300'  # Page segmentation mode 4: Assume a single column of text
+        column_text = pytesseract.image_to_string(gray_image, config=custom_config)
+        if column_text.strip():
+            results.append(column_text)
+        
+        # 3. Try with thresholding for better contrast
+        threshold = 150
+        binary_image = gray_image.point(lambda x: 0 if x < threshold else 255, '1')
+        threshold_text = pytesseract.image_to_string(binary_image, config=r'--oem 3 --psm 6 -l eng --dpi 300')
+        if threshold_text.strip():
+            results.append(threshold_text)
+        
+        # 4. Try with different scaling
+        width, height = image.size
+        scaled_img = image.resize((width*2, height*2), Image.LANCZOS)  # Upscale for better detail
+        scaled_gray = scaled_img.convert('L')
+        scaled_text = pytesseract.image_to_string(scaled_gray, config=r'--oem 3 --psm 1 -l eng --dpi 300')  # PSM 1: Auto page segmentation
+        if scaled_text.strip():
+            results.append(scaled_text)
+        
+        # Combine and clean results
+        if results:
+            # Join all results and remove duplicate lines
+            all_lines = set()
+            for result in results:
+                lines = result.split('\n')
+                for line in lines:
+                    clean_line = line.strip()
+                    if clean_line and len(clean_line) > 1:  # Ignore single characters
+                        all_lines.add(clean_line)
+            
+            # Sort lines by length (longer lines first, as they're likely more complete)
+            sorted_lines = sorted(all_lines, key=len, reverse=True)
+            
+            # Join the lines back together
+            combined_text = '\n'.join(sorted_lines)
+            
+            return {"success": True, "text": combined_text}
+        else:
+            # If all methods failed, try one more approach with very aggressive preprocessing
+            from PIL import ImageFilter
+            sharpened = gray_image.filter(ImageFilter.SHARPEN)
+            sharpened = sharpened.filter(ImageFilter.SHARPEN)  # Double sharpen
+            last_attempt = pytesseract.image_to_string(sharpened, config=r'--oem 3 --psm 12 -l eng --dpi 300')  # PSM 12: Sparse text with OSD
+            
+            if last_attempt and last_attempt.strip():
+                return {"success": True, "text": last_attempt}
+            else:
+                return {"success": False, "message": "No text detected in the image"}
+            
+    except Exception as e:
+        print(f"Enhanced OCR Error: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "message": f"Error processing image: {str(e)}"}
+        )
+

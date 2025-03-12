@@ -8,8 +8,8 @@ from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from pymongo.errors import PyMongoError
 
-from backend.models.userWeightLogger import UserWeightLogger
-from backend.db.database import weight_diary_collection, profiles_collection, changes_collection
+from ..models.userWeightLogger import UserWeightLogger
+from ..db.database import weight_diary_collection, profiles_collection, changes_collection
 
 weight_log_router = APIRouter()
 
