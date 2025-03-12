@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from .db.connection import Database
 from .db.database import init_db
-from .routers import userFitnessProfileRouter, fitnessPlanRouter, authRouter, chatRouter, mealLoggerRouter
+from .routers import userFitnessProfileRouter, fitnessPlanRouter, authRouter, chatRouter, mealLoggerRouter, nutritionGoalRouter, caloriesTrackerRouter, exerciseLoggerRouter, weightLoggerRouter
 
 app = FastAPI()
 
@@ -39,6 +39,22 @@ app.include_router(
 app.include_router(
     mealLoggerRouter.meal_log_router,
     tags=["Meal Logger"]
+)
+app.include_router(
+    nutritionGoalRouter.nutrition_goal_router,
+    tags=["Nutrition Goals"]
+)
+app.include_router(
+    caloriesTrackerRouter.calorie_tracker_router,
+    tags=["Calorie Tracker"]
+)
+app.include_router(
+    exerciseLoggerRouter.exercise_log_router,
+    tags=["Exercise Logger"]
+)
+app.include_router(
+    weightLoggerRouter.weight_log_router,
+    tags=["Weight Logger"]
 )
 
 # Data model for analysis input
