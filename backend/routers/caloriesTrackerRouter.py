@@ -17,8 +17,13 @@ NUTRITION_GOAL_API_URL = "http://localhost:8000/v1/360_degree_fitness/calculate_
 @calorie_tracker_router.get("/v1/360_degree_fitness/calorie_intake_vs_burnt")
 async def calorie_intake_vs_burnt(user_id: str, date: date):
     try:
+        date_str = date.isoformat()
+
+        # Log the input date and the formatted date string for debugging
+        print(f"Received Date: {date}, Date String: {date_str}")
+
         # Step 1: Get Calories Consumed
-        user_meal_diary = await meal_diary_collection.find_one({"user_id": user_id, "date": date.isoformat()})
+        user_meal_diary = await meal_diary_collection.find_one({"user_id": user_id, "date": date_str})
 
         if not user_meal_diary:
             return JSONResponse(status_code=404,
@@ -27,7 +32,7 @@ async def calorie_intake_vs_burnt(user_id: str, date: date):
         total_calories_consumed = user_meal_diary.get("daily_nutrition_summary", {}).get("total_calories", 0)
 
         # Step 2: Get Calories Burnt
-        user_exercise_diary = await exercise_diary_collection.find_one({"user_id": user_id, "date": date.isoformat()})
+        user_exercise_diary = await exercise_diary_collection.find_one({"user_id": user_id, "date": date_str})
 
         if not user_exercise_diary:
             return JSONResponse(status_code=404,
@@ -41,7 +46,8 @@ async def calorie_intake_vs_burnt(user_id: str, date: date):
                 response = await client.get(NUTRITION_GOAL_API_URL.format(user_id=user_id))
                 response.raise_for_status()  # Raise an error for non-2xx responses
                 nutrition_goals = response.json()
-                daily_calories_requirement = nutrition_goals["total_calories_goal"]
+                daily_calories_requirement = int(nutrition_goals["total_calories_goal"])
+
         except httpx.RequestError as e:
             return JSONResponse(status_code=500, content={"message": f"Error fetching nutrition goals: {str(e)}"})
         except KeyError:
@@ -59,7 +65,7 @@ async def calorie_intake_vs_burnt(user_id: str, date: date):
         # Step 5: Return the result
         return {
             "user_id": user_id,
-            "date": date.isoformat(),
+            "date": date_str,
             "daily_calories_requirement": daily_calories_requirement,
             "total_calories_intake": total_calories_consumed,
             "total_calories_burnt": total_calories_burnt,
