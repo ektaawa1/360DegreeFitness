@@ -7,6 +7,7 @@
 - Conda (recommended) or pip
 - Node.js and npm
 - MongoDB Atlas account and connection string
+- Tesseract OCR (for image text recognition)
 
 ### • Clone Repository
 git clone https://github.com/tashigarg/360DegreeFitness.git
@@ -47,6 +48,21 @@ ACCESS_TOKEN_EXPIRE_MINUTES=your_access_token_expire_minutes_here
 SECRET_KEY=your_secret_key_here
 
 GEMINI_API_KEY=your_gemini_api_key_here
+
+### • Install Tesseract OCR
+#### macOS:
+```bash
+brew install tesseract
+```
+
+#### Ubuntu/Debian:
+```bash
+sudo apt-get install tesseract-ocr
+```
+
+#### Windows:
+1. Download the installer from https://github.com/UB-Mannheim/tesseract/wiki
+2. Install and add the installation directory to your PATH
 
 #### 2. Install dependencies
 #### >> Install requirements from backend directory
