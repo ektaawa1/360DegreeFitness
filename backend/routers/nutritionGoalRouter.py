@@ -1,5 +1,6 @@
 from typing import Dict
 from fastapi import APIRouter, HTTPException
+from fastapi.responses import JSONResponse
 from ..db.connection import get_fitness_profile_collection
 from ..db.database import nutrition_goals_collection
 from ..models.nutritionalGoals import NutritionalGoals
@@ -81,6 +82,7 @@ async def calculate_nutritional_goals(user_id: str):
         return NutritionalGoals(**nutrition_goals)
 
     except ValueError as e:
-        return HTTPException(status_code=400, detail=str(e))
-
-    # modify the exceptions later
+        return JSONResponse(status_code=400, content={"message": str(e)})
+    except Exception as e:
+        # Catch all other exceptions
+        return JSONResponse(status_code=500, content={"message": f"An error occurred: {str(e)}"})
