@@ -19,6 +19,7 @@
     "classnames": "^2.3.1",
     "clsx": "^1.1.1",
     "currency-flags": "^4.0.7",
+    "highcharts": "^12.1.2",
     "highcharts-react-official": "^3.2.1",
     "jspdf": "^3.0.0",
     "moment": "^2.30.1",
