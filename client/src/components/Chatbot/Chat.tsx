@@ -1,15 +1,16 @@
 import React, { useState, useRef, useEffect, useContext } from 'react';
 import axios from 'axios';
-import { API_PATHS } from '../../config/Config';
 import styles from './Chat.module.css';
 import UserContext from '../../context/UserContext';
 import jsPDF from 'jspdf';
-
+import { API_PATHS } from '../../config/Config';
 interface Message {
     type: 'user' | 'bot';
     content: string;
     timestamp: string;
     conversationId?: string;
+    isImage?: boolean;
+    imageData?: string;
 }
 
 const Chat: React.FC = () => {
@@ -30,6 +31,8 @@ const Chat: React.FC = () => {
     const [resizeType, setResizeType] = useState<'horizontal' | 'vertical' | null>(null);
     const resizeRef = useRef<{ startX: number; startY: number; startWidth: number; startHeight: number } | null>(null);
     const [conversationId, setConversationId] = useState('');
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [imageUploading, setImageUploading] = useState(false);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -109,6 +112,185 @@ const Chat: React.FC = () => {
         }
 
         setLoading(false);
+    };
+
+    const handleImageUpload = () => {
+        fileInputRef.current?.click();
+    };
+
+    const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const files = event.target.files;
+        if (!files || files.length === 0 || !userData.user) return;
+
+        const file = files[0];
+
+        console.log('File selected:', {
+            name: file.name,
+            type: file.type,
+            size: `${(file.size / 1024).toFixed(2)} KB`
+        });
+
+        // Check if file is an image
+        if (!file.type.startsWith('image/')) {
+            alert('Please upload an image file (JPEG, PNG, WEBP,etc.)');
+            return;
+        }
+
+        // Create a preview of the image
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            const imageData = e.target?.result as string;
+
+            // Add user message with image
+            const userMessage = {
+                type: 'user' as const,
+                content: 'I uploaded a food image for analysis',
+                timestamp: new Date().toLocaleTimeString(),
+                isImage: true,
+                imageData
+            };
+
+            setMessages(prev => [...prev, userMessage]);
+            setImageUploading(true);
+
+            try {
+                // Create form data
+                const formData = new FormData();
+                formData.append('image_file', file);
+                if (!userData.user) {
+                    throw new Error('User data is missing');
+                }
+                formData.append('user_id', userData.user.id);
+                formData.append('return_ocr_text', 'true');
+
+                const token = localStorage.getItem('auth-token');
+
+                // Log the request details for debugging
+                console.log('Sending image to backend using the same pattern as chat endpoint');
+
+                // Use the same API_PATHS.CHAT pattern as the regular chat functionality
+                const response = await axios.post(
+                    `${API_PATHS.CHAT}/process_food_image`,
+                    formData,
+                    {
+                        headers: {
+                            'Content-Type': 'multipart/form-data',
+                            'Authorization': `Bearer ${token}`
+                        }
+                    }
+                );
+
+                // Format the response for display
+                let responseContent = '';
+
+                if (response.data.success) {
+                    if (response.data.image_type === 'label') {
+                        // Format nutrition label data
+                        const nutrition = response.data.nutrition_info;
+                        responseContent = `📋 **Nutrition Label Analysis**\n\n`;
+                        responseContent += `**Product**: ${nutrition.food_name || 'Unknown'}\n`;
+                        responseContent += `**Serving Size**: ${nutrition.serving_size || 'Not specified'}\n\n`;
+                        responseContent += `**Nutrition Facts**:\n`;
+                        responseContent += `• Calories: ${nutrition.calories || 'N/A'}\n`;
+                        responseContent += `• Total Fat: ${nutrition.total_fat || 'N/A'}g\n`;
+                        responseContent += `• Saturated Fat: ${nutrition.saturated_fat || 'N/A'}g\n`;
+                        responseContent += `• Trans Fat: ${nutrition.trans_fat || 'N/A'}g\n`;
+                        responseContent += `• Cholesterol: ${nutrition.cholesterol || 'N/A'}mg\n`;
+                        responseContent += `• Sodium: ${nutrition.sodium || 'N/A'}mg\n`;
+                        responseContent += `• Total Carbs: ${nutrition.total_carbohydrates || 'N/A'}g\n`;
+                        responseContent += `• Dietary Fiber: ${nutrition.dietary_fiber || 'N/A'}g\n`;
+                        responseContent += `• Sugars: ${nutrition.sugars || 'N/A'}g\n`;
+                        responseContent += `• Protein: ${nutrition.protein || 'N/A'}g\n`;
+                    } else {
+                        // Format food image analysis
+                        const foodAnalysis = response.data.food_analysis;
+                        responseContent = `🍽️ **Food Analysis**\n\n`;
+                        responseContent += `**Meal**: ${foodAnalysis.meal_description || 'Unknown meal'}\n\n`;
+                        responseContent += `**Food Items**:\n`;
+
+                        if (foodAnalysis.food_items && foodAnalysis.food_items.length > 0) {
+                            foodAnalysis.food_items.forEach((item: any, index: number) => {
+                                responseContent += `${index + 1}. ${item.food_name} (${item.portion_size || 'Unknown portion'})\n`;
+                                responseContent += `   • Calories: ${item.calories || 'N/A'}\n`;
+                                responseContent += `   • Protein: ${item.protein || 'N/A'}g\n`;
+                                responseContent += `   • Carbs: ${item.carbohydrates || 'N/A'}g\n`;
+                                responseContent += `   • Fat: ${item.fat || 'N/A'}g\n\n`;
+                            });
+                        }
+
+                        responseContent += `**Total Nutrition**:\n`;
+                        responseContent += `• Calories: ${foodAnalysis.total_nutrition?.calories || 'N/A'}\n`;
+                        responseContent += `• Protein: ${foodAnalysis.total_nutrition?.protein || 'N/A'}g\n`;
+                        responseContent += `• Carbs: ${foodAnalysis.total_nutrition?.carbohydrates || 'N/A'}g\n`;
+                        responseContent += `• Fat: ${foodAnalysis.total_nutrition?.fat || 'N/A'}g\n`;
+                    }
+
+                    // Add OCR text if available and cleaned
+                    if (response.data.cleaned_ocr_text) {
+                        responseContent += `\n\n**Additional Information**:\n${response.data.cleaned_ocr_text}`;
+                    }
+                } else {
+                    responseContent = `Sorry, I couldn't analyze this food image. ${response.data.message || ''}`;
+                }
+
+                // Add bot response
+                const botMessage = {
+                    type: 'bot' as const,
+                    content: responseContent,
+                    timestamp: new Date().toLocaleTimeString()
+                };
+
+                setMessages(prev => [...prev, botMessage]);
+
+            } catch (error: any) {
+                console.error('Food image processing error:', error);
+
+                // More detailed error logging
+                if (error.response) {
+                    // The request was made and the server responded with a status code
+                    // that falls out of the range of 2xx
+                    console.error('Error response data:', error.response.data);
+                    console.error('Error response status:', error.response.status);
+                    console.error('Error response headers:', error.response.headers);
+                    console.error('Request URL:', error.config?.url);
+                    console.error('Request method:', error.config?.method);
+
+                    const errorMessage = {
+                        type: 'bot' as const,
+                        content: `Sorry, I encountered an error processing your food image (${error.response.status}): ${error.response.data.message || 'Unknown error'}. Please try again with a different image.`,
+                        timestamp: new Date().toLocaleTimeString()
+                    };
+                    setMessages(prev => [...prev, errorMessage]);
+                } else if (error.request) {
+                    // The request was made but no response was received
+                    console.error('Error request:', error.request);
+                    const errorMessage = {
+                        type: 'bot' as const,
+                        content: 'Sorry, I couldn\'t reach the server to process your food image. Please check your internet connection and try again.',
+                        timestamp: new Date().toLocaleTimeString()
+                    };
+                    setMessages(prev => [...prev, errorMessage]);
+                } else {
+                    // Something happened in setting up the request that triggered an Error
+                    console.error('Error message:', error.message);
+                    const errorMessage = {
+                        type: 'bot' as const,
+                        content: 'Sorry, I encountered an error processing your food image. Please try again.',
+                        timestamp: new Date().toLocaleTimeString()
+                    };
+                    setMessages(prev => [...prev, errorMessage]);
+                }
+            } finally {
+                setImageUploading(false);
+
+                // Reset file input
+                if (fileInputRef.current) {
+                    fileInputRef.current.value = '';
+                }
+            }
+        };
+
+        reader.readAsDataURL(file);
     };
 
     const handleMouseDown = (e: React.MouseEvent) => {
@@ -229,7 +411,8 @@ const Chat: React.FC = () => {
             conversation: messages.map(msg => ({
                 role: msg.type,
                 content: msg.content,
-                timestamp: msg.timestamp
+                timestamp: msg.timestamp,
+                isImage: msg.isImage || false
             }))
         };
 
@@ -321,7 +504,16 @@ const Chat: React.FC = () => {
                                 key={index}
                                 className={`${styles.message} ${message.type === 'user' ? styles.userMessage : styles.botMessage}`}
                             >
-                                <div className={styles.messageContent}>
+                                <div className={styles.messageContent} style={{ wordBreak: 'break-word', overflowWrap: 'break-word', whiteSpace: 'pre-wrap' }}>
+                                    {message.isImage && message.imageData && (
+                                        <div className={styles.imagePreview}>
+                                            <img
+                                                src={message.imageData}
+                                                alt="Food"
+                                                style={{ maxWidth: '100%', maxHeight: '200px', borderRadius: '8px' }}
+                                            />
+                                        </div>
+                                    )}
                                     {message.content}
                                     <div className={styles.timestamp}>
                                         {message.timestamp}
@@ -354,20 +546,35 @@ const Chat: React.FC = () => {
                             onChange={(e) => setInputValue(e.target.value)}
                             onKeyPress={(e) => e.key === 'Enter' && handleSend()}
                             placeholder="Type your message here..."
-                            disabled={loading}
+                            disabled={loading || imageUploading}
                             className={styles.input}
                         />
                         <button
+                            onClick={handleImageUpload}
+                            disabled={loading || imageUploading}
+                            className={styles.nutritionButton}
+                            title="Upload food image for nutrition analysis"
+                        >
+                            Analyze Food 🍔
+                        </button>
+                        <input
+                            type="file"
+                            ref={fileInputRef}
+                            onChange={handleFileChange}
+                            accept="image/*"
+                            style={{ display: 'none' }}
+                        />
+                        <button
                             onClick={handleSend}
-                            disabled={loading}
+                            disabled={loading || imageUploading}
                             className={styles.sendButton}
                         >
                             Send
                         </button>
                     </div>
-                    {loading && (
+                    {(loading || imageUploading) && (
                         <div className={styles.loadingIndicator}>
-                            AI is thinking...
+                            {imageUploading ? 'Analyzing food image...' : 'AI is thinking...'}
                         </div>
                     )}
                 </div>
