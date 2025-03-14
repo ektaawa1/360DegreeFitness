@@ -12,6 +12,7 @@ class UserDetailsUpdate(BaseModel):
         'Male',
         'Female',
         'Other']]
+    weight_goal_in_kg: Optional[condecimal(ge=0)]
 
 class InitialMeasurementsUpdate(BaseModel):
     arms_in_cm: Optional[condecimal(ge=0)] #positive value
