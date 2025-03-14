@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useContext} from "react";
+import React, {useState} from "react";
 import styles from "./Search.module.css";
 import {Input,} from 'antd';
 import SearchFoodList  from './SearchFoodList';

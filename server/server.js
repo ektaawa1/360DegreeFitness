@@ -43,6 +43,10 @@ const foodRouter = require("./food-diary/routes/foodRoutes");
 app.use("/api/food", foodRouter);
 
 
+const weightRouter = require("./weight/routes/weightRoutes");
+app.use("/api/weight", weightRouter);
+
+
 
 // Serve UI
 if (process.env.NODE_ENV === "production") {
