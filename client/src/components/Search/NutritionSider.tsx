@@ -86,7 +86,7 @@ const NutritionSider = ({ selectedFood, onClose }) => {
                 maskClosable={false}
                 closable={true}
                 visible={true}
-                width={400}>
+                width={500}>
             <div className={styles.nutrition_facts}>
                 <div className={`${styles.heading} ${styles.black}`}>Nutrition Facts</div>
                 <div className={`${styles.divider} ${styles.thin}`}/>
@@ -96,7 +96,8 @@ const NutritionSider = ({ selectedFood, onClose }) => {
                         defaultValue={selectedServing.serving_id}
                         key={selectedServing.serving_id}
                         size={"small"}
-                        dropdownMatchSelectWidth={true}
+
+                        dropdownMatchSelectWidth={false}
                         onChange={handleServingChange}
                     >
                         {foodDetails.servings.serving.map((serving) => (

@@ -142,6 +142,7 @@ div.nutrition_facts .hero_value {
 
 .add_diary_form .ant-form-item {
   margin: 0 !important;
+  padding-bottom: 0 !important;
 }
 
 .centerGrid {

@@ -4,9 +4,15 @@ import styles from './LandingPage.module.css';
 const initItems = [
   {
     key: '1',
-    title: 'Single Stop to get updates on fitness. ....',
+    title: 'Single Stop to get updates on fitness',
     content:
-      'Single Stop to get updates',
+      'Generate workout & diet plans based on user goals. It track calories, weight, and workouts.',
+  },
+  {
+    key: '4',
+    title: ' AI Analysis',
+    content:
+        'Use ML models to create personalized workout plans based on fitness level, generate diet plans based on user goals. Scan meal images to detect nutritional values',
   },
   {
     key: '2',
@@ -18,7 +24,7 @@ const initItems = [
     key: '3',
     title: ' Workout Logging',
     content:
-      'The user logs in daily workouts by selecting- type of exercise & the duration.',
+      'The user logs in daily workouts by selecting type of exercise & the duration.',
   },
 ];
 
@@ -39,11 +45,6 @@ export const TopCards = () => {
               <div className="content">
                 <h3>{item.title}</h3>
                 <p>{item.content}</p>
-                <div className="btnHolder">
-                  <Button type="primary" size="large">
-                    Learn More
-                  </Button>
-                </div>
               </div>
             </div>
           );

@@ -206,13 +206,11 @@ hero
 .heroBlock h3 {
   font-size: 30px;
   line-height: 1.2;
-  margin: 0 0 30px;
   padding: 20px;
 }
 
 .heroBlock p {
-  margin: 0 0 30px;
-  padding: 20px;
+  margin-left: 30px;
 }
 
 .heroBlock .btnHolder {

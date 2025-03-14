@@ -109,7 +109,7 @@ const ProfileCreation = ({userData, editMode, onClose}) => {
             const response = await Axios.put(url, data, {
                  headers
              });
-            message.success(response.data.message, 5);
+            message.success(response.data.message  || 'Profile updated successfully!!', 5);
             setVisible(false);
             onClose();
             // set message
@@ -118,7 +118,7 @@ const ProfileCreation = ({userData, editMode, onClose}) => {
             const response = await Axios.post(url, data, {
                 headers
             });
-            message.success(response.data.message, 5);
+            message.success(response.data.message || 'Profile created successfully!!', 5);
             // set message
             setVisible(false);
             onClose();

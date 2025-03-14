@@ -39,14 +39,14 @@ const ServingFormEL = ({ form, foodData, onSubmit }) => {
 
     return (
         <Form layout="vertical" onSubmit={handleSubmit} className={styles.add_diary_form}>
-            <Form.Item label="Date">
+            <Form.Item label="Date" style={{ padding: 0}}>
                 {getFieldDecorator('date', {
                     initialValue: moment(),
                     rules: [{ required: true, message: 'Please select a date' }],
                 })(<DatePicker format="YYYY-MM-DD" style={{ width: '100%' }} allowClear={false} />)}
             </Form.Item>
 
-            <Form.Item label="Meal">
+            <Form.Item label="Meal" style={{ padding: 0}}>
                 {getFieldDecorator('meal', {
                     initialValue: "Breakfast",
                     rules: [{ required: true, message: 'Please select a meal type' }],
@@ -60,14 +60,14 @@ const ServingFormEL = ({ form, foodData, onSubmit }) => {
                 )}
             </Form.Item>
 
-            <Form.Item label="Serving Quantity">
+            <Form.Item label="Serving Quantity" style={{ padding: 0}}>
                 {getFieldDecorator('quantity', {
                     initialValue: 1,
                     rules: [{ required: true, message: 'Please enter quantity' }],
                 })(<InputNumber min={0} step={0.1} style={{ width: '100%' }} />)}
             </Form.Item>
 
-            <Form.Item label="Serving Type">
+            <Form.Item label="Serving Type" style={{ padding: 0}}>
                 {getFieldDecorator('servingType', {
                     rules: [{ required: true, message: 'Please select a serving type' }],
                 })(
@@ -81,7 +81,7 @@ const ServingFormEL = ({ form, foodData, onSubmit }) => {
                 )}
             </Form.Item>
 
-            <Form.Item>
+            <Form.Item style={{ padding: 0}}>
                 <Button type="primary" htmlType="submit">Add to Diary</Button>
             </Form.Item>
         </Form>

@@ -10,7 +10,7 @@ const LandingPage = ({onClick}) => {
             <div className="main">
                 <TopCards/>
                 <Feature onClick={onClick}/>
-                <FAQ/>
+                {/*<FAQ/>*/}
             </div>
         </div>
     );
