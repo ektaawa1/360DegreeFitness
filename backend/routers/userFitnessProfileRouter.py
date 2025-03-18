@@ -45,10 +45,6 @@ async def get_fitness_profile(user_id: str):
     # Get collection inside the handler
     fitness_profiles_collection = get_fitness_profile_collection()
 
-#     try:
-#         user_id = ObjectId(user_id)
-#     except Exception as e:
-#         return JSONResponse(status_code=400, content= {"message": "Invalid user id format"})
     try:
         user_profile = await fitness_profiles_collection.find_one({"user_id": user_id})
         print("----User Profile----:", user_profile)
@@ -88,13 +84,9 @@ async def delete_fitness_profile(user_id: str):
     # Get collection inside the handler
     fitness_profiles_collection = get_fitness_profile_collection()
 
-#     try:
-#         user_id = ObjectId(user_id)
-#     except Exception as e:
-#         return JSONResponse(status_code=400, content={"message": "Invalid user id format"})
     try:
         print("----Attempting to delete profile with user_id:----:", user_id)
-        #do we need to check here if the user profile exists or not?
+
         # MongoDB access to delete the fitness profile
         result = await fitness_profiles_collection.delete_one({"user_id": user_id})
         print("----Delete result----", {result.deleted_count})
@@ -116,10 +108,7 @@ async def delete_fitness_profile(user_id: str):
 async def check_profile_complete(user_id: str):
     # Get collection inside the handler
     fitness_profiles_collection = get_fitness_profile_collection()
-#     try:
-#         user_id = ObjectId(user_id)
-#     except Exception as e:
-#         return JSONResponse(status_code=400, content= {"message": "Invalid user id format"})
+
     try:
         # Fetch User Profile from DB
         user_profile = await fitness_profiles_collection.find_one({"user_id": user_id})
@@ -148,6 +137,32 @@ async def check_profile_complete(user_id: str):
                 break
 
         return {"profile_exists": True, "profile_complete": is_complete,}
+    except PyMongoError as e:
+        return JSONResponse(status_code=500, content={"message":f"Database error: {str(e)}"})
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"message": f"Unexpected error: {str(e)}"})
+
+@profile_router.get("/v1/360_degree_fitness/get_weight_goal/{user_id}")
+async def get_user_weight_goal(user_id: str):
+    # Get collection inside the handler
+    fitness_profiles_collection = get_fitness_profile_collection()
+    try:
+        user_profile = await fitness_profiles_collection.find_one({"user_id": user_id})
+
+        if not user_profile:
+            return JSONResponse(status_code=404, content={"message": "User profile not found"})
+
+        # Extract the weight goal from the user profile
+        user_weight_goal = user_profile.get("user_basic_details", {}).get("weight_goal_in_kg")
+
+        if user_weight_goal is None:
+            return JSONResponse(status_code=400, content={"message": "Weight goal not set for the user"})
+
+        return {
+            "user_id": user_id,
+            "weight_goal_in_kg": user_weight_goal
+        }
+
     except PyMongoError as e:
         return JSONResponse(status_code=500, content={"message":f"Database error: {str(e)}"})
     except Exception as e:

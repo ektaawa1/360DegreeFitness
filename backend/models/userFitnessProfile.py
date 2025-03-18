@@ -11,6 +11,7 @@ class UserDetails(BaseModel):
         'Female',
         'Other'
     ]
+    weight_goal_in_kg: condecimal(ge=0)  # The desired weight goal
 
 class InitialMeasurements(BaseModel):
     arms_in_cm: Optional[condecimal(ge=0)]  # Positive value
