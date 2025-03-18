@@ -80,7 +80,7 @@ class RoutineAssessmentFormEl extends React.Component<any, any> {
 
                         <Panel header="Daily Routine" key="2">
                             {['wakeup_time', 'breakfast_time', 'lunch_time', 'evening_snacks_time', 'dinner_time', 'bed_time'].map((field, index) => (
-                                <Form.Item label={field.replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase())} key={index}>
+                                <Form.Item label={field.replace('_', ' ').replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase())} key={index}>
                                     {getFieldDecorator(`daily_routine.${field}`)(
                                         <TimePicker format="h:mm A" use12Hours />
                                     )}

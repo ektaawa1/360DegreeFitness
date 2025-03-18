@@ -50,7 +50,6 @@ exports.get_meal_details = async (req, res) => {
         const user_id = verified.id;
         const response = await axios.get(`${FASTAPI_BASE_URL}/getMyMealDiary?user_id=${user_id}&meal_date=${date}`);
         const data = meal_data(response.data);
-        console.log(data);
         return res.json(data);
     } catch (error) {
         return res.json({

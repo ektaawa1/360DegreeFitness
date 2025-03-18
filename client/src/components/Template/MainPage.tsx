@@ -3,16 +3,12 @@ import {useNavigate} from "react-router-dom";
 import UserContext from "../../context/UserContext";
 import 'antd/dist/antd.css';
 import './index.css';
-import {Layout, Menu, Breadcrumb, Popconfirm, PageHeader, Dropdown} from 'antd';
+import {Layout, Menu, Breadcrumb, Popconfirm, PageHeader, Dropdown, Icon} from 'antd';
 import {
-    DashboardOutlined,
-    ExitToApp, HomeOutlined, TableChartOutlined,
     Menu as MenuIcon,
     MenuOpenOutlined,
-    SearchOutlined,
     PersonOutlineOutlined,
     ArrowDropDownOutlined,
-    LibraryBooksOutlined,
 } from "@material-ui/icons";
 import Copyright from "./Copyright";
 import {Search} from "../index";
@@ -104,32 +100,33 @@ const MainPage = () => {
         <div className="App">
             <Layout style={{height: 'calc(100vh)'}}>
                 <Sider collapsible collapsed={collapsed} onCollapse={onCollapse}>
-                    <Menu theme="dark" defaultSelectedKeys={['1']} mode="inline">
+                    <Menu theme="dark" defaultSelectedKeys={['1']} mode="inline"
+                          inlineCollapsed={collapsed}>
                         <Menu.Item key="menu" onClick={() => setCollapse(!collapsed)} style={{height: '50px'}}>
                             {!collapsed && <MenuOpenOutlined fontSize={'28px'}/>}
                             {collapsed && <MenuIcon fontSize={'28px'}/>}
                         </Menu.Item>
                         <Menu.Item key="landing" onClick={() => setPage('landing')}>
-                            <HomeOutlined fontSize={'28px'}/>
+                            <Icon type={"home"}/>
                             <span className={'item'}>{PAGE_TEXTS["landing"]}</span>
                         </Menu.Item>
-                        <Menu.Item key="dashboard" onClick={() => setPage('dashboard')}>
-                            <DashboardOutlined fontSize={'28px'}/>
-                            <span className={'item'}>{PAGE_TEXTS["dashboard"]}</span>
-                        </Menu.Item>
+                        {/*<Menu.Item key="dashboard" onClick={() => setPage('dashboard')}>*/}
+                        {/*    <Icon type={"dashboard"}/>*/}
+                        {/*    <span className={'item'}>{PAGE_TEXTS["dashboard"]}</span>*/}
+                        {/*</Menu.Item>*/}
 
                         <Menu.Item key="search" onClick={() => setPage('search')}>
-                            <SearchOutlined fontSize={'28px'}/>
+                            <Icon type={"search"} />
                             <span className={'item'}>{PAGE_TEXTS["search"]}</span>
                         </Menu.Item>
 
                         <Menu.Item key="diary" onClick={() => setPage('diary')}>
-                            <LibraryBooksOutlined fontSize={'28px'}/>
+                            <Icon type="book" />
                             <span className={'item'}>{PAGE_TEXTS["diary"]}</span>
                         </Menu.Item>
 
                         <Menu.Item key="weight" onClick={() => setPage('weight')}>
-                            <TableChartOutlined fontSize={'28px'}/>
+                            <Icon type="fund" />
                             <span className={'item'}>{PAGE_TEXTS["weight"]}</span>
                         </Menu.Item>
 
@@ -137,7 +134,7 @@ const MainPage = () => {
                             <Popconfirm placement="right" title={'Are you sure you want to logout?'} onConfirm={logout}
                                         okText="Logout"
                                         cancelText="Cancel">
-                                <ExitToApp fontSize={'28px'}/>
+                                <Icon type="logout" />
                                 <span className={'item'}>Logout</span>
                             </Popconfirm>
                         </Menu.Item>

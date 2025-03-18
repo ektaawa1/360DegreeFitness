@@ -33,7 +33,9 @@ const FoodDiary = ({onAdd}) => {
             const url = BASE_URL + `/api/food/get-diary?date=${renderedDate}`;
             const response = await Axios.get(url, {headers});
             if (response.status === 200) {
-                setResponseList(response.data);
+                const data = response.data;
+                setResponseList(data);
+
             }
         };
         getData();
@@ -77,9 +79,9 @@ const FoodDiary = ({onAdd}) => {
                 name: "Nutrients",
                 data: [
                     // {name: "Calories", y: nutritionSummary.total_calories},
-                    {name: "Carbs", y: nutritionSummary.total_carbs},
-                    {name: "Fat", y: nutritionSummary.total_fat},
-                    {name: "Protein", y: nutritionSummary.total_protein},
+                    {name: "Carbs", y: parseFloat((nutritionSummary.total_carbs || 0).toFixed(2))},
+                    {name: "Fat", y: parseFloat((nutritionSummary.total_fat.toFixed(2) || 0))},
+                    {name: "Protein", y: parseFloat((nutritionSummary.total_protein.toFixed(2) || 0))},
                 ],
             },
         ],
@@ -114,10 +116,10 @@ const FoodDiary = ({onAdd}) => {
                     visible={visible}
                     width={400}
                 >
-                    <p><strong>Total Calories:</strong> {nutritionSummary.total_calories}</p>
-                    <p><strong>Total Carbs:</strong> {nutritionSummary.total_carbs}g</p>
-                    <p><strong>Total Fat:</strong> {nutritionSummary.total_fat}g</p>
-                    <p><strong>Total Protein:</strong> {nutritionSummary.total_protein}g</p>
+                    <p><strong>Total Calories:</strong> {nutritionSummary.total_calories} kcal</p>
+                    <p><strong>Total Carbs:</strong> {nutritionSummary.total_carbs.toFixed(2)}g</p>
+                    <p><strong>Total Fat:</strong> {nutritionSummary.total_fat.toFixed(2)}g</p>
+                    <p><strong>Total Protein:</strong> {nutritionSummary.total_protein.toFixed(2)}g</p>
                     <HighchartsReact highcharts={Highcharts} options={chartOptions}/>
                 </Drawer>
         </div>

@@ -53,7 +53,7 @@ const Login = () => {
 
                 <div style={{ marginTop: "15px" }}>
                   <label style={{ fontWeight: "bold", color: "#333" }}>Password</label>
-                  <Input.Password name="password" placeholder="Enter your password" required style={{ borderRadius: "8px", padding: "10px" }} />
+                  <Input.Password name="password" placeholder="Enter your password" required style={{ borderRadius: "8px" }} />
                 </div>
 
                 <div style={{ marginTop: "20px" }}>
