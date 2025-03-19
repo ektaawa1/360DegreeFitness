@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import UserContext from "../../context/UserContext";
 import 'antd/dist/antd.css';
 import './index.css';
-import { Layout, Menu, Popconfirm, PageHeader, Dropdown, Icon } from 'antd';
+import {Layout, Menu, Popconfirm, PageHeader, Dropdown, Icon, Modal, Button} from 'antd';
 import {
     Menu as MenuIcon,
     MenuOpenOutlined,
@@ -39,7 +39,7 @@ const MainPage = () => {
     const [collapsed, setCollapse] = useState(true);
     const [selectedPage, setSelectedPage] = useState<PAGES>('landing');
     const [isEditProfile, setEditProfile] = useState(false);
-
+    const [dialogVisible, setDialogVisible] = useState(false);
     useEffect(() => {
         const path = location.pathname.replace("/", "") as PAGES;
         if (PAGE_TEXTS[path]) {
@@ -152,9 +152,26 @@ const MainPage = () => {
                     <Footer><Copyright /></Footer>
                 </Layout>
                 {(!userData?.profile_created || isEditProfile) &&
-                <ProfileCreation userData={userData} editMode={true} onClose={() => setEditProfile(false)} />
+                <ProfileCreation userData={userData} editMode={true} onClose={() => {
+                    setEditProfile(false);
+                    setDialogVisible(true);
+                }} />
                 }
                 {userData?.profile_created && <Chat />}
+                <Modal
+                    visible={dialogVisible}
+                    title="Fitness Plan Generated"
+                    onCancel={() => setDialogVisible(false)}
+                    footer={[
+                        <Button onClick={() => setDialogVisible(false)} key="cancel">Cancel</Button>,
+                        <Button type="primary" onClick={() => {
+                            setDialogVisible(false);
+                            navigate('/fitnessplan');
+                        }} key="go">Go to Fitness Plan</Button>
+                    ]}
+                >
+                    <p>{'Your fitness plan has been successfully generated with goals. To review them, go to the Fitness Plan page.'}</p>
+                </Modal>
             </Layout>
         </div>
     );
