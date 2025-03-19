@@ -14,19 +14,20 @@ import Copyright from "./Copyright";
 import {Search} from "../index";
 import Dashboard from "../Dashboard/Dashboard";
 import LandingPage from "../LandingPage/LandingPage";
-import {ProfileCreation, FoodDiary, WeightManagement} from "../index";
+import {ProfileCreation, FoodDiary, WeightManagement, FitnessPlanComponent} from "../index";
 import Chat from "../Chatbot/Chat";
 
 const {Header, Content, Footer, Sider} = Layout;
 
-type PAGES = 'search' | 'dashboard' | 'landing' | 'diary' | 'weight';
+type PAGES = 'search' | 'dashboard' | 'landing' | 'diary' | 'weight' | 'fitnessplan';
 const PAGE_TEXTS = {
 
     'dashboard': 'Dashboard',
     'search': 'Search Food',
     'landing': 'Home',
     'diary': 'Food Diary',
-    'weight': 'Weight Log'
+    'weight': 'Weight Log',
+    'fitnessplan': 'Fitness Plan'
 }
 
 const MainPage = () => {
@@ -83,6 +84,10 @@ const MainPage = () => {
                         <WeightManagement />
                     )}
 
+                    {selectedPage === "fitnessplan" && (
+                        <FitnessPlanComponent />
+                    )}
+
                     {selectedPage === "search" && (
                         <Search/>
                     )}
@@ -128,6 +133,11 @@ const MainPage = () => {
                         <Menu.Item key="weight" onClick={() => setPage('weight')}>
                             <Icon type="fund" />
                             <span className={'item'}>{PAGE_TEXTS["weight"]}</span>
+                        </Menu.Item>
+
+                        <Menu.Item key="fitnessplan" onClick={() => setPage('fitnessplan')}>
+                            <Icon type="heart" />
+                            <span className={'item'}>{PAGE_TEXTS["fitnessplan"]}</span>
                         </Menu.Item>
 
                         <Menu.Item key="logout">
