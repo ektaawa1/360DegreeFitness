@@ -6,6 +6,7 @@ import Axios from "axios";
 import Highcharts from "highcharts";
 import HighchartsReact from "highcharts-react-official";
 import {ArrowLeftRounded, ArrowRightRounded} from "@material-ui/icons";
+import { useNavigate } from "react-router-dom";
 
 type FoodEntry = {
     key: string;
@@ -24,7 +25,7 @@ const FoodDiary = ({onAdd}) => {
     const [data, setResponseList] = useState({});
     const [visible, setVisible] = useState(false);
     const styles = {color: "#1890ff", fontWeight: 600};
-
+    const navigate = useNavigate();
     useEffect(() => {
         const getData = async () => {
             const renderedDate = moment.utc(date).local().format("YYYY-MM-DD");
@@ -80,8 +81,8 @@ const FoodDiary = ({onAdd}) => {
                 data: [
                     // {name: "Calories", y: nutritionSummary.total_calories},
                     {name: "Carbs", y: parseFloat((nutritionSummary.total_carbs || 0).toFixed(2))},
-                    {name: "Fat", y: parseFloat((nutritionSummary.total_fat.toFixed(2) || 0))},
-                    {name: "Protein", y: parseFloat((nutritionSummary.total_protein.toFixed(2) || 0))},
+                    {name: "Fat", y: parseFloat((nutritionSummary.total_fat || 0).toFixed(2) )},
+                    {name: "Protein", y: parseFloat((nutritionSummary.total_protein || 0).toFixed(2))},
                 ],
             },
         ],
@@ -102,7 +103,9 @@ const FoodDiary = ({onAdd}) => {
                     expandable={{defaultExpandAllRows: true}}
                     size={"small"}
                 />
-                <Button type="primary" style={{marginTop: 10}} onClick={onAdd}>
+                <Button type="primary" style={{marginTop: 10}} onClick={() => {
+                    navigate("/search");
+                }}>
                     Add Food
                 </Button>
                 <Button type="primary" style={{marginTop: 10, marginLeft: 10}} onClick={() => setVisible(true)}>
@@ -117,9 +120,9 @@ const FoodDiary = ({onAdd}) => {
                     width={400}
                 >
                     <p><strong>Total Calories:</strong> {nutritionSummary.total_calories} kcal</p>
-                    <p><strong>Total Carbs:</strong> {nutritionSummary.total_carbs.toFixed(2)}g</p>
-                    <p><strong>Total Fat:</strong> {nutritionSummary.total_fat.toFixed(2)}g</p>
-                    <p><strong>Total Protein:</strong> {nutritionSummary.total_protein.toFixed(2)}g</p>
+                    <p><strong>Total Carbs:</strong> {nutritionSummary.total_carbs?.toFixed(2)}g</p>
+                    <p><strong>Total Fat:</strong> {nutritionSummary.total_fat?.toFixed(2)}g</p>
+                    <p><strong>Total Protein:</strong> {nutritionSummary.total_protein?.toFixed(2)}g</p>
                     <HighchartsReact highcharts={Highcharts} options={chartOptions}/>
                 </Drawer>
         </div>

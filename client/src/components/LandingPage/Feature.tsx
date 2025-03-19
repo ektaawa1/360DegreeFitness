@@ -6,11 +6,16 @@ import image66 from './assets/images/66.jpg';
 import image5 from './assets/images/2.jpg';
 import image55 from './assets/images/5.jpg';
 import styles from './LandingPage.module.css';
-
+import { useNavigate } from "react-router-dom";
 import { Row, Col, Card } from 'antd';
 const { Meta } = Card;
 
-export const Feature = ({onClick}) => {
+export const Feature = () => {
+  const navigate = useNavigate();
+  const onAdClick = (key) => {
+    navigate(key);
+  }
+
   return (
     <div id="main-feature" className={styles.featureBlock}>
       <div className="container-fluid">
@@ -21,17 +26,17 @@ export const Feature = ({onClick}) => {
           </p>
         </div>
         <Row gutter={[16, 16]}>
-          <Col xs={{ span: 24 }} sm={{ span: 12 }} md={{ span: 8 }}>
+          <Col xs={{ span: 24 }} sm={{ span: 12 }} md={{ span: 8 }} onClick={() => onAdClick('/fitnessplan')}>
             <Card hoverable cover={<img alt="Modern Design" src={image1} />}>
               <Meta title="Fitness at fingertips" />
             </Card>
           </Col>
-          <Col xs={{ span: 24 }} sm={{ span: 12 }} md={{ span: 8 }} onClick={() => onClick('search')}>
+          <Col xs={{ span: 24 }} sm={{ span: 12 }} md={{ span: 8 }} onClick={() => onAdClick('/search')}>
             <Card hoverable cover={<img alt="Test" src={image66} />}>
               <Meta title="Foods and Nutrition" />
             </Card>
           </Col>
-          <Col xs={{ span: 24 }} sm={{ span: 12 }} md={{ span: 8 }} onClick={() => onClick('diary')}>
+          <Col xs={{ span: 24 }} sm={{ span: 12 }} md={{ span: 8 }} onClick={() => onAdClick('/diary')}>
             <Card hoverable cover={<img alt="Test" src={image55} />}>
               <Meta title="Food Diary" />
             </Card>

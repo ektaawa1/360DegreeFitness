@@ -35,7 +35,7 @@ const SearchFoodList = ({ searchedFood }) => {
                 <Content className={styles.sider}>
                     <List
                         itemLayout="horizontal"
-                        dataSource={responseList.filter(food => food.food_name.toLowerCase().includes(searchedFood.toLowerCase()))}
+                        dataSource={(responseList || []).filter(food => food.food_name.toLowerCase().includes(searchedFood.toLowerCase()))}
                         renderItem={(item) => (
                             <List.Item onClick={() => {
                                 setSelectedFood(item)

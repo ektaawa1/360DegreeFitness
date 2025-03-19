@@ -1,9 +1,9 @@
-import React, {useContext, useState} from "react";
-import {useNavigate} from "react-router-dom";
+import React, { useContext, useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import UserContext from "../../context/UserContext";
 import 'antd/dist/antd.css';
 import './index.css';
-import {Layout, Menu, Breadcrumb, Popconfirm, PageHeader, Dropdown, Icon} from 'antd';
+import { Layout, Menu, Popconfirm, PageHeader, Dropdown, Icon } from 'antd';
 import {
     Menu as MenuIcon,
     MenuOpenOutlined,
@@ -11,37 +11,47 @@ import {
     ArrowDropDownOutlined,
 } from "@material-ui/icons";
 import Copyright from "./Copyright";
-import {Search} from "../index";
+import { Search } from "../index";
 import Dashboard from "../Dashboard/Dashboard";
 import LandingPage from "../LandingPage/LandingPage";
-import {ProfileCreation, FoodDiary, WeightManagement, FitnessPlanComponent} from "../index";
+import { ProfileCreation, FoodDiary, WeightManagement, FitnessPlanComponent } from "../index";
 import Chat from "../Chatbot/Chat";
 
-const {Header, Content, Footer, Sider} = Layout;
+const { Header, Content, Footer, Sider } = Layout;
 
-type PAGES = 'search' | 'dashboard' | 'landing' | 'diary' | 'weight' | 'fitnessplan';
+type PAGES = 'landing' | 'dashboard' | 'fitnessplan' | 'diary' | 'weight' |  'search' ;
+
 const PAGE_TEXTS = {
 
-    'dashboard': 'Dashboard',
-    'search': 'Search Food',
+
     'landing': 'Home',
+    'dashboard': 'Dashboard',
+    'fitnessplan': 'Fitness Plan',
     'diary': 'Food Diary',
     'weight': 'Weight Log',
-    'fitnessplan': 'Fitness Plan'
-}
+    'search': 'Search Food',
+};
 
 const MainPage = () => {
-    const {userData, setUserData} = useContext(UserContext);
+    const { userData, setUserData } = useContext(UserContext);
     const navigate = useNavigate();
+    const location = useLocation();
     const [collapsed, setCollapse] = useState(true);
     const [selectedPage, setSelectedPage] = useState<PAGES>('landing');
     const [isEditProfile, setEditProfile] = useState(false);
 
-    const onCollapse = collapsed => {
-        console.log(collapsed);
+    useEffect(() => {
+        const path = location.pathname.replace("/", "") as PAGES;
+        if (PAGE_TEXTS[path]) {
+            setSelectedPage(path);
+        } else {
+            navigate("/landing");
+        }
+    }, [location.pathname]);
+
+    const onCollapse = (collapsed) => {
         setCollapse(collapsed);
     };
-
 
     const logout = () => {
         setUserData({
@@ -52,98 +62,60 @@ const MainPage = () => {
         navigate("/login");
     };
 
-
-    if (!userData.user) {
-        navigate("/login");
-    }
-
     const getPageTitle = () => {
-        return <PageHeader
-            title={`${PAGE_TEXTS[selectedPage]}`}
-        />
+        return <PageHeader title={PAGE_TEXTS[selectedPage]} />;
+    };
 
-    }
+    const renderContent = () => (
+        <div className={'content'}>
+            <PageHeader title={getPageTitle()} />
+            <div style={{ height: '100%', background: 'white', overflow: 'scroll' }}>
+                {selectedPage === "landing" && <LandingPage />}
+                {selectedPage === "dashboard" && <Dashboard />}
+                {selectedPage === "diary" && <FoodDiary />}
+                {selectedPage === "weight" && <WeightManagement />}
+                {selectedPage === "fitnessplan" && <FitnessPlanComponent />}
+                {selectedPage === "search" && <Search />}
+            </div>
+        </div>
+    );
 
-    const renderContent = () => {
-        return (
-            <div className={'content'}>
-                <PageHeader title={getPageTitle()}/>
-                <div style={{height: 'calc(100vh - 255px)', background: 'white'}}>
-                    {selectedPage === "landing" && (
-                        <LandingPage onClick={(page) => setPage(page)}/>
-                    )}
-                    {selectedPage === "dashboard" && (
-                        <Dashboard/>
-                    )}
+    const getIcon = (key: PAGES) => {
+        switch (key) {
+            case 'landing':
+                return 'home';
 
-                    {selectedPage === "diary" && (
-                        <FoodDiary onAdd={() => setPage('search')}/>
-                    )}
+            case "diary":
+                return 'book';
 
-                    {selectedPage === "weight" && (
-                        <WeightManagement />
-                    )}
+            case "fitnessplan":
+                return 'heart';
 
-                    {selectedPage === "fitnessplan" && (
-                        <FitnessPlanComponent />
-                    )}
+            case "weight":
+                return 'fund';
 
-                    {selectedPage === "search" && (
-                        <Search/>
-                    )}
-                </div>
-            </div>)
-    }
-
-
-    const setPage = (page) => {
-        setSelectedPage(page);
+            default:
+                return key;
+        }
     }
 
 
     return (
         <div className="App">
-            <Layout style={{height: 'calc(100vh)'}}>
+            <Layout style={{ height: '100vh' }}>
                 <Sider collapsible collapsed={collapsed} onCollapse={onCollapse}>
-                    <Menu theme="dark" defaultSelectedKeys={['1']} mode="inline"
-                          inlineCollapsed={collapsed}>
-                        <Menu.Item key="menu" onClick={() => setCollapse(!collapsed)} style={{height: '50px'}}>
-                            {!collapsed && <MenuOpenOutlined fontSize={'28px'}/>}
-                            {collapsed && <MenuIcon fontSize={'28px'}/>}
+                    <Menu theme="dark" mode="inline">
+                        <Menu.Item key="menu" onClick={() => setCollapse(!collapsed)} style={{ height: '50px' }}>
+                            {!collapsed ? <MenuOpenOutlined fontSize={'28px'} /> : <MenuIcon fontSize={'28px'} />}
                         </Menu.Item>
-                        <Menu.Item key="landing" onClick={() => setPage('landing')}>
-                            <Icon type={"home"}/>
-                            <span className={'item'}>{PAGE_TEXTS["landing"]}</span>
-                        </Menu.Item>
-                        {/*<Menu.Item key="dashboard" onClick={() => setPage('dashboard')}>*/}
-                        {/*    <Icon type={"dashboard"}/>*/}
-                        {/*    <span className={'item'}>{PAGE_TEXTS["dashboard"]}</span>*/}
-                        {/*</Menu.Item>*/}
-
-                        <Menu.Item key="search" onClick={() => setPage('search')}>
-                            <Icon type={"search"} />
-                            <span className={'item'}>{PAGE_TEXTS["search"]}</span>
-                        </Menu.Item>
-
-                        <Menu.Item key="diary" onClick={() => setPage('diary')}>
-                            <Icon type="book" />
-                            <span className={'item'}>{PAGE_TEXTS["diary"]}</span>
-                        </Menu.Item>
-
-                        <Menu.Item key="weight" onClick={() => setPage('weight')}>
-                            <Icon type="fund" />
-                            <span className={'item'}>{PAGE_TEXTS["weight"]}</span>
-                        </Menu.Item>
-
-                        <Menu.Item key="fitnessplan" onClick={() => setPage('fitnessplan')}>
-                            <Icon type="heart" />
-                            <span className={'item'}>{PAGE_TEXTS["fitnessplan"]}</span>
-                        </Menu.Item>
-
+                        {Object.keys(PAGE_TEXTS).map((key) => (
+                            <Menu.Item key={key} onClick={() => navigate(`/${key}`)}>
+                                <Icon type={getIcon(key)} />
+                                <span className={'item'}>{PAGE_TEXTS[key]}</span>
+                            </Menu.Item>
+                        ))}
                         <Menu.Item key="logout">
-                            <Popconfirm placement="right" title={'Are you sure you want to logout?'} onConfirm={logout}
-                                        okText="Logout"
-                                        cancelText="Cancel">
+                            <Popconfirm placement="right" title={'Are you sure you want to logout?'} onConfirm={logout} okText="Logout" cancelText="Cancel">
                                 <Icon type="logout" />
                                 <span className={'item'}>Logout</span>
                             </Popconfirm>
@@ -151,57 +123,41 @@ const MainPage = () => {
                     </Menu>
                 </Sider>
                 <Layout className="site-layout">
-                    <Header className="site-layout-background header-text" style={{padding: 0}}>
-                        <div style={{display: 'flex'}}>
-                            <div style={{display: 'inline-flex', height: '60px', alignItems: 'center'}}>
-                                <div className="logo"/>
-                                <span className={'logo-text'}>360° Fitness</span>
-                            </div>
-                            <div style={{marginLeft: 'auto', marginRight: '20px'}}>
-                                <Dropdown
-                                    overlay={
-                                        <Menu>
-                                            <Menu.Item key="updateProfile" onClick={() => {
-                                                setEditProfile(true);
-                                            }}>
-                                                <PersonOutlineOutlined style={{verticalAlign: 'middle'}}/> Update
-                                                Profile
-                                            </Menu.Item>
-                                        </Menu>
-                                    }
-                                    trigger={['click']}
-                                >
-                                    <div style={{cursor: 'pointer'}}>
-                                        <span>{`Hello, ${userData.user.name}`}</span>
-                                        <ArrowDropDownOutlined style={{verticalAlign: 'middle'}}/>
+                    <Header className="site-layout-background header-text" style={{ padding: 0 }}>
+                        <div style={{ display: 'flex' }}>
+                            <span className={'logo-text'}>360° Fitness</span>
+                            <div style={{ marginLeft: 'auto', marginRight: '20px' }}>
+                                <Dropdown overlay={
+                                    <Menu>
+                                        <Menu.Item key="updateProfile" onClick={() => setEditProfile(true)}
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center', gap: 5
+                                        }}>
+                                            <PersonOutlineOutlined />
+                                            <span>Update Profile</span>
+                                        </Menu.Item>
+                                    </Menu>
+                                }>
+                                    <div style={{ cursor: 'pointer', display: 'flex',
+                                        alignItems: 'center', gap: 5 }}>
+                                        <span>{`Hello, ${userData.user?.name}`}</span>
+                                        <ArrowDropDownOutlined />
                                     </div>
                                 </Dropdown>
                             </div>
                         </div>
                     </Header>
-                    <Content style={{margin: '0 16px'}}>
-                        {/*<Breadcrumb style={{margin: '16px 0'}}>
-                            <Breadcrumb.Item>Home</Breadcrumb.Item>
-                            <Breadcrumb.Item onClick={() => {
-
-                            }}>{PAGE_TEXTS[selectedPage]}</Breadcrumb.Item>
-
-                        </Breadcrumb>*/}
-                        {renderContent()}
-                    </Content>
-                    <Footer className={'footer'}>
-                        <Copyright/>
-                    </Footer>
+                    <Content>{renderContent()}</Content>
+                    <Footer><Copyright /></Footer>
                 </Layout>
                 {(!userData?.profile_created || isEditProfile) &&
-                <ProfileCreation userData={userData} editMode={true} onClose={() => setEditProfile(false)}/>}
-                {userData?.profile_created && <Chat/>}
+                <ProfileCreation userData={userData} editMode={true} onClose={() => setEditProfile(false)} />
+                }
+                {userData?.profile_created && <Chat />}
             </Layout>
-
         </div>
     );
-
-
-}
+};
 
 export default MainPage;

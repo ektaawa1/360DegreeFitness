@@ -42,7 +42,7 @@ const WeightManagement = () => {
         const response = await Axios.post(url, values,{ headers });
         if (response.status === 200) {
             setResponseList(response.data);
-            message.success('Weight added successfully !!', 2000);
+            message.success('Weight added successfully !!', 2);
         }
     };
 

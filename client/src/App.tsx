@@ -4,7 +4,7 @@ import Axios from "axios";
 import { Login, Register, PageNotFound, MainPage, ForgotPassword, ResetPassword } from "./components";
 import UserContext from "./context/UserContext";
 import { BASE_URL } from './config/Config';
-import {Spin} from "antd";
+import { Spin } from "antd";
 
 function App() {
     const baseState = {
@@ -45,7 +45,7 @@ function App() {
                     token: token as any,
                     user: userRes.data as any,
                     profile_created: tokenIsValid.data.profile_created as boolean,
-                    profile_completed: tokenIsValid.data.profile_completed  as boolean
+                    profile_completed: tokenIsValid.data.profile_completed as boolean
                 });
             } else {
                 setUserData(baseState);
@@ -56,29 +56,38 @@ function App() {
         loginCheck();
     }, []);
 
-    return loading ?  <Spin size="large"
-    style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        height: '90vh',
-        margin: 0
-    }}
-
-    />: (
+    return loading ? (
+        <Spin size="large"
+              style={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  height: '90vh',
+                  margin: 0
+              }}
+        />
+    ) : (
         <Router>
-            <UserContext.Provider value={{userData, setUserData}}>
+            <UserContext.Provider value={{ userData, setUserData }}>
                 <Routes>
                     {userData.user ? (
-                        <Route path="/" element={<MainPage/>}/>
+                        <>
+                            <Route path="/" element={<MainPage />} />
+                            <Route path="/dashboard" element={<MainPage />} />
+                            <Route path="/search" element={<MainPage />} />
+                            <Route path="/landing" element={<MainPage />} />
+                            <Route path="/diary" element={<MainPage />} />
+                            <Route path="/weight" element={<MainPage />} />
+                            <Route path="/fitnessplan" element={<MainPage />} />
+                        </>
                     ) : (
-                        <Route path="/" element={<Login/>}/>
+                        <Route path="/" element={<Login />} />
                     )}
-                    <Route path="/login" element={<Login/>}/>
-                    <Route path="/register" element={<Register/>}/>
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/register" element={<Register />} />
                     <Route path="/forgot-password" element={<ForgotPassword />} />
                     <Route path="/reset-password/:token" element={<ResetPassword />} />
-                    <Route path="/*" element={<PageNotFound/>}/>
+                    <Route path="/*" element={<PageNotFound />} />
                 </Routes>
             </UserContext.Provider>
         </Router>

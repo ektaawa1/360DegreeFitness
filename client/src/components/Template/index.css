@@ -1,5 +1,4 @@
 .logo {
-
     height: 30px;
     width: 10px;
     margin: 10px;
@@ -8,10 +7,9 @@
 .logo-text {
     color: brown;
     font-size: 18px;
-    padding-top: 18px;
 }
 
-.footer {
+.ant-layout-footer {
     background: ghostwhite;
     text-align: center;
     font-weight: 600;
@@ -20,6 +18,7 @@
 .header-text {
     text-align: right;
     padding-right: 20px !important;
+    padding-left: 20px !important;
     font-size: 18px;
     color: darkslategrey;
     font-weight: 600;
@@ -44,10 +43,9 @@ li.ant-menu-item {
 }
 
 .content {
-    margin-top: 25px;
     flex-grow: 1;
-    height: calc(100% - 70px);
-    overflow: auto;
+    height: 100%;
+    overflow: hidden;
 }
 
 
@@ -57,4 +55,5 @@ li.ant-menu-item {
 
 .ant-page-header-heading-title  {
     height: 40px;
+    padding-left: 12px !important;
 }
