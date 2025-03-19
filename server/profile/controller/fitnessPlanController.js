@@ -10,16 +10,13 @@ exports.getPlan = async (req, res) => {
             return res.json(false);
         }
 
+        const goals = await axios.get(`${FASTAPI_BASE_URL}/calculate_nutritional_goals/${verified.id}`);
+
         const response = await axios.get(`${FASTAPI_BASE_URL}/retrieve_fitness_plan/${verified.id}`);
         const data = {
             fitness_plan: {
                 ...response.data,
-                "goals": {
-                    "total_calories_goal": 2200,
-                    "total_fat_goal": 10,
-                    "total_carbs_goal": 40,
-                    "total_protein_goal": 65
-                }
+                goals: goals.data
             }
         };
         return res.json(data);
