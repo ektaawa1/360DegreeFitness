@@ -3,12 +3,13 @@ const router = express.Router();
 
 const {
     add_weight,
-    get_weight
+    get_weight,
+    delete_weight
 } = require('../controller/weightController');
 
 
-router.post('/add-weight-log', add_weight);
-router.get('/get-log', get_weight);
-
+router.post('/add_weight', add_weight);
+router.get('/get_weight', get_weight);
+router.get('/delete_weight', delete_weight);
 
 module.exports = router;

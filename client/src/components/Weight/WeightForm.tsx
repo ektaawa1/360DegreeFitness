@@ -19,12 +19,20 @@ const WeightForm = Form.create({ name: "weight_form" })(
                     title="Add Weight"
                     okText="Submit"
                     onCancel={onCancel}
-                    onOk={onCreate}
+                    onOk={() => {
+                        form.validateFields((err, values) => {
+                            if (!err) {
+                                onCreate(values);
+                                form.resetFields();
+                            }
+                        });
+                    }}
                 >
                     <Form layout="vertical">
                         <Form.Item label="Date">
                             {getFieldDecorator("date", {
-                                initialValue: moment(),
+                                initialValue: moment(), // Default to today
+                                rules: [{ required: true, message: "Please select a date!" }],
                             })(
                                 <DatePicker
                                     disabledDate={disableFutureDates}
@@ -35,7 +43,7 @@ const WeightForm = Form.create({ name: "weight_form" })(
                         </Form.Item>
                         <Form.Item label="Weight (kg)">
                             {getFieldDecorator("weight", {
-                                rules: [{ required: true, message: "Please input your weight!" }],
+                                rules: [{ required: true, message: "Please enter your weight!" }],
                             })(
                                 <InputNumber
                                     placeholder="Weight (kg)"
@@ -46,7 +54,9 @@ const WeightForm = Form.create({ name: "weight_form" })(
                             )}
                         </Form.Item>
                         <Form.Item label="Notes">
-                            {getFieldDecorator("notes")(<Input.TextArea placeholder="Notes (optional)" />)}
+                            {getFieldDecorator("notes")(
+                                <Input.TextArea placeholder="Notes (optional)" />
+                            )}
                         </Form.Item>
                     </Form>
                 </Modal>
