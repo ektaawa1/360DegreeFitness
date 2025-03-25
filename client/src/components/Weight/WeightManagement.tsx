@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Table, Button, Select, Drawer, Modal, message } from "antd";
+import { Table, Button, Select, Drawer, Modal, message, Popconfirm } from "antd";
 import moment from "moment";
 import { BASE_URL } from "../../config/Config";
 import Axios from "axios";
@@ -14,8 +14,6 @@ const WeightManagement = () => {
     const [data, setResponseList] = useState([]);
     const [visible, setVisible] = useState(false);
     const [modalVisible, setModalVisible] = useState(false);
-    const styles = { color: "#1890ff", fontWeight: 600 };
-    let formRef = null;
 
     useEffect(() => {
         fetchWeightData();
@@ -70,11 +68,48 @@ const WeightManagement = () => {
         }
     };
 
+    const deleteWeight = async (timestamp, index) => {
+        try {
+            const token = localStorage.getItem("auth-token");
+            if (!token) {
+                message.error("Unauthorized: Please log in.");
+                return;
+            }
+
+            const headers = { "x-auth-token": token };
+            const payload = { date: timestamp, index };
+
+            const response = await Axios.delete(`${BASE_URL}/api/weight/delete_weight`, { data: payload, headers });
+
+            if (response.status === 200) {
+                message.success("Weight entry deleted successfully!");
+                fetchWeightData();
+            }
+        } catch (error) {
+            console.error("Error deleting weight entry:", error);
+            message.error("Failed to delete weight entry.");
+        }
+    };
+
 
     const columns = [
         { title: "Timestamp", dataIndex: "timestamp", key: "timestamp" },
         { title: "Weight (kg)", dataIndex: "weight", key: "weight" },
-        { title: "Notes", dataIndex: "notes", key: "notes" }
+        { title: "Notes", dataIndex: "notes", key: "notes" },
+        {
+            title: "Action",
+            key: "action",
+            render: (_, record, index) => (
+                <Popconfirm
+                    title="Are you sure you want to delete this entry?"
+                    onConfirm={() => deleteWeight(record.timestamp, index)}
+                    okText="Yes"
+                    cancelText="No"
+                >
+                    <Button type="link" danger>Delete</Button>
+                </Popconfirm>
+            )
+        }
     ];
 
     const weightChartOptions = {
@@ -119,7 +154,7 @@ const WeightManagement = () => {
             <WeightForm
                 visible={modalVisible}
                 onCancel={() => setModalVisible(false)}
-                onCreate={addWeight}
+                onCreate={(values) => addWeight(values)}
             />
         </div>
     );
