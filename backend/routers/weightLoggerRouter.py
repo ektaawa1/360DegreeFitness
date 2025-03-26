@@ -281,9 +281,17 @@ async def get_weight_logs(user_id: str, time_range: str):
         # Calculate start_date and end_date for the given time range
         start_date, end_date = get_date_range(time_range)
 
+        # For Debugging purpose
+        print(f"Start Date: {start_date}")
+        print(f"End Date: {end_date}")
+
+        # Format the dates as strings for MongoDB
+        start_date_str = start_date.strftime("%Y-%m-%d")
+        end_date_str = end_date.strftime("%Y-%m-%d")
+
         # Step 1: Retrieve the most recent weight log before the start of the time range
         weight_diary = await weight_diary_collection.find_one(
-            {"user_id": user_id, "date": {"$lt": start_date}}
+            {"user_id": user_id, "date": {"$lt": start_date_str}}
         )
 
         starting_weight = None
@@ -301,10 +309,10 @@ async def get_weight_logs(user_id: str, time_range: str):
         if starting_weight is None:
             return JSONResponse(status_code=404, content={"message": "No starting weight available"})
 
-        # Step 3: Get weight logs within the selected time range (start_date to end_date)
+        # Step 3: Get weight logs within the selected time range (start date to end date)
         weight_logs = []
         async for diary in weight_diary_collection.find(
-                {"user_id": user_id, "date": {"$gte": start_date, "$lte": end_date}}
+                {"user_id": user_id, "date": {"$gte": start_date_str, "$lte": end_date_str}}
         ):
             weight_logs.extend(diary.get("weights", []))
 
