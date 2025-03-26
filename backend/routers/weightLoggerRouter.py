@@ -299,7 +299,7 @@ async def get_weight_logs(user_id: str, time_range: str):
             # Get the most recent weight log before the start of the selected time range
             weight_logs = weight_diary["weights"]
             # Get the most recent weight log
-            starting_weight = weight_logs[-1]["weight"]
+            starting_weight = weight_logs[-1]["weight_in_kg"]
         else:
             # Step 2: If no weight log exists before the start of the range, get the starting weight from profile
             user_profile = await profiles_collection.find_one({"user_id": user_id})
@@ -314,13 +314,21 @@ async def get_weight_logs(user_id: str, time_range: str):
         async for diary in weight_diary_collection.find(
                 {"user_id": user_id, "date": {"$gte": start_date_str, "$lte": end_date_str}}
         ):
-            weight_logs.extend(diary.get("weights", []))
+            if diary.get("weights"):
+                for weight_entry in diary["weights"]:
+                    weight_log = {
+                        "date": diary["date"],
+                        "weight_in_kg": weight_entry.get("weight_in_kg"),
+                        "notes": weight_entry.get("notes", None)
+                    }
+                    weight_logs.append(weight_log)
 
         # Step 4: Return the response with starting_weight and weight_logs
+        print("Weight Logs are", weight_logs)
         return {
             "user_id": user_id,
             "starting_weight": starting_weight,
-            "weight_logs": weight_logs
+                "weight_logs": weight_logs
         }
 
     except PyMongoError as e:
