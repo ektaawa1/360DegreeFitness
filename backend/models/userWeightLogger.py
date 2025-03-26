@@ -3,7 +3,7 @@ from pydantic import BaseModel, Field
 from datetime import date, datetime
 
 class WeightEntry(BaseModel):
-    weight: float = Field(..., description="Weight in kilograms")
+    weight_in_kg: float = Field(..., description="Weight in kilograms")
     notes: Optional[str] = Field(None, description="Optional notes about the weight entry")
 
 class UserWeightLogger(BaseModel):
