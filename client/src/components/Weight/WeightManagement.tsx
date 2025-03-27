@@ -159,12 +159,18 @@ const WeightManagement = () => {
                 lineColor: "#000",
             },
             tooltip: {
-                formatter: function () {
+                formatter: function() {
                     if (this.series.name === "Projected Weight") {
-                        return `<b>Date:</b> ${today} <br><b>Projected Weight:</b> ${lastLog.weight_in_kg} kg`;
+                        return `<b>Date:</b> ${today}<br><b>Projected Weight:</b> ${lastLog.weight_in_kg} kg`;
                     } else if (this.series.name === "Weight") {
-                        const log = weightLogs[this.point.index]; // Skip x=-1 (no tooltip)
-                        return `<b>Date:</b> ${log.date} <br><b>Weight:</b> ${log.weight_in_kg} kg` +
+                        // Skip tooltip for the starting weight (x = -0.5)
+                        if (this.point.x === -0.5) return `<b>Start</b> <br><b>Weight:</b> ${data.starting_weight} kg`;;
+
+                        // Adjust index for actual logs (since x=0 is first log)
+                        const logIndex = this.point.x; // x=0 → first log
+                        const log = weightLogs[logIndex];
+
+                        return `<b>Date:</b> ${log.date}<br><b>Weight:</b> ${log.weight_in_kg} kg` +
                             (log.notes ? `<br><b>Notes:</b> ${log.notes}` : "");
                     }
                 }
