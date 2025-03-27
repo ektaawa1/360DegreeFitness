@@ -24,7 +24,8 @@ class BasicFormEl extends React.Component<any, any> {
                         ...values,
                         age: Number(values.age),
                         height_in_cm: Number(values.height_in_cm),
-                        weight_in_kg: Number(values.weight_in_kg),
+                        weight_in_kg: Number(values.weight_in_kg) || this.props.initialValues?.user_basic_details.weight_in_kg,
+                        weight_goal_in_kg: Number(values.weight_goal_in_kg),
                         gender: values.gender
                     }
                 };
@@ -62,8 +63,14 @@ class BasicFormEl extends React.Component<any, any> {
                         )}
                         <span className="ant-form-text"> cm</span>
                     </Form.Item>
-                    <Form.Item label="Weight">
+                    {!this.props.initialValues && <Form.Item label="Weight">
                         {getFieldDecorator("weight_in_kg", {rules: [{required: true, message: "Weight is required!"}],})(
+                            <InputNumber min={30} max={500}/>
+                        )}
+                        <span className="ant-form-text"> kg</span>
+                    </Form.Item>}
+                    <Form.Item label="Weight Goal">
+                        {getFieldDecorator("weight_goal_in_kg", {rules: [{required: true, message: "Weight Goal is required!"}],})(
                             <InputNumber min={30} max={500}/>
                         )}
                         <span className="ant-form-text"> kg</span>

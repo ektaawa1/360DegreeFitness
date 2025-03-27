@@ -39,6 +39,7 @@ exports.createProfile = async (req, res) => {
                 age: data.user_basic_details.age,
                 height_in_cm: data.user_basic_details.height_in_cm,
                 weight_in_kg: data.user_basic_details.weight_in_kg,
+                weight_goal_in_kg: data.user_basic_details.weight_goal_in_kg,
                 gender: data.user_basic_details.gender
             },
             user_initial_measurements:  makeNullIfEmpty(data.user_initial_measurements),
@@ -61,6 +62,21 @@ exports.createProfile = async (req, res) => {
     }
 };
 
+exports.getWeightGoal = async (req, res) => {
+    const token = req.header('x-auth-token');
+    try {
+        const verified = jwt.verify(token, process.env.JWT_SECRET);
+        if (!verified) {
+            return res.json(false);
+        }
+
+        const response = await axios.get(`${FASTAPI_BASE_URL}/get_weight_goal/${verified.id}`);
+        return res.json(response.data);
+    } catch (error) {
+        return res.json(false);
+    }
+};
+
 
 exports.updateProfile = async (req, res) => {
     let data = req.body;
@@ -76,6 +92,7 @@ exports.updateProfile = async (req, res) => {
                 age: data.user_basic_details.age,
                 height_in_cm: data.user_basic_details.height_in_cm,
                 weight_in_kg: data.user_basic_details.weight_in_kg,
+                weight_goal_in_kg: data.user_basic_details.weight_goal_in_kg,
                 gender: data.user_basic_details.gender
             },
             user_initial_measurements:  makeNullIfEmpty(data.user_initial_measurements),

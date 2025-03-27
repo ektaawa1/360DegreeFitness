@@ -28,6 +28,7 @@ const preprocessWeightLogs = (weightLogs) => {
 const WeightManagement = () => {
     const [range, setRange] = useState("1w");
     const [data, setResponseList] = useState(null);
+    const [targetWeight, setTargetWeight] = useState(null);
     const [visible, setVisible] = useState(false);
     const [modalVisible, setModalVisible] = useState(false);
 
@@ -44,6 +45,10 @@ const WeightManagement = () => {
             }
 
             const headers = { "x-auth-token": token };
+
+            const goalResponse = await Axios.get(`${BASE_URL}/api/profile/get-weight-goal`, { headers });
+            setTargetWeight(goalResponse.data.weight_goal_in_kg);
+
             const response = await Axios.get(`${BASE_URL}/api/weight/get_weight?range=${range}`, { headers });
 
             if (response.status === 200) {
@@ -135,10 +140,15 @@ const WeightManagement = () => {
         const weightLogs = data.weight_logs;
         const lastLog = weightLogs[weightLogs.length - 1];
 
-// Calculate y-axis min/max to include starting_weight + buffer
-        const minWeight = Math.min(data.starting_weight, ...weightLogs.map(entry => entry.weight_in_kg));
-        const maxWeight = Math.max(data.starting_weight, ...weightLogs.map(entry => entry.weight_in_kg));
-        const padding = 0.5; // Add slight padding (adjust as needed)
+
+// Calculate y-axis min/max to include starting_weight, target_weight, and logged weights
+        const allWeights = [
+            data.starting_weight,
+            targetWeight,
+            ...weightLogs.map(entry => entry.weight_in_kg)
+        ];
+        const minWeight = Math.min(...allWeights) - 0.5; // Add padding
+        const maxWeight = Math.max(...allWeights) + 0.5;
 
         weightChartOptions = {
             chart: { type: "line" },
@@ -146,30 +156,37 @@ const WeightManagement = () => {
             xAxis: {
                 categories: [...weightLogs.map(entry => entry.date), today],
                 title: { text: "Date" },
-                tickmarkPlacement: "on",
-                min: 0, // Start x-axis at first logged point (x=0)
-                max: weightLogs.length, // Adjust if projecting to today
+                min: 0,
+                max: weightLogs.length,
             },
             yAxis: {
                 title: { text: "Weight (kg)" },
-                min: minWeight - padding, // Ensures starting_weight is visible
-                max: maxWeight + padding,
+                min: minWeight,
+                max: maxWeight,
                 allowDecimals: true,
                 lineWidth: 1,
                 lineColor: "#000",
+                plotLines: [{ // Optional: Visual reference line for target
+                    color: 'green',
+                    width: 1,
+                    value: targetWeight,
+                    dashStyle: 'Dash',
+                    label: {
+                        text: `Target: ${targetWeight} kg`,
+                        align: 'right',
+                        style: { color: 'green' }
+                    }
+                }]
             },
             tooltip: {
                 formatter: function() {
                     if (this.series.name === "Projected Weight") {
                         return `<b>Date:</b> ${today}<br><b>Projected Weight:</b> ${lastLog.weight_in_kg} kg`;
+                    } else if (this.series.name === "Target Weight") {
+                        return `<b>Target Weight:</b> ${targetWeight} kg`;
                     } else if (this.series.name === "Weight") {
-                        // Skip tooltip for the starting weight (x = -0.5)
-                        if (this.point.x === -0.5) return `<b>Start</b> <br><b>Weight:</b> ${data.starting_weight} kg`;;
-
-                        // Adjust index for actual logs (since x=0 is first log)
-                        const logIndex = this.point.x; // x=0 → first log
-                        const log = weightLogs[logIndex];
-
+                        if (this.point.x === -0.5) return `<b>Start</b><br><b>Weight:</b> ${data.starting_weight} kg`;
+                        const log = weightLogs[this.point.x];
                         return `<b>Date:</b> ${log.date}<br><b>Weight:</b> ${log.weight_in_kg} kg` +
                             (log.notes ? `<br><b>Notes:</b> ${log.notes}` : "");
                     }
@@ -179,37 +196,35 @@ const WeightManagement = () => {
                 {
                     name: "Weight",
                     data: [
-                        { x: -0.5, y: data.starting_weight }, // Slight offset to align with y-axis
-                        { x: 0, y: weightLogs[0].weight_in_kg }, // First logged weight
-                        ...weightLogs.slice(1).map((entry, index) => ({
-                            x: index + 1,
-                            y: entry.weight_in_kg,
-                        })),
+                        { x: -0.5, y: data.starting_weight },
+                        ...weightLogs.map((entry, index) => ({ x: index, y: entry.weight_in_kg }))
                     ],
-                    marker: {
-                        enabled: true,
-                        symbol: "circle",
-                        lineWidth: 1,
-                    },
-                    lineWidth: 2,
+                    marker: { enabled: true },
+                    lineWidth: 2
+                },
+                {
+                    name: "Target Weight", // Horizontal target line
+                    data: [
+                        { x: -0.5, y: targetWeight },
+                        { x: weightLogs.length, y: targetWeight }
+                    ],
+                    color: "#FF0000",
+                    dashStyle: "Dash",
+                    marker: { enabled: false },
+                    lineWidth: 1,
+                    enableMouseTracking: true // Allows tooltips
                 },
                 {
                     name: "Projected Weight",
                     data: [
                         { x: weightLogs.length - 1, y: lastLog.weight_in_kg },
-                        { x: weightLogs.length, y: lastLog.weight_in_kg },
+                        { x: weightLogs.length, y: lastLog.weight_in_kg }
                     ],
                     dashStyle: "dot",
-                    marker: { enabled: true },
                     color: "gray",
-                },
-            ],
-            plotOptions: {
-                series: {
-                    // Hide the line segment between x=-0.5 and x=0 if it looks awkward
-                    connectNulls: false,
+                    marker: { enabled: true }
                 }
-            }
+            ]
         };
     }
 
