@@ -52,7 +52,7 @@ exports.add_weight = async (req, res) => {
 
         // Ensure each weight entry includes weight and optional notes
         const formattedWeights = weights.map(entry => ({
-            weight: entry.weight,
+            weight_in_kg: entry.weight,
             notes: entry.notes || null // If no notes provided, store as null
         }));
 

@@ -176,7 +176,7 @@ const WeightManagement = () => {
             <WeightForm
                 visible={modalVisible}
                 onCancel={() => setModalVisible(false)}
-                onCreate={(values) => addWeight(values)}
+                onCreate={addWeight}
             />
         </div>
     );
