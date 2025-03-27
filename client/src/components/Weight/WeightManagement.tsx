@@ -131,33 +131,33 @@ const WeightManagement = () => {
 
     if (data) {
 
-        const today = new Date().toISOString().split("T")[0]; // Get current date in YYYY-MM-DD format
+        const today = new Date().toISOString().split("T")[0];
         const weightLogs = data.weight_logs;
-        const lastLog = weightLogs[weightLogs.length - 1]; // Last recorded weight entry
-
-        // Starting weight
-        const startingWeight = data.starting_weight;
+        const lastLog = weightLogs[weightLogs.length - 1];
 
         weightChartOptions = {
-            chart: {type: "line"},
-            title: {text: "Weight Progress"},
+            chart: { type: "line" },
+            title: { text: "Weight Progress" },
             xAxis: {
-                categories: [...weightLogs.map(entry => entry.date), today], // Extend to today
-                title: {text: "Date"},
-                tickmarkPlacement: "on"
+                categories: [...weightLogs.map(entry => entry.date), today], // No "Start" label
+                title: { text: "Date" },
+                tickmarkPlacement: "on",
+                min: 0, // Ensure x=0 (first log) is at the left edge
             },
             yAxis: {
-                title: {text: "Weight (kg)"},
+                title: { text: "Weight (kg)" },
                 allowDecimals: true,
-                lineWidth: 1,  // Ensures the Y-axis line is visible
-                lineColor: "#000" // Optional: Ensures it's a solid black line
+                lineWidth: 1,
+                lineColor: "#000",
             },
             tooltip: {
                 formatter: function () {
                     if (this.series.name === "Projected Weight") {
                         return `<b>Date:</b> ${today} <br><b>Projected Weight:</b> ${lastLog.weight_in_kg} kg`;
-                    } else {
-                        let log = weightLogs[this.point.index];
+                    } else if (this.series.name === "Weight") {
+                        // Skip tooltip for the invisible starting point (x=-1)
+                        if (this.point.index === 0 && this.point.x === -1) return false;
+                        const log = weightLogs[this.point.index];
                         return `<b>Date:</b> ${log.date} <br><b>Weight:</b> ${log.weight_in_kg} kg` +
                             (log.notes ? `<br><b>Notes:</b> ${log.notes}` : "");
                     }
@@ -166,21 +166,34 @@ const WeightManagement = () => {
             series: [
                 {
                     name: "Weight",
-                    data: weightLogs.map(entry => entry.weight_in_kg),
-                    marker: {enabled: true}
+                    data: [
+                        { x: -1, y: data.starting_weight }, // Invisible starting point (plotted off-axis)
+                        ...weightLogs.map((entry, index) => ({
+                            x: index,
+                            y: entry.weight_in_kg,
+                        })),
+                    ],
+                    marker: {
+                        enabled: true,
+                        // Hide marker for the starting point
+                        states: {
+                            hover: {
+                                enabled: false,
+                            },
+                        },
+                    },
                 },
                 {
                     name: "Projected Weight",
                     data: [
-                        {x: weightLogs.length - 1, y: lastLog.weight_in_kg}, // Last actual weight
-                        {x: weightLogs.length, y: lastLog.weight_in_kg} // Extended weight to today
+                        { x: weightLogs.length - 1, y: lastLog.weight_in_kg },
+                        { x: weightLogs.length, y: lastLog.weight_in_kg },
                     ],
                     dashStyle: "dot",
-                    marker: {enabled: true}
-                }
-            ]
+                    marker: { enabled: true },
+                },
+            ],
         };
-
     }
 
     return (
