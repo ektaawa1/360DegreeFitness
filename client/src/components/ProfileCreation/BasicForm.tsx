@@ -63,7 +63,7 @@ class BasicFormEl extends React.Component<any, any> {
                         )}
                         <span className="ant-form-text"> cm</span>
                     </Form.Item>
-                    {!this.props.initialValues && <Form.Item label="Weight">
+                    {!this.props.initialValues?.user_basic_details && <Form.Item label="Weight">
                         {getFieldDecorator("weight_in_kg", {rules: [{required: true, message: "Weight is required!"}],})(
                             <InputNumber min={30} max={500}/>
                         )}
