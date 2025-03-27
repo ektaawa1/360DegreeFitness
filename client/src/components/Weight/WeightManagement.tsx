@@ -230,6 +230,8 @@ const WeightManagement = () => {
                 Add Weight
             </Button>
 
+            <div style={{ marginTop: 100}}/>
+
             <HighchartsReact highcharts={Highcharts} options={weightChartOptions} />
 
             <Drawer
