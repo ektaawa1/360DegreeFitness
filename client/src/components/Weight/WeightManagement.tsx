@@ -11,7 +11,7 @@ const { Option } = Select;
 
 const WeightManagement = () => {
     const [range, setRange] = useState("1w");
-    const [data, setResponseList] = useState([]);
+    const [data, setResponseList] = useState(null);
     const [visible, setVisible] = useState(false);
     const [modalVisible, setModalVisible] = useState(false);
 
@@ -31,7 +31,7 @@ const WeightManagement = () => {
             const response = await Axios.get(`${BASE_URL}/api/weight/get_weight?range=${range}`, { headers });
 
             if (response.status === 200) {
-                setResponseList(response.data.weight_logs || []);
+                setResponseList(response.data || []);
             }
         } catch (error) {
             console.error("Error fetching weight data:", error);
@@ -93,8 +93,8 @@ const WeightManagement = () => {
 
 
     const columns = [
-        { title: "Timestamp", dataIndex: "timestamp", key: "timestamp" },
-        { title: "Weight (kg)", dataIndex: "weight", key: "weight" },
+        { title: "Timestamp", dataIndex: "date", key: "date" },
+        { title: "Weight (kg)", dataIndex: "weight_in_kg", key: "weight_in_kg" },
         { title: "Notes", dataIndex: "notes", key: "notes" },
         {
             title: "Action",
@@ -112,18 +112,38 @@ const WeightManagement = () => {
         }
     ];
 
-    const weightChartOptions = {
+    const weightChartOptions = data ? {
         chart: { type: "line" },
         title: { text: "Weight Progress" },
-        xAxis: { categories: data.map(entry => entry.timestamp) },
-        yAxis: { title: { text: "Weight (kg)" } },
-        series: [{ name: "Weight", data: data.map(entry => entry.weight) }]
-    };
+        xAxis: {
+            categories: data.weight_logs.map(entry => entry.date),
+            title: { text: "Date" }
+        },
+        yAxis: {
+            title: { text: "Weight (kg)" },
+            allowDecimals: true
+        },
+        tooltip: {
+            formatter: function () {
+                if (this.point.index === 0) {
+                    return `<b>Starting Weight:</b> ${data.starting_weight} kg`;
+                }
+                let log = data.weight_logs[this.point.index - 1]; // Adjust index for logs
+                return `<b>Date:</b> ${log.date} <br><b>Weight:</b> ${log.weight_in_kg} kg` +
+                    (log.notes ? `<br><b>Notes:</b> ${log.notes}` : "");
+            }
+        },
+        series: [{
+            name: "Weight",
+            data: [data.starting_weight, ...data.weight_logs.map(entry => entry.weight_in_kg)],
+            marker: { enabled: true }
+        }]
+    } : {};
+
 
     return (
         <div style={{ padding: 20 }}>
             <Select value={range} onChange={setRange} style={{ width: 150, margin: "0 10px" }}>
-                <Option value="1d">1 Day</Option>
                 <Option value="1w">1 Week</Option>
                 <Option value="1m">1 Month</Option>
                 <Option value="3m">3 Months</Option>
@@ -148,7 +168,9 @@ const WeightManagement = () => {
                 visible={visible}
                 width={600}
             >
-                <Table dataSource={data} columns={columns} rowKey="timestamp" pagination={false} />
+                <Table dataSource={data?.weight_logs} columns={columns} rowKey="date" pagination={false}
+                       size={"small"}
+                />
             </Drawer>
 
             <WeightForm
