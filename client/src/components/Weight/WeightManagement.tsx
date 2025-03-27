@@ -208,10 +208,10 @@ const WeightManagement = () => {
                         { x: -0.5, y: targetWeight },
                         { x: weightLogs.length, y: targetWeight }
                     ],
-                    color: "#FF0000",
+                    color: "green",
                     dashStyle: "Dash",
                     marker: { enabled: false },
-                    lineWidth: 1,
+                    lineWidth: 3,
                     enableMouseTracking: true // Allows tooltips
                 },
                 {
