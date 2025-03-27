@@ -9,6 +9,22 @@ import WeightForm from "./WeightForm";
 
 const { Option } = Select;
 
+// Function to preprocess weight logs and assign an index for each entry on the same date
+const preprocessWeightLogs = (weightLogs) => {
+    let processedLogs = [];
+    let dateEntryMap = {};
+
+    weightLogs.forEach((entry) => {
+        if (!dateEntryMap[entry.date]) {
+            dateEntryMap[entry.date] = 0;
+        }
+        processedLogs.push({ ...entry, entryIndex: dateEntryMap[entry.date] });
+        dateEntryMap[entry.date] += 1;
+    });
+
+    return processedLogs;
+};
+
 const WeightManagement = () => {
     const [range, setRange] = useState("1w");
     const [data, setResponseList] = useState(null);
@@ -31,7 +47,9 @@ const WeightManagement = () => {
             const response = await Axios.get(`${BASE_URL}/api/weight/get_weight?range=${range}`, { headers });
 
             if (response.status === 200) {
-                setResponseList(response.data || []);
+                let updatedData = response.data || {};
+                updatedData.weight_logs = preprocessWeightLogs(updatedData.weight_logs || []);
+                setResponseList(updatedData);
             }
         } catch (error) {
             console.error("Error fetching weight data:", error);
@@ -39,19 +57,17 @@ const WeightManagement = () => {
         }
     };
 
-
     const addWeight = async (values) => {
         let token = localStorage.getItem("auth-token");
         const headers = { "x-auth-token": token };
         const url = `${BASE_URL}/api/weight/add_weight`;
 
-        // Ensure correct format for API
         const payload = {
-            date: values.date.format("YYYY-MM-DD"), // Format date
+            date: values.date.format("YYYY-MM-DD"),
             weights: [
                 {
-                    weight: values.weight, // Extract weight
-                    notes: values.notes || "", // Handle optional notes
+                    weight: values.weight,
+                    notes: values.notes || "",
                 }
             ]
         };
@@ -60,7 +76,7 @@ const WeightManagement = () => {
             const response = await Axios.post(url, payload, { headers });
             if (response.status === 200) {
                 message.success("Weight added successfully!", 2);
-                setModalVisible(false); // Close modal after success
+                setModalVisible(false);
                 fetchWeightData();
             }
         } catch (error) {
@@ -68,7 +84,7 @@ const WeightManagement = () => {
         }
     };
 
-    const deleteWeight = async (timestamp, index) => {
+    const deleteWeight = async (date, index) => {
         try {
             const token = localStorage.getItem("auth-token");
             if (!token) {
@@ -77,7 +93,7 @@ const WeightManagement = () => {
             }
 
             const headers = { "x-auth-token": token };
-            const payload = { date: timestamp, index };
+            const payload = { date, index };
 
             const response = await Axios.delete(`${BASE_URL}/api/weight/delete_weight`, { data: payload, headers });
 
@@ -91,18 +107,17 @@ const WeightManagement = () => {
         }
     };
 
-
     const columns = [
-        { title: "Timestamp", dataIndex: "date", key: "date" },
+        { title: "Date", dataIndex: "date", key: "date" },
         { title: "Weight (kg)", dataIndex: "weight_in_kg", key: "weight_in_kg" },
         { title: "Notes", dataIndex: "notes", key: "notes" },
         {
             title: "Action",
             key: "action",
-            render: (_, record, index) => (
+            render: (_, record) => (
                 <Popconfirm
                     title="Are you sure you want to delete this entry?"
-                    onConfirm={() => deleteWeight(record.timestamp, index)}
+                    onConfirm={() => deleteWeight(record.date, record.entryIndex)}
                     okText="Yes"
                     cancelText="No"
                 >
@@ -140,7 +155,6 @@ const WeightManagement = () => {
         }]
     } : {};
 
-
     return (
         <div style={{ padding: 20 }}>
             <Select value={range} onChange={setRange} style={{ width: 150, margin: "0 10px" }}>
@@ -168,9 +182,7 @@ const WeightManagement = () => {
                 visible={visible}
                 width={600}
             >
-                <Table dataSource={data?.weight_logs} columns={columns} rowKey="date" pagination={false}
-                       size={"small"}
-                />
+                <Table dataSource={data?.weight_logs} columns={columns} rowKey={(record) => `${record.date}-${record.entryIndex}`} pagination={false} size={"small"} />
             </Drawer>
 
             <WeightForm
