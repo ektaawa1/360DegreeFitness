@@ -135,17 +135,25 @@ const WeightManagement = () => {
         const weightLogs = data.weight_logs;
         const lastLog = weightLogs[weightLogs.length - 1];
 
+// Calculate y-axis min/max to include starting_weight + buffer
+        const minWeight = Math.min(data.starting_weight, ...weightLogs.map(entry => entry.weight_in_kg));
+        const maxWeight = Math.max(data.starting_weight, ...weightLogs.map(entry => entry.weight_in_kg));
+        const padding = 0.5; // Add slight padding (adjust as needed)
+
         weightChartOptions = {
             chart: { type: "line" },
             title: { text: "Weight Progress" },
             xAxis: {
-                categories: [...weightLogs.map(entry => entry.date), today], // No "Start" label
+                categories: [...weightLogs.map(entry => entry.date), today],
                 title: { text: "Date" },
                 tickmarkPlacement: "on",
-                min: 0, // Ensure x=0 (first log) is at the left edge
+                min: 0, // Start x-axis at first logged point (x=0)
+                max: weightLogs.length, // Adjust if projecting to today
             },
             yAxis: {
                 title: { text: "Weight (kg)" },
+                min: minWeight - padding, // Ensures starting_weight is visible
+                max: maxWeight + padding,
                 allowDecimals: true,
                 lineWidth: 1,
                 lineColor: "#000",
@@ -155,9 +163,7 @@ const WeightManagement = () => {
                     if (this.series.name === "Projected Weight") {
                         return `<b>Date:</b> ${today} <br><b>Projected Weight:</b> ${lastLog.weight_in_kg} kg`;
                     } else if (this.series.name === "Weight") {
-                        // Skip tooltip for the invisible starting point (x=-1)
-                        if (this.point.index === 0 && this.point.x === -1) return false;
-                        const log = weightLogs[this.point.index];
+                        const log = weightLogs[this.point.index]; // Skip x=-1 (no tooltip)
                         return `<b>Date:</b> ${log.date} <br><b>Weight:</b> ${log.weight_in_kg} kg` +
                             (log.notes ? `<br><b>Notes:</b> ${log.notes}` : "");
                     }
@@ -167,21 +173,19 @@ const WeightManagement = () => {
                 {
                     name: "Weight",
                     data: [
-                        { x: -1, y: data.starting_weight }, // Invisible starting point (plotted off-axis)
-                        ...weightLogs.map((entry, index) => ({
-                            x: index,
+                        { x: -0.5, y: data.starting_weight }, // Slight offset to align with y-axis
+                        { x: 0, y: weightLogs[0].weight_in_kg }, // First logged weight
+                        ...weightLogs.slice(1).map((entry, index) => ({
+                            x: index + 1,
                             y: entry.weight_in_kg,
                         })),
                     ],
                     marker: {
                         enabled: true,
-                        // Hide marker for the starting point
-                        states: {
-                            hover: {
-                                enabled: false,
-                            },
-                        },
+                        symbol: "circle",
+                        lineWidth: 1,
                     },
+                    lineWidth: 2,
                 },
                 {
                     name: "Projected Weight",
@@ -191,8 +195,15 @@ const WeightManagement = () => {
                     ],
                     dashStyle: "dot",
                     marker: { enabled: true },
+                    color: "gray",
                 },
             ],
+            plotOptions: {
+                series: {
+                    // Hide the line segment between x=-0.5 and x=0 if it looks awkward
+                    connectNulls: false,
+                }
+            }
         };
     }
 
