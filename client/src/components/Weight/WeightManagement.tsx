@@ -127,57 +127,61 @@ const WeightManagement = () => {
         }
     ];
 
-    const today = new Date().toISOString().split("T")[0]; // Get current date in YYYY-MM-DD format
-    const weightLogs = data.weight_logs;
-    const lastLog = weightLogs[weightLogs.length - 1]; // Last recorded weight entry
+    let weightChartOptions = {};
 
-    // Starting weight
-    const startingWeight = data.starting_weight;
+    if (data) {
 
-    const weightChartOptions = {
-        chart: { type: "line" },
-        title: { text: "Weight Progress" },
-        xAxis: {
-            categories: [...weightLogs.map(entry => entry.date), today], // Extend to today
-            title: { text: "Date" },
-            tickmarkPlacement: "on"
-        },
-        yAxis: {
-            title: { text: "Weight (kg)" },
-            allowDecimals: true,
-            lineWidth: 1,  // Ensures the Y-axis line is visible
-            lineColor: "#000" // Optional: Ensures it's a solid black line
-        },
-        tooltip: {
-            formatter: function () {
-                if (this.series.name === "Projected Weight") {
-                    return `<b>Date:</b> ${today} <br><b>Projected Weight:</b> ${lastLog.weight_in_kg} kg`;
-                } else {
-                    let log = weightLogs[this.point.index];
-                    return `<b>Date:</b> ${log.date} <br><b>Weight:</b> ${log.weight_in_kg} kg` +
-                        (log.notes ? `<br><b>Notes:</b> ${log.notes}` : "");
-                }
-            }
-        },
-        series: [
-            {
-                name: "Weight",
-                data: weightLogs.map(entry => entry.weight_in_kg),
-                marker: { enabled: true }
+        const today = new Date().toISOString().split("T")[0]; // Get current date in YYYY-MM-DD format
+        const weightLogs = data.weight_logs;
+        const lastLog = weightLogs[weightLogs.length - 1]; // Last recorded weight entry
+
+        // Starting weight
+        const startingWeight = data.starting_weight;
+
+        weightChartOptions = {
+            chart: {type: "line"},
+            title: {text: "Weight Progress"},
+            xAxis: {
+                categories: [...weightLogs.map(entry => entry.date), today], // Extend to today
+                title: {text: "Date"},
+                tickmarkPlacement: "on"
             },
-            {
-                name: "Projected Weight",
-                data: [
-                    { x: weightLogs.length - 1, y: lastLog.weight_in_kg }, // Last actual weight
-                    { x: weightLogs.length, y: lastLog.weight_in_kg } // Extended weight to today
-                ],
-                dashStyle: "dot",
-                marker: { enabled: true }
-            }
-        ]
-    };
+            yAxis: {
+                title: {text: "Weight (kg)"},
+                allowDecimals: true,
+                lineWidth: 1,  // Ensures the Y-axis line is visible
+                lineColor: "#000" // Optional: Ensures it's a solid black line
+            },
+            tooltip: {
+                formatter: function () {
+                    if (this.series.name === "Projected Weight") {
+                        return `<b>Date:</b> ${today} <br><b>Projected Weight:</b> ${lastLog.weight_in_kg} kg`;
+                    } else {
+                        let log = weightLogs[this.point.index];
+                        return `<b>Date:</b> ${log.date} <br><b>Weight:</b> ${log.weight_in_kg} kg` +
+                            (log.notes ? `<br><b>Notes:</b> ${log.notes}` : "");
+                    }
+                }
+            },
+            series: [
+                {
+                    name: "Weight",
+                    data: weightLogs.map(entry => entry.weight_in_kg),
+                    marker: {enabled: true}
+                },
+                {
+                    name: "Projected Weight",
+                    data: [
+                        {x: weightLogs.length - 1, y: lastLog.weight_in_kg}, // Last actual weight
+                        {x: weightLogs.length, y: lastLog.weight_in_kg} // Extended weight to today
+                    ],
+                    dashStyle: "dot",
+                    marker: {enabled: true}
+                }
+            ]
+        };
 
-
+    }
 
     return (
         <div style={{ padding: 20 }}>
