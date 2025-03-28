@@ -138,7 +138,10 @@ const WeightManagement = () => {
 
         const today = new Date().toISOString().split("T")[0];
         const weightLogs = data.weight_logs;
-        const lastLog = weightLogs[weightLogs.length - 1];
+        let lastLog = weightLogs[weightLogs.length - 1]?.weight_in_kg;
+        if (!lastLog) {
+            lastLog = data.starting_weight;
+        }
 
 
 // Calculate y-axis min/max to include starting_weight, target_weight, and logged weights
@@ -181,7 +184,7 @@ const WeightManagement = () => {
             tooltip: {
                 formatter: function() {
                     if (this.series.name === "Projected Weight") {
-                        return `<b>Date:</b> ${today}<br><b>Projected Weight:</b> ${lastLog.weight_in_kg} kg`;
+                        return `<b>Date:</b> ${today}<br><b>Projected Weight:</b> ${lastLog} kg`;
                     } else if (this.series.name === "Target Weight") {
                         return `<b>Target Weight:</b> ${targetWeight} kg`;
                     } else if (this.series.name === "Weight") {
@@ -217,8 +220,8 @@ const WeightManagement = () => {
                 {
                     name: "Projected Weight",
                     data: [
-                        { x: weightLogs.length - 1, y: lastLog.weight_in_kg },
-                        { x: weightLogs.length, y: lastLog.weight_in_kg }
+                        { x: weightLogs.length - 1, y: lastLog },
+                        { x: weightLogs.length, y: lastLog }
                     ],
                     dashStyle: "dot",
                     color: "gray",
