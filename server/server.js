@@ -46,6 +46,9 @@ app.use("/api/food", foodRouter);
 const weightRouter = require("./weight/routes/weightRoutes");
 app.use("/api/weight", weightRouter);
 
+const exerciseRouter = require("./exercise/routes/exerciseRoutes");
+app.use("/api/exercise", exerciseRouter);
+
 
 
 // Serve UI

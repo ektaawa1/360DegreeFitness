@@ -16,10 +16,11 @@ import Dashboard from "../Dashboard/Dashboard";
 import LandingPage from "../LandingPage/LandingPage";
 import { ProfileCreation, FoodDiary, WeightManagement, FitnessPlanComponent } from "../index";
 import Chat from "../Chatbot/Chat";
+import ExerciseDiary from "../ExerciseDiary/ExerciseDiary";
 
 const { Header, Content, Footer, Sider } = Layout;
 
-type PAGES = 'landing' | 'dashboard' | 'fitnessplan' | 'diary' | 'weight' |  'search' ;
+type PAGES = 'landing' | 'dashboard' | 'fitnessplan' | 'diary' | 'weight' |  'search' | 'exercise' ;
 
 const PAGE_TEXTS = {
 
@@ -29,6 +30,7 @@ const PAGE_TEXTS = {
     'fitnessplan': 'Fitness Plan',
     'diary': 'Food Diary',
     'weight': 'Weight Log',
+    'exercise': 'Exercise Log',
     'search': 'Search Food',
 };
 
@@ -76,6 +78,7 @@ const MainPage = () => {
                 {selectedPage === "weight" && <WeightManagement />}
                 {selectedPage === "fitnessplan" && <FitnessPlanComponent />}
                 {selectedPage === "search" && <Search />}
+                {selectedPage === "exercise" && <ExerciseDiary />}
             </div>
         </div>
     );
@@ -93,6 +96,9 @@ const MainPage = () => {
 
             case "weight":
                 return 'fund';
+
+            case "exercise":
+                return 'thunderbolt';
 
             default:
                 return key;
