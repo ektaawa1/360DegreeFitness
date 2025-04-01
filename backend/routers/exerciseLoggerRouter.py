@@ -1,12 +1,11 @@
 import json
 import os
 from datetime import date
-from decimal import Decimal
 from typing import Dict
 
 import httpx
 from bson import ObjectId
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from pymongo.errors import PyMongoError
 
@@ -25,10 +24,12 @@ NUTRITIONIX_API_KEY = os.getenv("NUTRITIONIX_API_KEY")
 # Update the encoder to handle both Decimal and date objects
 class CustomEncoder(json.JSONEncoder):
     def default(self, obj):
-        if isinstance(obj, Decimal):
-            return float(obj)
+        if isinstance(obj, float):
+            return obj
         elif isinstance(obj, date):
             return obj.isoformat()
+        elif isinstance(obj, ObjectId):
+            return str(obj)
         return super(CustomEncoder, self).default(obj)
 
 # Add this function to handle MongoDB document serialization
@@ -74,13 +75,14 @@ async def get_exercise_diary(user_id: str, exercise_date: date):
     except Exception as e:
         return JSONResponse(status_code=500, content={"message": f"Internal Server Error: {str(e)}"})
 
-# Update the exercise diary summary
+
+#  Update the exercise diary summary
 def update_exercise_summary(exercise_diary):
-    total_calories_burnt = 0
+    total_calories_burnt = 0.0
     total_duration = 0
 
     for exercise in exercise_diary.get("exercises", []):
-        total_calories_burnt += exercise.get("calories_burnt", 0)
+        total_calories_burnt += float(exercise.get("calories_burnt", 0))
         total_duration += exercise.get("duration_minutes", 0)
 
     exercise_diary["daily_exercise_summary"] = {
@@ -115,7 +117,7 @@ async def add_exercise_log(exercise_log_request: UserExerciseDiary):
                 "date": exercise_log_date,
                 "exercises": [],
                 "daily_exercise_summary": {
-                    "total_calories_burnt": 0,
+                    "total_calories_burnt": 0.0,
                     "total_duration": 0
                 }
             }
@@ -125,6 +127,9 @@ async def add_exercise_log(exercise_log_request: UserExerciseDiary):
 
         # Convert exercise log to dict and handle Decimal and date values
         exercise_log_dict = json.loads(json.dumps(user_exercise_log.dict(), cls=CustomEncoder))
+
+        # Ensure that calories_burnt is converted to float before saving
+        exercise_log_dict['calories_burnt'] = float(exercise_log_dict.get('calories_burnt', 0))
 
         # Step 4: Append the exercise log to the exercise diary's exercise list
         update_result = await exercise_diary_collection.update_one(
@@ -151,7 +156,7 @@ async def add_exercise_log(exercise_log_request: UserExerciseDiary):
         )
 
         # Serialize the MongoDB document before returning
-        serialized_exercise_diary = serialize_mongo_doc(updated_exercise_diary)
+        serialized_exercise_diary = json.loads(json.dumps(updated_exercise_diary, cls=CustomEncoder))
 
         return {
             "message": "Exercise log added successfully",
@@ -247,6 +252,20 @@ async def delete_user_exercise_log(delete_exercise_request: Dict):
         return JSONResponse(status_code=500, content={"message": f"Error deleting exercise log: {str(e)}"})
 
 
+#  Adjust the calories burnt based on the intensity type entered by the user
+def adjust_calories_burnt(calories_burnt, intensity_type):
+    intensity_factors = {
+        "low": 0.9, #  10% reduction in calories burnt
+        "moderate": 1, #  No change
+        "high": 1.2 #  20% increase in calories burnt
+    }
+
+    exercise_intensity_factor = intensity_factors.get(intensity_type, 1) #  Default value is 1 if intensity_type is unknown
+    adjusted_calories_burnt = calories_burnt * exercise_intensity_factor
+
+    return adjusted_calories_burnt
+
+
 @exercise_log_router.post("/v1/360_degree_fitness/calculateCaloriesBurnt")
 async def calculate_calories_burnt(exercise_info_req: Dict):
     try:
@@ -254,6 +273,7 @@ async def calculate_calories_burnt(exercise_info_req: Dict):
         duration_minutes = exercise_info_req.get("duration_minutes")
         user_id = exercise_info_req.get("user_id")
         date_logged = exercise_info_req.get("date")
+        intensity_type = exercise_info_req.get("intensity_type")
 
         if not exercise_type or not duration_minutes:
             return JSONResponse(status_code=400, content={"message": "exercise_type and duration_minutes are required"})
@@ -283,6 +303,8 @@ async def calculate_calories_burnt(exercise_info_req: Dict):
 
         exercise = exercise_data["exercises"][0]
 
+        final_calories_burnt = adjust_calories_burnt(exercise["nf_calories"], intensity_type)
+
         # Return the calories burnt info from the response
         return JSONResponse(status_code=200, content={
             "message": "Calories burnt calculated successfully",
@@ -291,8 +313,8 @@ async def calculate_calories_burnt(exercise_info_req: Dict):
             "date": date_logged,
             "exercise_type": exercise_type,
             "duration_minutes": duration_minutes,
-            "intensity_type": exercise_info_req.get("intensity_type"),
-            "calories_burnt": round(exercise["nf_calories"], 2)  # Calories burnt from response
+            "intensity_type": intensity_type,
+            "calories_burnt": round(final_calories_burnt, 2)
         }
     })
 
