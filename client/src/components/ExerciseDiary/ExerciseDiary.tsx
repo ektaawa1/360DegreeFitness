@@ -49,11 +49,7 @@ const ExerciseDiary = ({ onAdd }) => {
                     "duration_minutes": values.duration_minutes,
                     "calories_burnt": values.calories_burnt
                 }
-            ],
-            "daily_exercise_summary": {
-                "total_calories_burnt": 0,
-                "total_duration": 0
-            }
+            ]
         };
 
         try {
