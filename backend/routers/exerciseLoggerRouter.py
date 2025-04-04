@@ -175,7 +175,7 @@ async def delete_user_exercise_log(delete_exercise_request: Dict):
         user_id = delete_exercise_request.get("user_id")
         exercise_log_date = delete_exercise_request.get("date")
         exercise_type = delete_exercise_request.get("exercise_type")
-        index = delete_exercise_request.get("index")
+        index = int(delete_exercise_request.get("index"))
 
         if not user_id or not exercise_log_date or not exercise_type or index is None:
             return JSONResponse(status_code=400, content={"message": "user_id, date, exercise_type, and index are required"})
@@ -199,6 +199,12 @@ async def delete_user_exercise_log(delete_exercise_request: Dict):
         # Validate the index
         if index < 0 or index >= len(existing_exercises):
             return JSONResponse(status_code=400, content={"message": f"Invalid index: {index}"})
+
+        #Validate exercise type before deleting the log
+        exercise_to_delete = existing_exercises[index]
+        print(f"Exercise Log to be deleted is: {exercise_to_delete}")
+        if exercise_to_delete["exercise_type"] != exercise_type:
+            return JSONResponse(status_code=400, content={"message":"Exercise type is not matching"})
 
         # Remove the exercise from the list
         deleted_exercise = existing_exercises.pop(index)
