@@ -12,16 +12,22 @@ import {
     Radio,
     Tag,
     Collapse,
-    Empty
+    Empty,
+    Carousel,
+    Typography
 } from 'antd';
 import {
     SearchOutlined,
     ArrowLeftOutlined,
     SortAscendingOutlined,
-    SortDescendingOutlined
+    SortDescendingOutlined,
+    FireOutlined,
+    BulbOutlined,
+    ToolOutlined
 } from '@ant-design/icons';
 import exercisesData from './exercises.json';
 
+const { Title, Text, Paragraph } = Typography;
 const { Panel } = Collapse;
 const { Meta } = Card;
 const { Option } = Select;
@@ -228,105 +234,167 @@ const ExerciseBrowser: React.FC = () => {
         setSelectedExercise(null);
     };
 
-    const getExerciseImageUrl = (name: string) => {
-        return `https://your-image-server.com/${encodeURIComponent(name)}.jpg`;
+    const getExerciseImageUrls = (name: string) => {
+        const baseName = name.replaceAll(' ', '_').replaceAll('/', '_');
+        return [
+            `https://raw.githubusercontent.com/wrkout/exercises.json/master/exercises/${baseName}/images/0.jpg`,
+            `https://raw.githubusercontent.com/wrkout/exercises.json/master/exercises/${baseName}/images/1.jpg`
+        ];
     };
 
     if (loading) {
-        return <div>Loading exercises...</div>;
+        return (
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+                <Card loading style={{ width: 300 }} />
+            </div>
+        );
     }
 
     if (selectedExercise) {
+        const imageUrls = getExerciseImageUrls(selectedExercise.name);
+
         return (
-            <div className="exercise-detail">
+            <div style={{ padding: 24 }}>
                 <Button
                     type="link"
                     icon={<ArrowLeftOutlined />}
                     onClick={handleBackToList}
+                    style={{ marginBottom: 16 }}
                 >
                     Back to exercises
                 </Button>
 
                 <Card
-                    cover={
-                        <img
-                            alt={selectedExercise.name}
-                            src={getExerciseImageUrl(selectedExercise.name)}
-                            style={{ maxHeight: '400px', objectFit: 'cover' }}
-                        />
-                    }
+                    style={{ borderRadius: 12, boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)' }}
+                    bodyStyle={{ padding: 0 }}
                 >
-                    <Meta
-                        title={selectedExercise.name}
-                        description={
-                            <>
-                                <Tag color="blue">{selectedExercise.category}</Tag>
-                                <Tag color="green">{selectedExercise.level}</Tag>
-                                <Tag color="orange">{selectedExercise.equipment}</Tag>
-
-                                <Divider orientation="left">Primary Muscles</Divider>
-                                <div>
-                                    {selectedExercise.primaryMuscles.map(muscle => (
-                                        <Tag key={muscle}>{muscle}</Tag>
-                                    ))}
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <Carousel
+                            autoplay
+                            dotPosition="top"
+                            style={{ height: 400, background: '#f0f2f5' }}
+                        >
+                            {imageUrls.map((url, index) => (
+                                <div key={index}>
+                                    <img
+                                        alt={`${selectedExercise.name} ${index + 1}`}
+                                        src={url}
+                                        style={{
+                                            width: '100%',
+                                            height: 400,
+                                            objectFit: 'cover',
+                                            borderRadius: '12px 12px 0 0'
+                                        }}
+                                        onError={(e) => {
+                                            (e.target as HTMLImageElement).src = 'https://via.placeholder.com/800x400?text=Image+Not+Available';
+                                        }}
+                                    />
                                 </div>
+                            ))}
+                        </Carousel>
 
-                                {selectedExercise.secondaryMuscles.length > 0 && (
-                                    <>
-                                        <Divider orientation="left">Secondary Muscles</Divider>
-                                        <div>
-                                            {selectedExercise.secondaryMuscles.map(muscle => (
-                                                <Tag key={muscle}>{muscle}</Tag>
-                                            ))}
-                                        </div>
-                                    </>
-                                )}
+                        <div style={{ padding: 24 }}>
+                            <div style={{ marginBottom: 16 }}>
+                                <Title level={3} style={{ marginBottom: 8 }}>
+                                    {selectedExercise.name}
+                                </Title>
+                                <div>
+                                    <Tag icon={<FireOutlined />} color="red" style={{ marginRight: 8, marginBottom: 8 }}>
+                                        {selectedExercise.category}
+                                    </Tag>
+                                    <Tag icon={<BulbOutlined />} color="blue" style={{ marginRight: 8, marginBottom: 8 }}>
+                                        {selectedExercise.level}
+                                    </Tag>
+                                    <Tag icon={<ToolOutlined />} color="orange" style={{ marginBottom: 8 }}>
+                                        {selectedExercise.equipment}
+                                    </Tag>
+                                </div>
+                            </div>
 
-                                <Divider orientation="left">Instructions</Divider>
-                                <ol>
-                                    {selectedExercise.instructions.map((step, index) => (
-                                        <li key={index}>{step}</li>
-                                    ))}
-                                </ol>
-                            </>
-                        }
-                    />
+                            <Divider orientation="left" style={{ marginTop: 0 }}>
+                                <Text strong>Primary Muscles Worked</Text>
+                            </Divider>
+                            <div style={{ marginBottom: 16 }}>
+                                {selectedExercise.primaryMuscles.map(muscle => (
+                                    <Tag key={muscle} color="geekblue" style={{ marginRight: 8, marginBottom: 8 }}>
+                                        {muscle}
+                                    </Tag>
+                                ))}
+                            </div>
+
+                            {selectedExercise.secondaryMuscles.length > 0 && (
+                                <>
+                                    <Divider orientation="left">
+                                        <Text strong>Secondary Muscles Worked</Text>
+                                    </Divider>
+                                    <div style={{ marginBottom: 16 }}>
+                                        {selectedExercise.secondaryMuscles.map(muscle => (
+                                            <Tag key={muscle} color="cyan" style={{ marginRight: 8, marginBottom: 8 }}>
+                                                {muscle}
+                                            </Tag>
+                                        ))}
+                                    </div>
+                                </>
+                            )}
+
+                            <Divider orientation="left">
+                                <Text strong>Instructions</Text>
+                            </Divider>
+                            <ol style={{ paddingLeft: 24, marginBottom: 0 }}>
+                                {selectedExercise.instructions.map((step, index) => (
+                                    <li key={index} style={{ marginBottom: 8 }}>
+                                        <Text>{step}</Text>
+                                    </li>
+                                ))}
+                            </ol>
+                        </div>
+                    </div>
                 </Card>
             </div>
         );
     }
 
     return (
-        <div className="exercise-browser" style={{ padding: 20}}>
-            <Row gutter={16}>
+        <div style={{ padding: 24, background: '#f5f7fa' }}>
+            <Row gutter={[24, 24]}>
                 {/* Filters Column */}
                 <Col xs={24} sm={24} md={8} lg={6} xl={6}>
-                    <div className="filters-section">
+                    <Card
+                        title="Filters"
+                        bordered={false}
+                        style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0, 0, 0, 0.09)' }}
+                    >
                         <Input
                             placeholder="Search exercises..."
                             prefix={<SearchOutlined />}
                             value={filters.searchQuery}
                             onChange={handleSearch}
-                            style={{ marginBottom: '20px' }}
+                            style={{ marginBottom: 24 }}
+                            size="large"
+                            allowClear
                         />
 
-                        <Collapse defaultActiveKey={['1', '2', '3']} ghost>
-                            <Panel header="Primary Muscles" key="1">
-                                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <Collapse
+                            defaultActiveKey={['1', '2', '3']}
+                            ghost
+                            expandIconPosition="right"
+                        >
+                            <Panel header={<Text strong>Primary Muscles</Text>} key="1">
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                                     {MUSCLE_OPTIONS.map(muscle => (
                                         <Checkbox
                                             key={muscle}
                                             checked={filters.primaryMuscle.includes(muscle)}
                                             onChange={e => handleMuscleFilter(muscle, e.target.checked)}
                                         >
-                                            {muscle.toLowerCase().replace('_', ' ')}
+                                            {muscle.toLowerCase().replaceAll('_', ' ')}
                                         </Checkbox>
                                     ))}
                                 </div>
                             </Panel>
 
-                            <Panel header="Categories" key="2">
-                                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                            <Panel header={<Text strong>Categories</Text>} key="2">
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                                     {CATEGORY_OPTIONS.map(category => (
                                         <Checkbox
                                             key={category}
@@ -339,8 +407,8 @@ const ExerciseBrowser: React.FC = () => {
                                 </div>
                             </Panel>
 
-                            <Panel header="Levels" key="3">
-                                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                            <Panel header={<Text strong>Difficulty Levels</Text>} key="3">
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                                     {LEVEL_OPTIONS.map(level => (
                                         <Checkbox
                                             key={level}
@@ -353,48 +421,50 @@ const ExerciseBrowser: React.FC = () => {
                                 </div>
                             </Panel>
                         </Collapse>
-                    </div>
+                    </Card>
                 </Col>
 
                 {/* Results Column */}
                 <Col xs={24} sm={24} md={16} lg={18} xl={18}>
-                    <div className="results-section">
+                    <Card
+                        bordered={false}
+                        style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0, 0, 0, 0.09)' }}
+                        bodyStyle={{ padding: 24 }}
+                    >
                         <div style={{
                             display: 'flex',
                             justifyContent: 'space-between',
                             alignItems: 'center',
-                            marginBottom: '16px',
-                            flexWrap: 'wrap',
-                            gap: '16px'
+                            marginBottom: 24,
+                            flexWrap: 'wrap'
                         }}>
-                            <div>
-                                Showing {filteredExercises.length} exercises
-                            </div>
+                            <Text strong style={{ fontSize: 16, marginRight: 16, marginBottom: 8 }}>
+                                {filteredExercises.length} exercises found
+                            </Text>
 
-                            <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <span>Sort by:</span>
-                                    <Select
-                                        value={sortOption.field}
-                                        onChange={handleSortFieldChange}
-                                        style={{ width: '120px' }}
-                                    >
-                                        <Option value="name">Name</Option>
-                                        <Option value="level">Difficulty</Option>
-                                        <Option value="category">Category</Option>
-                                    </Select>
-                                </div>
+                            <div style={{ display: 'flex', flexWrap: 'wrap' }}>
+                                <Select
+                                    value={sortOption.field}
+                                    onChange={handleSortFieldChange}
+                                    style={{ width: 140, marginRight: 16, marginBottom: 8 }}
+                                    size="middle"
+                                >
+                                    <Option value="name">Name</Option>
+                                    <Option value="level">Difficulty</Option>
+                                    <Option value="category">Category</Option>
+                                </Select>
 
                                 <Radio.Group
                                     value={sortOption.direction}
                                     onChange={(e) => handleSortDirectionChange(e.target.value)}
                                     buttonStyle="solid"
+                                    size="middle"
                                 >
                                     <Radio.Button value="asc">
-                                        <SortAscendingOutlined />
+                                        <SortAscendingOutlined /> Asc
                                     </Radio.Button>
                                     <Radio.Button value="desc">
-                                        <SortDescendingOutlined />
+                                        <SortDescendingOutlined /> Desc
                                     </Radio.Button>
                                 </Radio.Group>
                             </div>
@@ -404,25 +474,43 @@ const ExerciseBrowser: React.FC = () => {
                             <>
                                 <Row gutter={[16, 16]}>
                                     {paginatedExercises.map(exercise => (
-                                        <Col key={exercise.name} xs={24} sm={12} md={8} lg={6} xl={6}>
+                                        <Col key={exercise.name} xs={24} sm={12} md={8} lg={8} xl={6}>
                                             <Card
                                                 hoverable
                                                 cover={
-                                                    <img
-                                                        alt={exercise.name}
-                                                        src={getExerciseImageUrl(exercise.name)}
-                                                        style={{ height: '150px', objectFit: 'cover' }}
-                                                    />
+                                                    <div style={{ height: 180, overflow: 'hidden' }}>
+                                                        <img
+                                                            alt={exercise.name}
+                                                            src={getExerciseImageUrls(exercise.name)[0]}
+                                                            style={{
+                                                                width: '100%',
+                                                                height: '100%',
+                                                                objectFit: 'cover',
+                                                                transition: 'transform 0.3s'
+                                                            }}
+                                                            onMouseOver={(e) => {
+                                                                e.currentTarget.style.transform = 'scale(1.05)';
+                                                            }}
+                                                            onMouseOut={(e) => {
+                                                                e.currentTarget.style.transform = 'scale(1)';
+                                                            }}
+                                                            onError={(e) => {
+                                                                (e.target as HTMLImageElement).src = 'https://via.placeholder.com/300x180?text=Exercise';
+                                                            }}
+                                                        />
+                                                    </div>
                                                 }
                                                 onClick={() => handleExerciseClick(exercise)}
+                                                style={{ borderRadius: 8, overflow: 'hidden' }}
+                                                bodyStyle={{ padding: 16 }}
                                             >
                                                 <Meta
-                                                    title={exercise.name}
+                                                    title={<Text ellipsis={{ tooltip: exercise.name }}>{exercise.name}</Text>}
                                                     description={
-                                                        <>
-                                                            <Tag color="blue">{exercise.category}</Tag>
-                                                            <Tag color="green">{exercise.level}</Tag>
-                                                        </>
+                                                        <div>
+                                                            <Tag color="blue" style={{ marginRight: 8, marginBottom: 8 }}>{exercise.category}</Tag>
+                                                            <Tag color="green" style={{ marginBottom: 8 }}>{exercise.level}</Tag>
+                                                        </div>
                                                     }
                                                 />
                                             </Card>
@@ -433,7 +521,7 @@ const ExerciseBrowser: React.FC = () => {
                                 <div style={{
                                     display: 'flex',
                                     justifyContent: 'center',
-                                    marginTop: '24px'
+                                    marginTop: 24
                                 }}>
                                     <Pagination
                                         current={currentPage}
@@ -441,16 +529,37 @@ const ExerciseBrowser: React.FC = () => {
                                         pageSize={PAGE_SIZE}
                                         onChange={handlePageChange}
                                         showSizeChanger={false}
+                                        showQuickJumper
+                                        size="default"
+                                        style={{ marginTop: 24 }}
                                     />
                                 </div>
                             </>
                         ) : (
                             <Empty
-                                description="No exercises match your filters. Try adjusting your search criteria."
+                                image="https://gw.alipayobjects.com/zos/antfincdn/ZHrcdLPrvN/empty.svg"
+                                imageStyle={{ height: 120 }}
+                                description={
+                                    <Text type="secondary">
+                                        No exercises match your filters. Try adjusting your search criteria.
+                                    </Text>
+                                }
                                 style={{ margin: '40px 0' }}
-                            />
+                            >
+                                <Button
+                                    type="primary"
+                                    onClick={() => setFilters({
+                                        primaryMuscle: [],
+                                        category: [],
+                                        level: [],
+                                        searchQuery: ''
+                                    })}
+                                >
+                                    Clear All Filters
+                                </Button>
+                            </Empty>
                         )}
-                    </div>
+                    </Card>
                 </Col>
             </Row>
         </div>
