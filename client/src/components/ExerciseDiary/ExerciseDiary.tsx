@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import {DatePicker, Table, Button, Drawer, message} from "antd";
+import {DatePicker, Table, Button, Drawer, message, Popconfirm} from "antd";
 import moment from "moment";
 import { BASE_URL } from "../../config/Config";
 import Axios from "axios";
@@ -7,7 +7,7 @@ import { ArrowLeftRounded, ArrowRightRounded } from "@material-ui/icons";
 import { useNavigate } from "react-router-dom";
 import ExerciseForm from "./ExerciseForm";
 
-const ExerciseDiary = ({ onAdd }) => {
+const ExerciseDiary = ( ) => {
     const [date, setDate] = useState(moment());
     const [data, setData] = useState({});
     const styles = { color: "#1890ff", fontWeight: 600 };
@@ -65,6 +65,33 @@ const ExerciseDiary = ({ onAdd }) => {
         }
     };
 
+    const deleteExercise = async (record, index) => {
+        try {
+            const token = localStorage.getItem("auth-token");
+            if (!token) {
+                message.error("Unauthorized: Please log in.");
+                return;
+            }
+
+            const headers = { "x-auth-token": token };
+            const payload = {
+                "date":moment.utc(date).local().format("YYYY-MM-DD"),
+                "exercise_type":record.exercise_type,
+                index
+            };
+
+            const response = await Axios.delete(`${BASE_URL}/api/exercise/delete-exercise`, { data: payload, headers });
+
+            if (response.status === 200) {
+                message.success("Exercise entry deleted successfully!");
+                getData();
+            }
+        } catch (error) {
+            console.error("Error deleting exercise entry:", error);
+            message.error("Failed to delete exercise entry.");
+        }
+    };
+
 
     const columns = [
         {
@@ -74,6 +101,20 @@ const ExerciseDiary = ({ onAdd }) => {
         },
         { title: <span style={styles}>Duration (min)</span>, dataIndex: "duration_minutes", key: "duration_minutes" },
         { title: <span style={styles}>Calories Burnt</span>, dataIndex: "calories_burnt", key: "calories_burnt" },
+        {
+            title: "Action",
+            key: "action",
+            render: (_, record, i) => (
+                <Popconfirm
+                    title="Are you sure you want to delete this entry?"
+                    onConfirm={() => deleteExercise(record, i)}
+                    okText="Yes"
+                    cancelText="No"
+                >
+                    <Button type="link" danger>Delete</Button>
+                </Popconfirm>
+            )
+        }
     ];
 
     const exerciseSummary = data.daily_exercise_summary || {

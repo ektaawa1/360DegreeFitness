@@ -78,6 +78,7 @@ function App() {
                             <Route path="/landing" element={<MainPage />} />
                             <Route path="/diary" element={<MainPage />} />
                             <Route path="/weight" element={<MainPage />} />
+                            <Route path="/workout" element={<MainPage />} />
                             <Route path="/exercise" element={<MainPage />} />
                             <Route path="/fitnessplan" element={<MainPage />} />
                         </>

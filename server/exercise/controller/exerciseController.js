@@ -17,41 +17,21 @@ exports.add_exercise = async (req, res) => {
     }
 };
 
+exports.delete_exercise = async (req, res) => {
+    let data = req.body;
+    const token = req.header('x-auth-token');
+    const verified = jwt.verify(token, process.env.JWT_SECRET);
+    try {
+        data.user_id = verified.id;
+        console.log(data);
+        const response = await axios.delete(`${FASTAPI_BASE_URL}/delete_exercise_log`, data);
+        console.log(response);
+        return res.json(response);
+    } catch (error) {
+        return res.json({});
+    }
+};
 
-
-// function meal_data(data) {
-//     console.log(JSON.stringify(data));
-//     if (!data || !data.meal_diary) {
-//         return {
-//             meal_diary: [],
-//             daily_nutrition_summary: {}
-//         };
-//     }
-//
-//     const mealTypes = ["breakfast", "lunch", "dinner", "snacks"];
-//     const transformedData = mealTypes.map((mealType, index) => {
-//         const meals = data.meal_diary[mealType] || [];
-//
-//         return {
-//             key: (index + 1).toString(),
-//             name: mealType.charAt(0).toUpperCase() + mealType.slice(1),
-//             children: meals.map((meal, mealIndex) => ({
-//                 key: `${index + 1}-${mealIndex + 1}`,
-//                 name: `${meal.food_name}`,
-//                 calories: meal.total_calories,
-//                 carbs: meal.total_carbs,
-//                 fat: meal.total_fat,
-//                 protein: meal.total_protein,
-//                 quantity: meal.quantity_consumed
-//             })),
-//         };
-//     });
-//
-//     return {
-//         meal_diary: transformedData,
-//         daily_nutrition_summary: data.meal_diary.daily_nutrition_summary
-//     };
-// }
 
 exports.get_exercise_details = async (req, res) => {
     const {date} = req.query;

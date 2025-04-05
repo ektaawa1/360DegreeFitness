@@ -17,10 +17,11 @@ import LandingPage from "../LandingPage/LandingPage";
 import { ProfileCreation, FoodDiary, WeightManagement, FitnessPlanComponent } from "../index";
 import Chat from "../Chatbot/Chat";
 import ExerciseDiary from "../ExerciseDiary/ExerciseDiary";
+import ExerciseBrowser from "../Workout/ExerciseBrowser";
 
 const { Header, Content, Footer, Sider } = Layout;
 
-type PAGES = 'landing' | 'dashboard' | 'fitnessplan' | 'diary' | 'weight' |  'search' | 'exercise' ;
+type PAGES = 'landing' | 'dashboard' | 'fitnessplan' | 'diary' | 'weight' |  'search' | 'exercise' | 'workout' ;
 
 const PAGE_TEXTS = {
 
@@ -32,6 +33,7 @@ const PAGE_TEXTS = {
     'weight': 'Weight Log',
     'exercise': 'Exercise Log',
     'search': 'Search Food',
+    'workout': 'Workouts',
 };
 
 const MainPage = () => {
@@ -71,7 +73,7 @@ const MainPage = () => {
     const renderContent = () => (
         <div className={'content'}>
             <PageHeader title={getPageTitle()} />
-            <div style={{ height: '100%', background: 'white', overflow: 'scroll' }}>
+            <div style={{ height: 'calc(100% - 50px)', background: 'white', overflow: 'scroll' }}>
                 {selectedPage === "landing" && <LandingPage />}
                 {selectedPage === "dashboard" && <Dashboard />}
                 {selectedPage === "diary" && <FoodDiary />}
@@ -79,6 +81,7 @@ const MainPage = () => {
                 {selectedPage === "fitnessplan" && <FitnessPlanComponent />}
                 {selectedPage === "search" && <Search />}
                 {selectedPage === "exercise" && <ExerciseDiary />}
+                {selectedPage === "workout" && <ExerciseBrowser />}
             </div>
         </div>
     );
@@ -99,6 +102,9 @@ const MainPage = () => {
 
             case "exercise":
                 return 'thunderbolt';
+
+            case "workout":
+                return 'build';
 
             default:
                 return key;
