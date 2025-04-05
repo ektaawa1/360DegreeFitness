@@ -268,32 +268,9 @@ const ExerciseBrowser: React.FC = () => {
                     style={{ borderRadius: 12, boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)' }}
                     bodyStyle={{ padding: 0 }}
                 >
-                    <div style={{ display: 'flex', flexDirection: 'column' }}>
-                        <Carousel
-                            autoplay
-                            dotPosition="top"
-                            style={{ height: 400, background: '#f0f2f5' }}
-                        >
-                            {imageUrls.map((url, index) => (
-                                <div key={index}>
-                                    <img
-                                        alt={`${selectedExercise.name} ${index + 1}`}
-                                        src={url}
-                                        style={{
-                                            width: '100%',
-                                            height: 400,
-                                            objectFit: 'cover',
-                                            borderRadius: '12px 12px 0 0'
-                                        }}
-                                        onError={(e) => {
-                                            (e.target as HTMLImageElement).src = 'https://via.placeholder.com/800x400?text=Image+Not+Available';
-                                        }}
-                                    />
-                                </div>
-                            ))}
-                        </Carousel>
-
-                        <div style={{ padding: 24 }}>
+                    <div style={{ display: 'flex', flexDirection: 'row' }}>
+                        {/* Content on the left */}
+                        <div style={{ flex: 1, padding: 24 }}>
                             <div style={{ marginBottom: 16 }}>
                                 <Title level={3} style={{ marginBottom: 8 }}>
                                     {selectedExercise.name}
@@ -347,6 +324,33 @@ const ExerciseBrowser: React.FC = () => {
                                     </li>
                                 ))}
                             </ol>
+                        </div>
+
+                        {/* Carousel on the right */}
+                        <div style={{ width: '40%', padding: 24 }}>
+                            <Carousel
+                                autoplay
+                                dotPosition="top"
+                                style={{ height: 400, background: '#f0f2f5', borderRadius: 12 }}
+                            >
+                                {imageUrls.map((url, index) => (
+                                    <div key={index}>
+                                        <img
+                                            alt={`${selectedExercise.name} ${index + 1}`}
+                                            src={url}
+                                            style={{
+                                                width: '100%',
+                                                height: 400,
+                                                objectFit: 'cover',
+                                                borderRadius: 12
+                                            }}
+                                            onError={(e) => {
+                                                (e.target as HTMLImageElement).src = 'https://via.placeholder.com/800x400?text=Image+Not+Available';
+                                            }}
+                                        />
+                                    </div>
+                                ))}
+                            </Carousel>
                         </div>
                     </div>
                 </Card>
