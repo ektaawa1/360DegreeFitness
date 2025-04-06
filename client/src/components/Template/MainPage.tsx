@@ -17,7 +17,7 @@ import LandingPage from "../LandingPage/LandingPage";
 import { ProfileCreation, FoodDiary, WeightManagement, FitnessPlanComponent } from "../index";
 import Chat from "../Chatbot/Chat";
 import ExerciseDiary from "../ExerciseDiary/ExerciseDiary";
-import ExerciseBrowser from "../Workout/ExerciseBrowser";
+import Workouts from "../Workout/Workouts";
 
 const { Header, Content, Footer, Sider } = Layout;
 
@@ -81,7 +81,7 @@ const MainPage = () => {
                 {selectedPage === "fitnessplan" && <FitnessPlanComponent />}
                 {selectedPage === "search" && <Search />}
                 {selectedPage === "exercise" && <ExerciseDiary />}
-                {selectedPage === "workout" && <ExerciseBrowser />}
+                {selectedPage === "workout" && <Workouts />}
             </div>
         </div>
     );

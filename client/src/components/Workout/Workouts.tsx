@@ -58,22 +58,22 @@ type SortOption = {
 
 const MUSCLE_OPTIONS = [
     'ABDOMINALS', 'ADDUCTORS', 'BICEPS', 'CHEST', 'CALVES',
-    'LOWER_BACK', 'TRICEPS', 'FOREARMS', 'ABDUCTORS',
-    'HAMSTRINGS', 'QUADRICEPS', 'SHOULDERS', 'MIDDLE_BACK',
+    'LOWER BACK', 'TRICEPS', 'FOREARMS', 'ABDUCTORS',
+    'HAMSTRINGS', 'QUADRICEPS', 'SHOULDERS', 'MIDDLE BACK',
     'GLUTES', 'LATS', 'TRAPS', 'NECK'
 ];
 
 const CATEGORY_OPTIONS = [
     'STRENGTH', 'STRETCHING', 'PLYOMETRICS',
     'STRONGMAN', 'POWERLIFTING', 'CARDIO',
-    'OLYMPIC_WEIGHTLIFTING'
+    'OLYMPIC WEIGHTLIFTING'
 ];
 
 const LEVEL_OPTIONS = ['BEGINNER', 'INTERMEDIATE', 'EXPERT'];
 
 const PAGE_SIZE = 8;
 
-const ExerciseBrowser: React.FC = () => {
+const Workouts: React.FC = () => {
     const [exercises, setExercises] = useState<Exercise[]>([]);
     const [filteredExercises, setFilteredExercises] = useState<Exercise[]>([]);
     const [paginatedExercises, setPaginatedExercises] = useState<Exercise[]>([]);
@@ -570,4 +570,4 @@ const ExerciseBrowser: React.FC = () => {
     );
 };
 
-export default ExerciseBrowser;
+export default Workouts;

@@ -4,6 +4,11 @@
     margin: 10px;
 }
 
+
+.ant-checkbox-wrapper + .ant-checkbox-wrapper {
+    margin-left: 0 !important;
+}
+
 .logo-text {
     color: brown;
     font-size: 18px;
