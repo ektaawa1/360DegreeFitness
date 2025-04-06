@@ -7,13 +7,15 @@ const {
 
 const {
     get_meal_details,
-    add_meal
+    add_meal,
+    delete_meal
 } = require('../controller/mealController');
 
 router.get('/search-food/:name', search_food);
 router.get('/food-nutrition/:id', details_by_id);
 
 router.post('/add-meal', add_meal);
+router.delete('/delete-meal', delete_meal);
 router.get('/get-diary', get_meal_details);
 
 

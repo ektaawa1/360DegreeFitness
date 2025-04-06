@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from "react";
-import {DatePicker, Table, Button, Drawer} from "antd";
+import {DatePicker, Table, Button, Drawer, message, Popconfirm} from "antd";
 import moment from "moment";
 import {BASE_URL} from "../../config/Config";
 import Axios from "axios";
@@ -20,27 +20,28 @@ type FoodEntry = {
     children?: FoodEntry[];
 };
 
-const FoodDiary = ({onAdd}) => {
+const FoodDiary = () => {
     const [date, setDate] = useState(moment());
     const [data, setResponseList] = useState({});
     const [visible, setVisible] = useState(false);
     const styles = {color: "#1890ff", fontWeight: 600};
     const navigate = useNavigate();
     useEffect(() => {
-        const getData = async () => {
-            const renderedDate = moment.utc(date).local().format("YYYY-MM-DD");
-            let token = localStorage.getItem("auth-token");
-            const headers = {"x-auth-token": token};
-            const url = BASE_URL + `/api/food/get-diary?date=${renderedDate}`;
-            const response = await Axios.get(url, {headers});
-            if (response.status === 200) {
-                const data = response.data;
-                setResponseList(data);
-
-            }
-        };
         getData();
     }, [date]);
+
+    const getData = async () => {
+        const renderedDate = moment.utc(date).local().format("YYYY-MM-DD");
+        let token = localStorage.getItem("auth-token");
+        const headers = {"x-auth-token": token};
+        const url = BASE_URL + `/api/food/get-diary?date=${renderedDate}`;
+        const response = await Axios.get(url, {headers});
+        if (response.status === 200) {
+            const data = response.data;
+            setResponseList(data);
+
+        }
+    };
 
     const handlePreviousDay = () => {
         setDate(prevDate => moment(prevDate).subtract(1, 'days'));
@@ -48,6 +49,34 @@ const FoodDiary = ({onAdd}) => {
 
     const handleNextDay = () => {
         setDate(prevDate => moment(prevDate).add(1, 'days'));
+    };
+
+
+    const deleteMeal = async (record, index) => {
+        try {
+            const token = localStorage.getItem("auth-token");
+            if (!token) {
+                message.error("Unauthorized: Please log in.");
+                return;
+            }
+
+            const headers = { "x-auth-token": token };
+            const payload = {
+                "date":moment.utc(date).local().format("YYYY-MM-DD"),
+                "meal_type":record.mealType,
+                index
+            };
+
+            const response = await Axios.delete(`${BASE_URL}/api/food/delete-meal`, { data: payload, headers });
+
+            if (response.status === 200) {
+                message.success("Meal entry deleted successfully!");
+                getData();
+            }
+        } catch (error) {
+            console.error("Error deleting meal entry:", error);
+            message.error("Failed to delete meal entry.");
+        }
     };
 
     const columns = [
@@ -63,6 +92,25 @@ const FoodDiary = ({onAdd}) => {
         {title: <span style={styles}>Carbs (g)</span>, dataIndex: "carbs", key: "carbs"},
         {title: <span style={styles}>Fat (g)</span>, dataIndex: "fat", key: "fat"},
         {title: <span style={styles}>Protein (g)</span>, dataIndex: "protein", key: "protein"},
+        {
+            title: "Action",
+            key: "action",
+            render: (_, record, i) => {
+                if (record.children) {
+                    return;
+                }
+                return (
+                    <Popconfirm
+                        title="Are you sure you want to delete this entry?"
+                        onConfirm={() => deleteMeal(record, i)}
+                        okText="Yes"
+                        cancelText="No"
+                    >
+                        <Button type="link" danger>Delete</Button>
+                    </Popconfirm>
+                )
+            }
+        }
     ];
 
     const nutritionSummary = data.daily_nutrition_summary || {

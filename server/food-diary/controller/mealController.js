@@ -20,6 +20,7 @@ function meal_data(data) {
             name: mealType.charAt(0).toUpperCase() + mealType.slice(1),
             children: meals.map((meal, mealIndex) => ({
                 key: `${index + 1}-${mealIndex + 1}`,
+                mealType,
                 name: `${meal.food_name}`,
                 calories: meal.total_calories,
                 carbs: meal.total_carbs,
@@ -67,13 +68,25 @@ exports.add_meal = async (req, res) => {
     try {
         data.user_id = verified.id
         const response = await axios.post(`${FASTAPI_BASE_URL}/add_meal_log`, data);
-        console.log(response);
         return res.json(response);
     } catch (error) {
         return res.json({
             meal_diary: [],
             daily_nutrition_summary: {}
         });
+    }
+};
+
+exports.delete_meal = async (req, res) => {
+    let data = req.body;
+    const token = req.header('x-auth-token');
+    const verified = jwt.verify(token, process.env.JWT_SECRET);
+    try {
+        data.user_id = verified.id;
+        const response = await axios.delete(`${FASTAPI_BASE_URL}/delete_meal_log`, {data});
+        return res.json(response);
+    } catch (error) {
+        return res.json({});
     }
 };
 

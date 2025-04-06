@@ -10,7 +10,6 @@ exports.add_exercise = async (req, res) => {
     try {
         data.user_id = verified.id
         const response = await axios.post(`${FASTAPI_BASE_URL}/addExerciseLog`, data);
-        console.log(response);
         return res.json(response);
     } catch (error) {
         return res.json({});
@@ -23,9 +22,7 @@ exports.delete_exercise = async (req, res) => {
     const verified = jwt.verify(token, process.env.JWT_SECRET);
     try {
         data.user_id = verified.id;
-        console.log(data);
-        const response = await axios.delete(`${FASTAPI_BASE_URL}/delete_exercise_log`, data);
-        console.log(response);
+        const response = await axios.delete(`${FASTAPI_BASE_URL}/delete_exercise_log`, {data});
         return res.json(response);
     } catch (error) {
         return res.json({});
