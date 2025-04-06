@@ -34,7 +34,12 @@ const ExerciseDiary = ( ) => {
     };
 
     const handleNextDay = () => {
-        setDate(prevDate => moment(prevDate).add(1, 'days'));
+        const nextDay = moment(date).add(1, 'days');
+        if (nextDay.isAfter(moment(), 'day')) {
+            message.warning("Cannot navigate to future dates");
+            return;
+        }
+        setDate(nextDay);
     };
 
     const addExercise = async (values, callback) => {
@@ -126,7 +131,11 @@ const ExerciseDiary = ( ) => {
         <div style={{padding: 20}}>
             <Button onClick={handlePreviousDay} style={{margin: 0, border: "none", padding: 0}}><ArrowLeftRounded
                 fontSize={'30px'}/></Button>
-            <DatePicker value={date} onChange={(d) => setDate(d || moment())}/>
+            <DatePicker
+                value={date}
+                onChange={(d) => setDate(d || moment())}
+                disabledDate={current => current && current > moment().endOf('day')}
+            />
             <Button onClick={handleNextDay} style={{margin: 0, border: "none", padding: 0}}><ArrowRightRounded
                 fontSize={'30px'}/></Button>
             <Table columns={columns} dataSource={data.exercises || []} rowKey={(record, index) => index} />
