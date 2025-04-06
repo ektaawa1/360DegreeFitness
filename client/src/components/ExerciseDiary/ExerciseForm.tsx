@@ -7,8 +7,10 @@ import Axios from "axios";
 const { Option } = Select;
 
 const exerciseOptions = [
-    "Running", "Swimming", "Brisk Walking", "Jogging", "Yoga", "Pilates", "Zumba", "Stretching",
-    "Strength Training", "HIIT", "Table Tennis", "Tennis", "Others"
+    "Aerobics", "Billiards", "Bowling", "Brisk Walking", "Cardio", "Cycling", "Dancing",
+    "Frisbee", "HIIT", "Horseback Riding", "Jogging", "Kayaking", "Others", "Pilates",
+    "Running", "Skateboarding", "Snorkeling", "Strength Training", "Stretching",
+    "Swimming", "Table Tennis", "Tennis", "Volleyball", "Yoga", "Zumba"
 ];
 
 const intensityOptions = ["Low", "Moderate", "High"];
