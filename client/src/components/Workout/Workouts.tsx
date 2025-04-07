@@ -3,6 +3,7 @@ import {
     Row,
     Col,
     Card,
+    Icon,
     Input,
     Checkbox,
     Button,
@@ -16,15 +17,15 @@ import {
     Carousel,
     Typography
 } from 'antd';
-import {
-    SearchOutlined,
-    ArrowLeftOutlined,
-    SortAscendingOutlined,
-    SortDescendingOutlined,
-    FireOutlined,
-    BulbOutlined,
-    ToolOutlined
-} from '@ant-design/icons';
+/*import {
+    SearchOutline,
+    ArrowLeftOutline,
+    SortAscendingOutline,
+    SortDescendingOutline,
+    FireOutline,
+    BulbOutline,
+    ToolOutline
+} from '@ant-design/icons';*/
 import exercisesData from './exercises.json';
 
 const { Title, Text, Paragraph } = Typography;
@@ -257,7 +258,7 @@ const Workouts: React.FC = () => {
             <div style={{ padding: 24 }}>
                 <Button
                     type="link"
-                    icon={<ArrowLeftOutlined />}
+                    icon={"arrow-left"}
                     onClick={handleBackToList}
                     style={{ marginBottom: 16 }}
                 >
@@ -276,13 +277,14 @@ const Workouts: React.FC = () => {
                                     {selectedExercise.name}
                                 </Title>
                                 <div>
-                                    <Tag icon={<FireOutlined />} color="red" style={{ marginRight: 8, marginBottom: 8 }}>
+                                    <Tag icon={"fire"} color="red" style={{ marginRight: 8, marginBottom: 8 }}>
                                         {selectedExercise.category}
                                     </Tag>
-                                    <Tag icon={<BulbOutlined />} color="blue" style={{ marginRight: 8, marginBottom: 8 }}>
+                                    <Tag icon={"bulb"} color="blue" style={{ marginRight: 8, marginBottom: 8 }}>
+
                                         {selectedExercise.level}
                                     </Tag>
-                                    <Tag icon={<ToolOutlined />} color="orange" style={{ marginBottom: 8 }}>
+                                    <Tag icon={"tool"} color="orange" style={{ marginBottom: 8 }}>
                                         {selectedExercise.equipment}
                                     </Tag>
                                 </div>
@@ -370,7 +372,7 @@ const Workouts: React.FC = () => {
                     >
                         <Input
                             placeholder="Search exercises..."
-                            prefix={<SearchOutlined />}
+                            prefix={<Icon type="search" />}
                             value={filters.searchQuery}
                             onChange={handleSearch}
                             style={{ marginBottom: 24 }}
@@ -465,10 +467,10 @@ const Workouts: React.FC = () => {
                                     size="middle"
                                 >
                                     <Radio.Button value="asc">
-                                        <SortAscendingOutlined /> Asc
+                                        <Icon type="sort-ascending" /> Asc
                                     </Radio.Button>
                                     <Radio.Button value="desc">
-                                        <SortDescendingOutlined /> Desc
+                                        <Icon type="sort-descending" /> Desc
                                     </Radio.Button>
                                 </Radio.Group>
                             </div>

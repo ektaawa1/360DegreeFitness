@@ -1,6 +1,6 @@
 .chatWidget {
     position: fixed;
-    bottom: 20px;
+    bottom: 10px;
     right: 20px;
     z-index: 1000;
 }

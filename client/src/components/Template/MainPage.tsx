@@ -4,16 +4,9 @@ import UserContext from "../../context/UserContext";
 import 'antd/dist/antd.css';
 import './index.css';
 import {Layout, Menu, Popconfirm, PageHeader, Dropdown, Icon, Modal, Button} from 'antd';
-import {
-    Menu as MenuIcon,
-    MenuOpenOutlined,
-    PersonOutlineOutlined,
-    ArrowDropDownOutlined,
-} from "@material-ui/icons";
 import Copyright from "./Copyright";
 import { Search } from "../index";
 import Dashboard from "../Dashboard/Dashboard";
-import LandingPage from "../LandingPage/LandingPage";
 import { ProfileCreation, FoodDiary, WeightManagement, FitnessPlanComponent } from "../index";
 import Chat from "../Chatbot/Chat";
 import ExerciseDiary from "../ExerciseDiary/ExerciseDiary";
@@ -21,12 +14,11 @@ import Workouts from "../Workout/Workouts";
 
 const { Header, Content, Footer, Sider } = Layout;
 
-type PAGES = 'landing' | 'dashboard' | 'fitnessplan' | 'diary' | 'weight' |  'search' | 'exercise' | 'workout' ;
+type PAGES =  'dashboard' | 'fitnessplan' | 'diary' | 'weight' |  'search' | 'exercise' | 'workout' ;
 
 const PAGE_TEXTS = {
 
 
-    'landing': 'Home',
     'dashboard': 'Dashboard',
     'fitnessplan': 'Fitness Plan',
     'diary': 'Food Diary',
@@ -41,7 +33,7 @@ const MainPage = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const [collapsed, setCollapse] = useState(true);
-    const [selectedPage, setSelectedPage] = useState<PAGES>('landing');
+    const [selectedPage, setSelectedPage] = useState<PAGES>('dashboard');
     const [isEditProfile, setEditProfile] = useState(false);
     const [dialogVisible, setDialogVisible] = useState(false);
     useEffect(() => {
@@ -49,7 +41,7 @@ const MainPage = () => {
         if (PAGE_TEXTS[path]) {
             setSelectedPage(path);
         } else {
-            navigate("/landing");
+            navigate("/dashboard");
         }
     }, [location.pathname]);
 
@@ -62,8 +54,8 @@ const MainPage = () => {
             token: undefined,
             user: undefined,
         });
-        localStorage.setItem("auth-token", "");
-        navigate("/login");
+        sessionStorage.setItem("auth-token", "");
+        navigate("/");
     };
 
     const getPageTitle = () => {
@@ -74,7 +66,6 @@ const MainPage = () => {
         <div className={'content'}>
             <PageHeader title={getPageTitle()} />
             <div style={{ height: 'calc(100% - 50px)', background: 'white', overflow: 'scroll' }}>
-                {selectedPage === "landing" && <LandingPage />}
                 {selectedPage === "dashboard" && <Dashboard />}
                 {selectedPage === "diary" && <FoodDiary />}
                 {selectedPage === "weight" && <WeightManagement />}
@@ -88,8 +79,6 @@ const MainPage = () => {
 
     const getIcon = (key: PAGES) => {
         switch (key) {
-            case 'landing':
-                return 'home';
 
             case "diary":
                 return 'book';
@@ -118,7 +107,7 @@ const MainPage = () => {
                 <Sider collapsible collapsed={collapsed} onCollapse={onCollapse}>
                     <Menu theme="dark" mode="inline">
                         <Menu.Item key="menu" onClick={() => setCollapse(!collapsed)} style={{ height: '50px' }}>
-                            {!collapsed ? <MenuOpenOutlined fontSize={'28px'} /> : <MenuIcon fontSize={'28px'} />}
+                            {!collapsed ? <Icon type="menu-fold" /> : <Icon type="menu-unfold" />}
                         </Menu.Item>
                         {Object.keys(PAGE_TEXTS).map((key) => (
                             <Menu.Item key={key} onClick={() => navigate(`/${key}`)}>
@@ -146,7 +135,7 @@ const MainPage = () => {
                                             display: 'flex',
                                             alignItems: 'center', gap: 5
                                         }}>
-                                            <PersonOutlineOutlined />
+                                            <Icon type="user" />
                                             <span>Update Profile</span>
                                         </Menu.Item>
                                     </Menu>
@@ -154,7 +143,7 @@ const MainPage = () => {
                                     <div style={{ cursor: 'pointer', display: 'flex',
                                         alignItems: 'center', gap: 5 }}>
                                         <span>{`Hello, ${userData.user?.name}`}</span>
-                                        <ArrowDropDownOutlined />
+                                        <Icon type="caret-down" />
                                     </div>
                                 </Dropdown>
                             </div>

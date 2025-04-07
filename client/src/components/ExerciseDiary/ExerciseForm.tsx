@@ -31,7 +31,7 @@ const ExerciseForm = Form.create({ name: "exercise_form" })(
             form.validateFields(["date", "exercise_type", "duration_minutes", "intensity_type", "other_exercise"], async (err, values) => {
                 if (!err) {
                     try {
-                        let token = localStorage.getItem("auth-token");
+                        let token = sessionStorage.getItem("auth-token");
                         const headers = { "x-auth-token": token };
                         const url = BASE_URL + `/api/exercise/calculate-calories`;
                         const payload = { ...values, date: values.date.format("YYYY-MM-DD") };

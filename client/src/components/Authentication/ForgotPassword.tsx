@@ -1,50 +1,89 @@
-import React, {useState} from "react";
-import {Input, Button, Card, Typography, message} from "antd";
-import Axios from "axios";
-import {BASE_URL} from "../../config/Config";
-import styles from "./Authentication.module.css";
+import React from 'react';
+import { Form, Input, Button, Card, Typography, message, Icon } from 'antd';
+import { Link } from 'react-router-dom';
+import Axios from 'axios';
+import { BASE_URL } from '../../config/Config';
+import AuthLayout from './AuthLayout';
 
-const ForgotPassword = () => {
-    const [email, setEmail] = useState("");
-    const [loading, setLoading] = useState(false);
+const { Title, Text } = Typography;
+const FormItem = Form.Item;
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-
-        try {
-            const res = await Axios.post(`${BASE_URL}/api/auth/forgot-password`, {email});
-            message.success(res.data.message);
-        } catch (error) {
-            message.error("Error sending password reset link. Try again.");
-        }
-
-        setLoading(false);
+class ForgotPassword extends React.Component<any, any> {
+    state = {
+        loading: false
     };
 
-    return (
-        <div className={styles.background}>
-            <div style={{display: "flex", justifyContent: "center", alignItems: "center", height: "100vh"}}>
-                <Card style={{width: 400, textAlign: "center"}}>
-                    <Typography.Title level={2}>Reset Password</Typography.Title>
-                    <Typography.Text>Enter your email to receive a password reset link.</Typography.Text>
-                    <form onSubmit={handleSubmit} style={{marginTop: 20}}>
-                        <Input
-                            type="email"
-                            placeholder="Enter your email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                            style={{marginBottom: 10}}
-                        />
-                        <Button type="primary" htmlType="submit" block loading={loading}>
-                            Send Reset Link
-                        </Button>
-                    </form>
-                </Card>
-            </div>
-        </div>
-    );
-};
+    handleSubmit = (e) => {
+        e.preventDefault();
+        this.props.form.validateFields((err, values) => {
+            if (!err) {
+                this.setState({ loading: true });
+                Axios.post(`${BASE_URL}/api/auth/forgot-password`, { email: values.email })
+                    .then(res => {
+                        message.success(res.data.message);
+                    })
+                    .catch(error => {
+                        message.error("Error sending password reset link. Try again.");
+                    })
+                    .finally(() => {
+                        this.setState({ loading: false });
+                    });
+            }
+        });
+    };
 
-export default ForgotPassword;
+    render() {
+        const { getFieldDecorator } = this.props.form;
+        const { loading } = this.state;
+
+        return (
+            <AuthLayout>
+                <Card className="auth-card">
+                    <Title level={3} style={{ textAlign: 'center', marginBottom: 24 }}>
+                        Reset Password
+                    </Title>
+                    <Text style={{ display: 'block', textAlign: 'center', marginBottom: 30, color: '#666' }}>
+                        Enter your email to receive a password reset link
+                    </Text>
+
+                    <Form onSubmit={this.handleSubmit}>
+                        <FormItem>
+                            {getFieldDecorator('email', {
+                                rules: [
+                                    { required: true, message: 'Please input your email!' },
+                                    { type: 'email', message: 'Please enter a valid email!' }
+                                ],
+                            })(
+                                <Input
+                                    prefix={<Icon type="mail" />}
+                                    placeholder="Email"
+                                    size="large"
+                                />
+                            )}
+                        </FormItem>
+
+                        <FormItem>
+                            <Button
+                                type="primary"
+                                htmlType="submit"
+                                block
+                                loading={loading}
+                                size="large"
+                            >
+                                Send Reset Link
+                            </Button>
+                        </FormItem>
+
+                        <div style={{ textAlign: 'center', marginTop: 16 }}>
+                            <Link to="/login">Back to Login</Link>
+                        </div>
+                    </Form>
+                </Card>
+            </AuthLayout>
+        );
+    }
+}
+
+const WrappedForgotPasswordForm = Form.create({ name: 'forgot_password' })(ForgotPassword);
+
+export default WrappedForgotPasswordForm;

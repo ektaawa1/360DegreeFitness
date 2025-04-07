@@ -1,0 +1,104 @@
+.authLayout {
+    min-height: 100vh;
+    background: #f9fafb;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 50px;
+    height: 80px;
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.logo {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1890ff;
+}
+
+.authButtons {
+    display: flex;
+    gap: 20px;
+}
+
+.authLink {
+    color: #1a1a1a;
+    font-weight: 500;
+    transition: color 0.3s;
+}
+
+.authLink:hover {
+    color: #1890ff;
+}
+
+.authContent {
+    padding: 40px 50px;
+    height: calc(100vh - 133px);
+    background-color: #8BC6EC;
+    background-image: linear-gradient(135deg, #8BC6EC 0%, #9599E2 100%);
+}
+
+.footer {
+    padding: 20px 50px;
+    background: #1a1a1a;
+    color: #fff;
+}
+
+.footerContent {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.footerLinks {
+    display: flex;
+    gap: 20px;
+}
+
+.footerLinks a {
+    color: rgba(255, 255, 255, 0.65);
+}
+
+.footerLinks a:hover {
+    color: #fff;
+}
+
+@media (max-width: 768px) {
+    .header {
+        padding: 0 20px;
+    }
+
+    .footerContent {
+        flex-direction: column;
+        gap: 10px;
+    }
+}
+
+/* Add to AuthLayout.module.css */
+.auth-card {
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border: none;
+    padding: 24px;
+}
+
+.auth-card .ant-card-body {
+    padding: 24px;
+}
+
+/* Add to your global CSS or create a new module */
+.ant-form-item {
+    margin-bottom: 16px;
+}
+
+.ant-input-affix-wrapper {
+    padding: 8px 11px;
+}
+
+.ant-input-prefix {
+    margin-right: 8px;
+    color: rgba(0, 0, 0, 0.25);
+}

@@ -13,7 +13,7 @@ const { Meta } = Card;
 export const Feature = () => {
   const navigate = useNavigate();
   const onAdClick = (key) => {
-    navigate(key);
+    //navigate(key);
   }
 
   return (

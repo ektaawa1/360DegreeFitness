@@ -1,11 +1,10 @@
 import React, {useEffect, useState} from "react";
-import {DatePicker, Table, Button, Drawer, message, Popconfirm} from "antd";
+import {DatePicker, Table, Button, Drawer, message, Popconfirm, Icon} from "antd";
 import moment from "moment";
 import {BASE_URL} from "../../config/Config";
 import Axios from "axios";
 import Highcharts from "highcharts";
 import HighchartsReact from "highcharts-react-official";
-import {ArrowLeftRounded, ArrowRightRounded} from "@material-ui/icons";
 import { useNavigate } from "react-router-dom";
 
 type FoodEntry = {
@@ -32,7 +31,7 @@ const FoodDiary = () => {
 
     const getData = async () => {
         const renderedDate = moment.utc(date).local().format("YYYY-MM-DD");
-        let token = localStorage.getItem("auth-token");
+        let token = sessionStorage.getItem("auth-token");
         const headers = {"x-auth-token": token};
         const url = BASE_URL + `/api/food/get-diary?date=${renderedDate}`;
         const response = await Axios.get(url, {headers});
@@ -59,7 +58,7 @@ const FoodDiary = () => {
 
     const deleteMeal = async (record, index) => {
         try {
-            const token = localStorage.getItem("auth-token");
+            const token = sessionStorage.getItem("auth-token");
             if (!token) {
                 message.error("Unauthorized: Please log in.");
                 return;
@@ -143,12 +142,10 @@ const FoodDiary = () => {
 
     return (
         <div style={{padding: 20}}>
-            <Button onClick={handlePreviousDay} style={{margin: 0, border: "none", padding: 0}}><ArrowLeftRounded
-                fontSize={'30px'}/></Button>
+            <Button onClick={handlePreviousDay} style={{margin: 0, border: "none", padding: 0}}><Icon type="caret-left" /></Button>
             <DatePicker value={date} disabledDate={current => current && current > moment().endOf('day')}
                         onChange={(d) => setDate(d || moment())}/>
-            <Button onClick={handleNextDay} style={{margin: 0, border: "none", padding: 0}}><ArrowRightRounded
-                fontSize={'30px'}/></Button>
+            <Button onClick={handleNextDay} style={{margin: 0, border: "none", padding: 0}}><Icon type="caret-right" /></Button>
                 <Table
                     expandedRowKeys={data.meal_diary?.map((o) => o.key)}
                     columns={columns}

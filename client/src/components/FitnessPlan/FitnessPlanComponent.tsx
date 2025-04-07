@@ -31,7 +31,7 @@ const FitnessPlanComponent: React.FC = () => {
     const [fitnessData, setFitnessData] = useState<FitnessPlan | null>(null);
 
     useEffect(() => {
-        let token = localStorage.getItem("auth-token");
+        let token = sessionStorage.getItem("auth-token");
         const headers = {"x-auth-token": token};
         const url = BASE_URL + `/api/profile/get-fitness-plan`;
         axios.get(url, {headers}).then((response) => {

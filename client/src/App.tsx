@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import {BrowserRouter as Router, Route, Routes, useNavigate} from "react-router-dom";
 import Axios from "axios";
-import { Login, Register, PageNotFound, MainPage, ForgotPassword, ResetPassword } from "./components";
+import {PageNotFound, MainPage, ForgotPassword, ResetPassword, Register} from "./components";
 import UserContext from "./context/UserContext";
 import { BASE_URL } from './config/Config';
 import { Spin } from "antd";
+import LandingPage from "./components/LandingPage/LandingPage";
+import Login from "./components/Authentication/Login";
 
 function App() {
     const baseState = {
@@ -18,7 +20,7 @@ function App() {
 
     useEffect(() => {
         const loginCheck = async () => {
-            let token = localStorage.getItem("auth-token");
+            let token = sessionStorage.getItem("auth-token");
             if (!token) {
                 setUserData(baseState);
                 setLoading(false);
@@ -75,7 +77,6 @@ function App() {
                             <Route path="/" element={<MainPage />} />
                             <Route path="/dashboard" element={<MainPage />} />
                             <Route path="/search" element={<MainPage />} />
-                            <Route path="/landing" element={<MainPage />} />
                             <Route path="/diary" element={<MainPage />} />
                             <Route path="/weight" element={<MainPage />} />
                             <Route path="/workout" element={<MainPage />} />
@@ -83,13 +84,15 @@ function App() {
                             <Route path="/fitnessplan" element={<MainPage />} />
                         </>
                     ) : (
-                        <Route path="/" element={<Login />} />
+                        <>
+                            <Route path="/" element={<LandingPage />} />
+                            <Route path="/login" element={<Login />} />
+                            <Route path="/register" element={<Register />} />
+                            <Route path="/forgot-password" element={<ForgotPassword />} />
+                            <Route path="/reset-password/:token" element={<ResetPassword />} />
+                        </>
                     )}
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/register" element={<Register />} />
-                    <Route path="/forgot-password" element={<ForgotPassword />} />
-                    <Route path="/reset-password/:token" element={<ResetPassword />} />
-                    <Route path="/*" element={<PageNotFound />} />
+                    <Route path="/*" element={<LandingPage />} />
                 </Routes>
             </UserContext.Provider>
         </Router>

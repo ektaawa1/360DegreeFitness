@@ -38,7 +38,7 @@ const WeightManagement = () => {
 
     const fetchWeightData = async () => {
         try {
-            const token = localStorage.getItem("auth-token");
+            const token = sessionStorage.getItem("auth-token");
             if (!token) {
                 message.error("Unauthorized: Please log in.");
                 return;
@@ -63,7 +63,7 @@ const WeightManagement = () => {
     };
 
     const addWeight = async (values) => {
-        let token = localStorage.getItem("auth-token");
+        let token = sessionStorage.getItem("auth-token");
         const headers = { "x-auth-token": token };
         const url = `${BASE_URL}/api/weight/add_weight`;
 
@@ -91,7 +91,7 @@ const WeightManagement = () => {
 
     const deleteWeight = async (date, index) => {
         try {
-            const token = localStorage.getItem("auth-token");
+            const token = sessionStorage.getItem("auth-token");
             if (!token) {
                 message.error("Unauthorized: Please log in.");
                 return;

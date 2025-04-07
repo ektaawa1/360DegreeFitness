@@ -1,103 +1,137 @@
-import React, { useState } from "react";
-import { Input, Button, Card, Typography, Row, Col } from "antd";
-import { Link, useNavigate } from "react-router-dom";
-import Axios from "axios";
-import { BASE_URL } from "../../config/Config";
-import styles from "./Authentication.module.css";
+import React from 'react';
+import { Form, Input, Button, Card, Typography, Icon } from 'antd';
+import { Link } from 'react-router-dom';
+import Axios from 'axios';
+import { BASE_URL } from '../../config/Config';
+import AuthLayout from './AuthLayout';
 
-const Register = () => {
-  const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    username: "",
-    password: "",
-  });
-  const [errors, setErrors] = useState({});
+const { Title, Text } = Typography;
 
-  const onChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+class Register extends React.Component<any, any> {
+    state = {
+        loading: false
+    };
 
-  const validate = () => {
-    let errors = {};
-    if (formData.username.length < 4 || formData.username.length > 15) {
-      errors.username = "Username must be between 4 and 15 characters.";
+    handleSubmit = (e) => {
+        e.preventDefault();
+        this.props.form.validateFields((err, values) => {
+            if (!err) {
+                this.setState({ loading: true });
+                Axios.post(`${BASE_URL}/api/auth/register`, values)
+                    .then(response => {
+                        if (response.data.status === "fail") {
+                            alert(response.data.message);
+                        } else {
+                            window.location.href = "/login";
+                        }
+                    })
+                    .catch(error => {
+                        alert("Registration failed. Please try again.");
+                    })
+                    .finally(() => {
+                        this.setState({ loading: false });
+                    });
+            }
+        });
+    };
+
+    render() {
+        const { getFieldDecorator } = this.props.form;
+        const { loading } = this.state;
+
+        return (
+            <AuthLayout>
+                <Card className="auth-card">
+                    <Title level={3} style={{ textAlign: 'center', marginBottom: 24 }}>
+                        Create Your Account
+                    </Title>
+                    <Text style={{ display: 'block', textAlign: 'center', marginBottom: 30, color: '#666' }}>
+                        Start your fitness journey today
+                    </Text>
+
+                    <Form onSubmit={this.handleSubmit}>
+                        <Form.Item>
+                            {getFieldDecorator('name', {
+                                rules: [{ required: true, message: 'Please input your full name!' }],
+                            })(
+                                <Input
+                                    prefix={<Icon type="user" />}
+                                    placeholder="Full Name"
+                                    size="large"
+                                />
+                            )}
+                        </Form.Item>
+
+                        <Form.Item>
+                            {getFieldDecorator('email', {
+                                rules: [
+                                    { required: true, message: 'Please input your email!' },
+                                    { type: 'email', message: 'Please enter a valid email!' }
+                                ],
+                            })(
+                                <Input
+                                    prefix={<Icon type="mail" />}
+                                    placeholder="Email"
+                                    size="large"
+                                />
+                            )}
+                        </Form.Item>
+
+                        <Form.Item>
+                            {getFieldDecorator('username', {
+                                rules: [
+                                    { required: true, message: 'Please choose a username!' },
+                                    { min: 4, message: 'Username must be at least 4 characters!' },
+                                    { max: 15, message: 'Username cannot be longer than 15 characters!' }
+                                ],
+                            })(
+                                <Input
+                                    prefix={<Icon type="user" />}
+                                    placeholder="Username"
+                                    size="large"
+                                />
+                            )}
+                        </Form.Item>
+
+                        <Form.Item>
+                            {getFieldDecorator('password', {
+                                rules: [
+                                    { required: true, message: 'Please input your password!' },
+                            { min: 6, message: 'Password must be at least 6 characters!' },
+                            { max: 20, message: 'Password cannot be longer than 20 characters!' }
+                                ],
+                            })(
+                            <Input.Password
+                                prefix={<Icon type="lock" />}
+                                placeholder="Password"
+                                size="large"
+                            />
+                            )}
+                        </Form.Item>
+
+                        <Form.Item>
+                            <Button
+                                type="primary"
+                                htmlType="submit"
+                                block
+                                loading={loading}
+                                size="large"
+                            >
+                                Register
+                            </Button>
+                        </Form.Item>
+
+                        <div style={{ textAlign: 'center', marginTop: 16 }}>
+                            <span>Already have an account? </span>
+                            <Link to="/login">Log in</Link>
+                        </div>
+                    </Form>
+                </Card>
+            </AuthLayout>
+        );
     }
-    if (formData.password.length < 6 || formData.password.length > 20) {
-      errors.password = "Password must be between 6 and 20 characters.";
-    }
-    return errors;
-  };
+}
 
-  const onSubmit = async (e) => {
-    e.preventDefault();
-    const validationErrors = validate();
-    setErrors(validationErrors);
+const WrappedRegisterForm = Form.create({ name: 'register' })(Register);
 
-    if (Object.keys(validationErrors).length === 0) {
-      setLoading(true);
-      try {
-        const response = await Axios.post(`${BASE_URL}/api/auth/register`, formData);
-        if (response.data.status === "fail") {
-          alert(response.data.message);
-        } else {
-          navigate("/login");
-        }
-      } catch (error) {
-        alert("Registration failed. Please try again.");
-      }
-      setLoading(false);
-    }
-  };
-
-  return (
-      <div className={styles.background}>
-        <Row justify="center" align="middle" style={{ minHeight: "100vh" }}>
-          <Col span={8} style={{float: "right"}}>
-            <Card style={{ boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.2)", borderRadius: "10px", padding: "20px" }}>
-              <Typography.Title level={2} style={{ textAlign: "center", color: "#1890ff" }}>
-                Create an Account
-              </Typography.Title>
-              <Typography.Text style={{ display: "block", textAlign: "center", marginBottom: "20px", color: "#555" }}>
-                Fill in the details to register.
-              </Typography.Text>
-              <form onSubmit={onSubmit}>
-                <div>
-                  <label style={{ fontWeight: "bold", color: "#333" }}>Name</label>
-                  <Input name="name" placeholder="Enter your full name" required onChange={onChange} style={{ borderRadius: "8px", padding: "10px" }} />
-                </div>
-                <div style={{ marginTop: "15px" }}>
-                  <label style={{ fontWeight: "bold", color: "#333" }}>Email</label>
-                  <Input name="email" type="email" placeholder="Enter your email" required onChange={onChange} style={{ borderRadius: "8px", padding: "10px" }} />
-                </div>
-                <div style={{ marginTop: "15px" }}>
-                  <label style={{ fontWeight: "bold", color: "#333" }}>Username</label>
-                  <Input name="username" placeholder="Choose a username" required onChange={onChange} style={{ borderRadius: "8px", padding: "10px" }} />
-                  {errors.username && <Typography.Text type="danger">{errors.username}</Typography.Text>}
-                </div>
-                <div style={{ marginTop: "15px" }}>
-                  <label style={{ fontWeight: "bold", color: "#333" }}>Password</label>
-                  <Input.Password name="password" placeholder="Create a password" required onChange={onChange} style={{ borderRadius: "8px" }} />
-                  {errors.password && <Typography.Text type="danger">{errors.password}</Typography.Text>}
-                </div>
-                <div style={{ marginTop: "20px" }}>
-                  <Button type="primary" htmlType="submit" block loading={loading} style={{ borderRadius: "8px", fontSize: "16px", padding: "10px", paddingTop: 4 }}>
-                    Register
-                  </Button>
-                </div>
-              </form>
-              <Row justify="center" style={{ marginTop: 16 }}>
-                <Link to="/login" style={{ color: "#1890ff", fontWeight: "bold", marginRight: 20 }}>Sign In</Link>
-                |
-                <Link to="/forgot-password" style={{ color: "#1890ff", fontWeight: "bold", marginLeft: 20 }}>Forgot Password?</Link>
-              </Row>
-            </Card>
-          </Col>
-        </Row>
-      </div>
-  );
-};
-
-export default Register;
+export default WrappedRegisterForm;

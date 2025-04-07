@@ -27,9 +27,11 @@ const getDailyValue = (nutrient, amount) => {
     return `${Math.round((amount / DAILY_VALUES[nutrient]) * 100)}%`;
 };
 
+
 const NutritionSider = ({ selectedFood, onClose }) => {
     const [foodDetails, setFoodDetails] = useState(null);
     const [selectedServing, setSelectedServing] = useState(null);
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         const getData = async () => {
@@ -37,17 +39,20 @@ const NutritionSider = ({ selectedFood, onClose }) => {
                 setFoodDetails(null);
                 return;
             }
+            setLoading(true);
             try {
                 const url = `${BASE_URL}/api/food/food-nutrition/${selectedFood.food_id}`;
                 const response = await Axios.get(url);
                 if (response.status === 200) {
                     setFoodDetails(response.data.food);
-                    setSelectedServing(response.data.food.servings.serving[0]); // Default to the first serving
+                    setSelectedServing(response.data.food.servings.serving[0]);
                 } else {
                     setFoodDetails(null);
                 }
             } catch (error) {
                 setFoodDetails(null);
+            } finally {
+                setLoading(false);
             }
         };
         getData();
@@ -55,7 +60,7 @@ const NutritionSider = ({ selectedFood, onClose }) => {
 
     const onSubmitMeal = async (data) => {
         try {
-            let token = localStorage.getItem("auth-token");
+            let token = sessionStorage.getItem("auth-token");
             const headers = {
                 "x-auth-token": token,
             };
@@ -76,36 +81,40 @@ const NutritionSider = ({ selectedFood, onClose }) => {
         setSelectedServing(selected);
     };
 
-    if (!foodDetails || !selectedServing) return null;
-
+    if (!foodDetails || !selectedServing || loading) return null;
     return (
-        <Drawer className={styles.nutrition_facts} onClose={onClose}
-                title={`Nutrition Facts - ${foodDetails.food_name}`}
-                placement="right"
-                mask={false}
-                maskClosable={false}
-                closable={true}
-                visible={true}
-                width={500}>
+        <Drawer
+            className={styles.nutrition_facts}
+            onClose={onClose}
+            title={`Nutrition Facts - ${foodDetails.food_name}`}
+            placement="right"
+            mask={false}
+            maskClosable={false}
+            closable={true}
+            visible={true}
+            width={500}
+        >
             <div className={styles.nutrition_facts}>
                 <div className={`${styles.heading} ${styles.black}`}>Nutrition Facts</div>
                 <div className={`${styles.divider} ${styles.thin}`}/>
                 <div className={styles.serving_selector}>
                     <span className={`${styles.serving_size} ${styles.black}`}>Serving Size: </span>
-                    <Select
-                        defaultValue={selectedServing.serving_id}
-                        key={selectedServing.serving_id}
-                        size={"small"}
-
-                        dropdownMatchSelectWidth={false}
-                        onChange={handleServingChange}
-                    >
-                        {foodDetails.servings.serving.map((serving) => (
-                            <Option key={serving.serving_id} value={serving.serving_id}>
-                                {serving.serving_description} ({serving.metric_serving_amount}{serving.metric_serving_unit})
-                            </Option>
-                        ))}
-                    </Select>
+                    {foodDetails.servings?.serving && (
+                        <Select
+                            defaultValue={selectedServing.serving_id}
+                            key={`select-${selectedServing.serving_id}`} // Add unique key
+                            size="small"
+                            dropdownMatchSelectWidth={false}
+                            onChange={handleServingChange}
+                            loading={loading}
+                        >
+                            {foodDetails.servings.serving.map((serving) => (
+                                <Option key={serving.serving_id} value={serving.serving_id}>
+                                    {serving.serving_description} ({serving.metric_serving_amount}{serving.metric_serving_unit})
+                                </Option>
+                            ))}
+                        </Select>
+                    )}
                 </div>
                 <div className={`${styles.divider} ${styles.thick}`}/>
                 <div className={styles.left}>

@@ -76,7 +76,7 @@ const Chat: React.FC = () => {
         setLoading(true);
 
         try {
-            const token = localStorage.getItem('auth-token');
+            const token = sessionStorage.getItem('auth-token');
             const response = await axios.post(
                 `${API_PATHS.CHAT}/chat`,
                 {
@@ -163,7 +163,7 @@ const Chat: React.FC = () => {
                 formData.append('user_id', userData.user.id);
                 formData.append('return_ocr_text', 'true');
 
-                const token = localStorage.getItem('auth-token');
+                const token = sessionStorage.getItem('auth-token');
 
                 // Log the request details for debugging
                 console.log('Sending image to backend using the same pattern as chat endpoint');

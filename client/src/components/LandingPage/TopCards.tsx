@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Carousel } from 'antd';
+import { Carousel } from 'antd';
 import styles from './LandingPage.module.css';
 const initItems = [
   {

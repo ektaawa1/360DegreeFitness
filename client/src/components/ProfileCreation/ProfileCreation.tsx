@@ -44,7 +44,7 @@ const ProfileCreation = ({userData, editMode, onClose}) => {
 
         if (userData.profile_created) {
             // fetch current profile
-            let token = localStorage.getItem("auth-token");
+            let token = sessionStorage.getItem("auth-token");
             const headers = {
                 "x-auth-token": token,
             };
@@ -100,7 +100,7 @@ const ProfileCreation = ({userData, editMode, onClose}) => {
     }
 
     const handleAction = async (data) => {
-        let token = localStorage.getItem("auth-token");
+        let token = sessionStorage.getItem("auth-token");
         const headers = {
             "x-auth-token": token,
         };

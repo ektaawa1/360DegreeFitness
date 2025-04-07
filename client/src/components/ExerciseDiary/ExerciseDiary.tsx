@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from "react";
-import {DatePicker, Table, Button, Drawer, message, Popconfirm} from "antd";
+import {DatePicker, Table, Button, Drawer, message, Popconfirm, Icon} from "antd";
 import moment from "moment";
 import { BASE_URL } from "../../config/Config";
 import Axios from "axios";
-import { ArrowLeftRounded, ArrowRightRounded } from "@material-ui/icons";
 import { useNavigate } from "react-router-dom";
 import ExerciseForm from "./ExerciseForm";
 
@@ -20,7 +19,7 @@ const ExerciseDiary = ( ) => {
 
     const getData = async () => {
         const formattedDate = moment.utc(date).local().format("YYYY-MM-DD");
-        let token = localStorage.getItem("auth-token");
+        let token = sessionStorage.getItem("auth-token");
         const headers = { "x-auth-token": token };
         const url = BASE_URL + `/api/exercise/get-diary?date=${formattedDate}`;
         const response = await Axios.get(url, { headers });
@@ -43,7 +42,7 @@ const ExerciseDiary = ( ) => {
     };
 
     const addExercise = async (values, callback) => {
-        let token = localStorage.getItem("auth-token");
+        let token = sessionStorage.getItem("auth-token");
         const headers = { "x-auth-token": token };
         const url = `${BASE_URL}/api/exercise/add-exercise`;
         const payload = {
@@ -72,7 +71,7 @@ const ExerciseDiary = ( ) => {
 
     const deleteExercise = async (record, index) => {
         try {
-            const token = localStorage.getItem("auth-token");
+            const token = sessionStorage.getItem("auth-token");
             if (!token) {
                 message.error("Unauthorized: Please log in.");
                 return;
@@ -129,15 +128,13 @@ const ExerciseDiary = ( ) => {
 
     return (
         <div style={{padding: 20}}>
-            <Button onClick={handlePreviousDay} style={{margin: 0, border: "none", padding: 0}}><ArrowLeftRounded
-                fontSize={'30px'}/></Button>
+            <Button onClick={handlePreviousDay} style={{margin: 0, border: "none", padding: 0}}><Icon type="caret-left" /></Button>
             <DatePicker
                 value={date}
                 onChange={(d) => setDate(d || moment())}
                 disabledDate={current => current && current > moment().endOf('day')}
             />
-            <Button onClick={handleNextDay} style={{margin: 0, border: "none", padding: 0}}><ArrowRightRounded
-                fontSize={'30px'}/></Button>
+            <Button onClick={handleNextDay} style={{margin: 0, border: "none", padding: 0}}><Icon type="caret-right" /></Button>
             <Table columns={columns} dataSource={data.exercises || []} rowKey={(record, index) => index} />
             <h3>Summary</h3>
             <p>Total Duration: {exerciseSummary.total_duration} min</p>

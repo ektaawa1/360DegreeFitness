@@ -14,8 +14,10 @@
     font-size: 18px;
 }
 
+
 .ant-layout-footer {
-    background: ghostwhite;
+    background: #1a1a1a;
+    color: rgba(255, 255, 255, 0.65);
     text-align: center;
     font-weight: 600;
 }
