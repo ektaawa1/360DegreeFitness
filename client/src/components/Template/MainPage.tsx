@@ -6,7 +6,7 @@ import './index.css';
 import {Layout, Menu, Popconfirm, PageHeader, Dropdown, Icon, Modal, Button} from 'antd';
 import Copyright from "./Copyright";
 import { Search } from "../index";
-import Dashboard from "../Dashboard/Dashboard";
+import FitnessDashboard from "../Dashboard/FitnessDashboard";
 import { ProfileCreation, FoodDiary, WeightManagement, FitnessPlanComponent } from "../index";
 import Chat from "../Chatbot/Chat";
 import ExerciseDiary from "../ExerciseDiary/ExerciseDiary";
@@ -66,7 +66,7 @@ const MainPage = () => {
         <div className={'content'}>
             <PageHeader title={getPageTitle()} />
             <div style={{ height: 'calc(100% - 50px)', background: 'white', overflow: 'scroll' }}>
-                {selectedPage === "dashboard" && <Dashboard />}
+                {selectedPage === "dashboard" && <FitnessDashboard />}
                 {selectedPage === "diary" && <FoodDiary />}
                 {selectedPage === "weight" && <WeightManagement />}
                 {selectedPage === "fitnessplan" && <FitnessPlanComponent />}

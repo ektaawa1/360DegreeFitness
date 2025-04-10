@@ -10,6 +10,7 @@
     "@types/react-dom": "18.3.6",
     "antd": "3.26.20",
     "axios": "0.27.2",
+    "axios-mock-adapter": "^2.1.0",
     "babel": "6.23.0",
     "classnames": "2.3.1",
     "clsx": "1.1.1",
