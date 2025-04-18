@@ -29,6 +29,7 @@ meal_diary_collection = db["meal_diary"] # for storing users' meal diary and mea
 exercise_diary_collection = db["exercise_diary"] # for storing users' exercise diary and exercise logs
 weight_diary_collection = db["weight_diary"] # for storing users' weight diary and weight logs
 nutrition_goals_collection = db["nutrition_goals"]
+fitness_plans_collection = db.get_collection("fitness_plans")
 
 # Decimal handling
 class DecimalEncoder(json.JSONEncoder):

@@ -7,7 +7,7 @@ import google.generativeai as genai
 import os
 import json
 from dotenv import load_dotenv
-from ..db.database import profiles_collection, key_recommendations_collection, conversation_history_collection, meal_diary_collection
+from ..db.database import profiles_collection, key_recommendations_collection, conversation_history_collection, meal_diary_collection, fitness_plans_collection
 from datetime import datetime, timedelta, date
 import re
 from rapidfuzz import fuzz
@@ -24,6 +24,7 @@ import numpy as np
 import pytesseract
 from PIL import Image
 import base64
+import httpx
 
 load_dotenv()
 gemini_api_key = os.getenv("GEMINI_API_KEY")
@@ -679,19 +680,88 @@ async def provide_chat_feedback(feedback: ChatFeedback):
 # Modify the chat_with_ai function to use similar past questions
 @chat_router.post("/v1/360_degree_fitness/chat", response_model=ChatResponse)
 async def chat_with_ai(chat_message: ChatMessage):
-    # Generate conversation_id at the start
-    conversation_id = str(ObjectId())
-    
-    # Define retrieval instructions early
-    retrieval_instructions = (
-        "Want to view this conversation later? "
-        f"Save this conversation ID: {conversation_id}\n"
-        "You can retrieve your chat history by visiting:\n"
-        f"- JSON format: /v1/360_degree_fitness/chat/history/{conversation_id}?format=json\n"
-        f"- PDF format: /v1/360_degree_fitness/chat/history/{conversation_id}?format=pdf"
-    )
-    
     try:
+        # Get user profile
+        user_profile = await profiles_collection.find_one({"user_id": chat_message.user_id})
+        print(f"User profile found: {bool(user_profile)}")  # Debug log
+
+        if is_fitness_plan_request(chat_message.message):
+            try:
+                print(f"Attempting to handle fitness plan request for user: {chat_message.user_id}")
+                
+                # First try to retrieve existing plan
+                fitness_plan = await fitness_plans_collection.find_one({"user_id": chat_message.user_id})
+                print(f"Existing plan found: {bool(fitness_plan)}")  # Debug log
+
+                if not fitness_plan:
+                    print("No existing plan found, creating new plan...")
+                    # Create new plan using the fitness plan endpoint
+                    async with httpx.AsyncClient() as client:
+                        create_url = f"http://localhost:8000/v1/360_degree_fitness/create_fitness_plan/{chat_message.user_id}"
+                        print(f"Calling create plan endpoint: {create_url}")
+                        
+                        create_response = await client.post(create_url)
+                        print(f"Create plan response status: {create_response.status_code}")
+                        
+                        if create_response.status_code == 200:
+                            fitness_plan = create_response.json()["fitness_plan"]
+                            print("New plan created successfully")
+                        else:
+                            print(f"Failed to create plan: {create_response.text}")
+                            raise Exception(f"Failed to create fitness plan: {create_response.text}")
+
+                if fitness_plan:
+                    # Format the plan for display
+                    formatted_plan = {
+                        "type": "fitness_plan_table",
+                        "content": {
+                            "Meal Plan": fitness_plan["meal_plan"],
+                            "Workout Plan": fitness_plan["workout_plan"],
+                            "Lifestyle Suggestions": fitness_plan["sleep_and_lifestyle_suggestions"]
+                        }
+                    }
+
+                    return ChatResponse(
+                        response="Here's your personalized fitness plan:",
+                        data=formatted_plan,
+                        conversation_id=str(ObjectId())
+                    )
+                else:
+                    raise Exception("No fitness plan available")
+
+            except Exception as e:
+                print(f"Error in fitness plan handling: {str(e)}")
+                # Provide a more informative response using profile data
+                if user_profile:
+                    return ChatResponse(
+                        response=(
+                            f"I apologize, but I'm having trouble accessing your fitness plan. "
+                            f"However, based on your profile, I can see that:\n\n"
+                            f"• Your current activity level is: {user_profile['user_habits_assessment']['activity_level']}\n"
+                            f"• Your fitness goal is: {user_profile['user_fitness_goals']}\n"
+                            f"• Your diet preference is: {user_profile['user_habits_assessment']['diet_preference']}\n\n"
+                            f"Would you like me to create a new fitness plan for you? Just say 'create new fitness plan'."
+                        ),
+                        conversation_id=str(ObjectId())
+                    )
+                else:
+                    return ChatResponse(
+                        response="I'm having trouble accessing your profile and fitness plan. Please ensure your profile is complete and try again.",
+                        conversation_id=str(ObjectId())
+                    )
+
+        # Generate conversation_id at the start
+        conversation_id = str(ObjectId())
+        
+        # Define retrieval instructions early
+        retrieval_instructions = (
+            "Want to view this conversation later? "
+            f"Save this conversation ID: {conversation_id}\n"
+            "You can retrieve your chat history by visiting:\n"
+            f"- JSON format: /v1/360_degree_fitness/chat/history/{conversation_id}?format=json\n"
+            f"- PDF format: /v1/360_degree_fitness/chat/history/{conversation_id}?format=pdf"
+        )
+        
         # Before calling Gemini, check if we have a similar question with a good response
         similar_question = await find_similar_questions(chat_message.user_id, chat_message.message)
         
@@ -858,13 +928,10 @@ async def chat_with_ai(chat_message: ChatMessage):
             )
             
     except Exception as e:
-        print(f"General Error: {str(e)}")
-        fallback_response = "I encountered an error processing your request. Please try again or contact support if the issue persists."
+        print(f"General error in chat_with_ai: {str(e)}")
         return ChatResponse(
-            response=fallback_response,
-            sources=["Fallback"],
-            conversation_id=conversation_id,
-            retrieval_instructions=retrieval_instructions
+            response="I encountered an error processing your request. Please try again.",
+            conversation_id=str(ObjectId())
         )
 
 @chat_router.get("/v1/360_degree_fitness/chat/history/{conversation_id}")
@@ -1294,4 +1361,106 @@ async def enhanced_ocr(image_file: UploadFile = File(...)):
             status_code=500,
             content={"success": False, "message": f"Error processing image: {str(e)}"}
         )
+
+# Add this function to format the profile as structured data rather than a string
+def format_user_profile_as_table(profile):
+    """Format user profile data into a structured table format"""
+    return {
+        "basicDetails": {
+            "title": "Basic Details",
+            "data": [
+                {"label": "Age", "value": f"{profile['user_basic_details']['age']} years"},
+                {"label": "Weight", "value": f"{profile['user_basic_details']['weight_in_kg']} kg"},
+                {"label": "Height", "value": f"{profile['user_basic_details']['height_in_cm']} cm"},
+                {"label": "Gender", "value": profile['user_basic_details']['gender']},
+                {"label": "Weight Goal", "value": f"{profile['user_basic_details']['weight_goal_in_kg']} kg"}
+            ]
+        },
+        "measurements": {
+            "title": "Body Measurements",
+            "data": [
+                {"label": "Arms", "value": f"{profile['user_initial_measurements']['arms_in_cm']} cm"},
+                {"label": "Neck", "value": f"{profile['user_initial_measurements']['neck_in_cm']} cm"},
+                {"label": "Chest", "value": f"{profile['user_initial_measurements']['chest_in_cm']} cm"},
+                {"label": "Waist", "value": f"{profile['user_initial_measurements']['waist_in_cm']} cm"},
+                {"label": "Thighs", "value": f"{profile['user_initial_measurements']['thighs_in_cm']} cm"},
+                {"label": "Hips", "value": f"{profile['user_initial_measurements']['hips_in_cm']} cm"}
+            ]
+        },
+        "healthInfo": {
+            "title": "Health Information",
+            "data": [
+                {"label": "Health Conditions", "value": ', '.join(profile['user_health_details']['existing_conditions']) or 'None'},
+                {"label": "Family History", "value": ', '.join(profile['user_health_details']['family_history']) or 'None'},
+                {"label": "Habitual Consumption", "value": ', '.join(profile['user_health_details']['habitual_consumption'])},
+                {"label": "Current Supplements", "value": ', '.join(profile['user_health_details']['current_supplements']) or 'None'}
+            ]
+        },
+        "fitnessHabits": {
+            "title": "Fitness Habits",
+            "data": [
+                {"label": "Daily Water Intake", "value": profile['user_habits_assessment']['daily_water_intake_in_liter']},
+                {"label": "Weekly Workouts", "value": f"{profile['user_habits_assessment']['weekly_workout_frequency']} times"},
+                {"label": "Diet Preference", "value": profile['user_habits_assessment']['diet_preference']},
+                {"label": "Activity Level", "value": profile['user_habits_assessment']['activity_level']}
+            ]
+        },
+        "dailyRoutine": {
+            "title": "Daily Routine",
+            "data": [
+                {"label": "Breakfast", "value": profile['user_routine_assessment']['typical_meals']['breakfast']},
+                {"label": "Lunch", "value": profile['user_routine_assessment']['typical_meals']['lunch']},
+                {"label": "Snacks", "value": profile['user_routine_assessment']['typical_meals']['snacks']},
+                {"label": "Dinner", "value": profile['user_routine_assessment']['typical_meals']['dinner']}
+            ]
+        },
+        "goals": {
+            "title": "Fitness Goals",
+            "data": [
+                {"label": "Goal", "value": profile['user_fitness_goals']}
+            ]
+        }
+    }
+
+def is_fitness_plan_request(message: str) -> bool:
+    """Check if the message is requesting a fitness plan using more natural language patterns"""
+    
+    # Common variations of asking for a fitness plan
+    plan_phrases = [
+        # Direct requests
+        'fitness plan', 'workout plan', 'exercise plan', 'training plan',
+        # Questions
+        'what\'s my plan', 'what is my plan', 'show me my plan',
+        'can you show me my plan', 'what plan do i have',
+        # Action requests
+        'suggest me fitness', 'create a plan', 'make me a plan',
+        'give me a plan', 'recommend a plan', 'need a plan',
+        # Specific types
+        'workout routine', 'exercise routine', 'training schedule',
+        'workout schedule', 'exercise schedule', 'fitness routine',
+        # Informal requests
+        'how should i workout', 'what should i do', 'plan for me',
+        'help me workout', 'help me exercise', 'help me get fit',
+        # Variations with 'fitness/exercise/workout'
+        'my fitness', 'my workout', 'my exercise',
+        'fitness program', 'workout program', 'exercise program'
+    ]
+
+    message_lower = message.lower()
+    
+    # Check for exact phrases
+    if any(phrase in message_lower for phrase in plan_phrases):
+        return True
+    
+    # Check for word combinations
+    plan_related = ['plan', 'routine', 'schedule', 'program', 'regime', 'regimen']
+    fitness_related = ['fitness', 'workout', 'exercise', 'training', 'gym']
+    
+    words = message_lower.split()
+    
+    # Check if message contains both a plan-related word and a fitness-related word
+    has_plan_word = any(word in words for word in plan_related)
+    has_fitness_word = any(word in words for word in fitness_related)
+    
+    return has_plan_word and has_fitness_word
 

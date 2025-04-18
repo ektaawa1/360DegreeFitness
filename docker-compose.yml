@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./backend/.env
+    networks:
+      - app-network
+
+  server:
+    build: ./server
+    ports:
+      - "5050:5050"
+    volumes:
+      - ./server/config:/app/config
+    env_file:
+      - ./server/config/.env
+    environment:
+      - NODE_ENV=development
+    networks:
+      - app-network
+    depends_on:
+      - backend
+
+  client:
+    build: ./client
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_BASE_URL=http://localhost:5050
+      - REACT_APP_AI_BASE_URL=http://localhost:8000
+    networks:
+      - app-network
+    depends_on:
+      - server
+
+networks:
+  app-network:
+    driver: bridge
+
+# Run both services with a single command
+# # Navigate to root directory
+# cd /Users/dongyangsu/Desktop/360DegreeFitness
+
+# # Start all services
+# docker-compose up
+
+# # Or run in detached mode (in background)
+# docker-compose up -d
+
+# Useful Docker Compose commands:
+# Stop all services
+# docker-compose down
+
+# # View logs
+# docker-compose logs
+
+# # View logs for specific service
+# docker-compose logs backend
+# docker-compose logs server
+
+# # Restart a specific service
+# docker-compose restart backend
+# docker-compose restart server

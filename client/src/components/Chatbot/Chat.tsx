@@ -4,8 +4,9 @@ import styles from './Chat.module.css';
 import UserContext from '../../context/UserContext';
 import jsPDF from 'jspdf';
 import { API_PATHS } from '../../config/Config';
+
 interface Message {
-    type: 'user' | 'bot';
+    type: 'user' | 'bot' | 'profile' | 'plan' | 'error' | 'profile_table';
     content: string;
     timestamp: string;
     conversationId?: string;
@@ -62,6 +63,55 @@ const Chat: React.FC = () => {
         };
     };
 
+    const handleFitnessPlanRequest = async () => {
+        try {
+            // First fetch user profile
+            const userId = userData.user?.id;
+            if (!userId) {
+                throw new Error('User ID is missing');
+            }
+            const response = await axios.get(`/v1/360_degree_fitness/retrieve_fitness_plan/${userId}`);
+
+            if (response.data) {
+                // If plan exists, display it
+                setMessages(prev => [...prev, {
+                    type: 'plan',
+                    content: response.data,
+                    timestamp: new Date().toLocaleTimeString()
+                }]);
+            } else {
+                // If no plan exists, create one
+                const createResponse = await axios.post(`/v1/360_degree_fitness/create_fitness_plan/${userId}`);
+                setMessages(prev => [...prev, {
+                    type: 'plan',
+                    content: createResponse.data.fitness_plan,
+                    timestamp: new Date().toLocaleTimeString()
+                }]);
+            }
+        } catch (error) {
+            console.error('Error fetching/creating fitness plan:', error);
+            setMessages(prev => [...prev, {
+                type: 'error',
+                content: 'Unable to retrieve your fitness plan at the moment.',
+                timestamp: new Date().toLocaleTimeString()
+            }]);
+        }
+    };
+
+    const isFitnessPlanRequest = (message: string): boolean => {
+        const planKeywords = [
+            'fitness plan',
+            'workout plan',
+            "what's my plan",
+            'my fitness plan',
+            'show my plan',
+            'exercise plan'
+        ];
+        return planKeywords.some(keyword =>
+            message.toLowerCase().includes(keyword.toLowerCase())
+        );
+    };
+
     const handleSend = async () => {
         if (!inputValue.trim() || !userData.user) return;
 
@@ -74,6 +124,12 @@ const Chat: React.FC = () => {
         setMessages(prev => [...prev, userMessage]);
         setInputValue('');
         setLoading(true);
+
+        // Check if this is a fitness plan request
+        if (isFitnessPlanRequest(inputValue)) {
+            await handleFitnessPlanRequest();
+            return;
+        }
 
         try {
             const token = sessionStorage.getItem('auth-token');
@@ -458,6 +514,98 @@ const Chat: React.FC = () => {
         doc.save(`fitness-chat-${new Date().toISOString().slice(0, 10)}.pdf`);
     };
 
+    // Add this component to render profile tables
+    const ProfileTable: React.FC<{ data: any }> = ({ data }) => {
+        return (
+            <div className={styles.profileTableContainer}>
+                {Object.entries(data).map(([section, items]: [string, any]) => (
+                    <div key={section} className={styles.tableSection}>
+                        <h4 className={styles.sectionTitle}>{section}</h4>
+                        <table className={styles.dataTable}>
+                            <tbody>
+                                {items.map((item: any, index: number) => (
+                                    <tr key={index}>
+                                        <td className={styles.labelCell}>{item.label}</td>
+                                        <td className={styles.valueCell}>{item.value}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                ))}
+            </div>
+        );
+    };
+
+    // Add a component to render the fitness plan
+    const FitnessPlanDisplay: React.FC<{ plan: any }> = ({ plan }) => {
+        return (
+            <div className={styles.planContainer}>
+                <h3 className={styles.planTitle}>Your 7-Day Fitness Plan</h3>
+
+                {/* Meal Plan Section */}
+                <div className={styles.planSection}>
+                    <h4>Meal Plan</h4>
+                    {Object.entries(plan.meal_plan).map(([day, meals]: [string, any]) => (
+                        <div key={day} className={styles.dayPlan}>
+                            <h5>{day.replace('_', ' ').toUpperCase()}</h5>
+                            <table className={styles.mealTable}>
+                                <tbody>
+                                    {Object.entries(meals).map(([meal, description]: [string, any]) => (
+                                        <tr key={meal}>
+                                            <td className={styles.mealType}>{meal}</td>
+                                            <td className={styles.mealDescription}>{description}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    ))}
+                </div>
+
+                {/* Workout Plan Section */}
+                <div className={styles.planSection}>
+                    <h4>Workout Plan</h4>
+                    {Object.entries(plan.workout_plan).map(([day, workout]: [string, any]) => (
+                        <div key={day} className={styles.dayPlan}>
+                            <h5>{day.replace('_', ' ').toUpperCase()}</h5>
+                            <p>{workout}</p>
+                        </div>
+                    ))}
+                </div>
+
+                {/* Lifestyle Suggestions */}
+                <div className={styles.planSection}>
+                    <h4>Sleep & Lifestyle Suggestions</h4>
+                    <table className={styles.suggestionTable}>
+                        <tbody>
+                            <tr>
+                                <td>Sleep Duration</td>
+                                <td>{plan.sleep_and_lifestyle_suggestions.sleep_duration}</td>
+                            </tr>
+                            <tr>
+                                <td>Sleep Tips</td>
+                                <td>{plan.sleep_and_lifestyle_suggestions.sleep_tips}</td>
+                            </tr>
+                            <tr>
+                                <td>Stress Management</td>
+                                <td>{plan.sleep_and_lifestyle_suggestions.stress_management}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        );
+    };
+
+    // Modify your message rendering logic
+    const renderMessage = (message: any) => {
+        if (message.type === 'profile_table') {
+            return <ProfileTable data={message.content} />;
+        }
+        // ... rest of your message rendering logic
+    };
+
     return (
         <div className={styles.chatWidget}>
             {isOpen ? (
@@ -514,7 +662,11 @@ const Chat: React.FC = () => {
                                             />
                                         </div>
                                     )}
-                                    {message.content}
+                                    {message.type === 'profile' ? (
+                                        <ProfileTable data={message.content} />
+                                    ) : message.type === 'plan' ? (
+                                        <FitnessPlanDisplay plan={message.content} />
+                                    ) : message.content}
                                     <div className={styles.timestamp}>
                                         {message.timestamp}
                                     </div>
