@@ -12,13 +12,13 @@ const initItems = [
     key: '4',
     title: ' AI Analysis',
     content:
-        'Use ML models to create personalized workout plans based on fitness level, generate diet plans based on user goals. Scan meal images to detect nutritional values',
+        'Use ML models to create personalized workout plans based on fitness level, generate diet plans based on user goals. Scan meal images to detect nutritional values.',
   },
   {
     key: '2',
     title: 'Meal Tracking and Recipe Finder',
     content:
-      'Allows user to log meals manually. The app gives the total calories, nutrition info consumed for the day',
+      'Allows user to log meals manually. The app gives the total calories, nutrition info consumed for the day.',
   },
   {
     key: '3',
