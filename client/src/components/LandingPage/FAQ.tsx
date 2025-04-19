@@ -11,10 +11,6 @@ export const FAQ = () => {
           <h2>Frequently Asked Questions</h2>
         </div>
         <Collapse defaultActiveKey={['1']}>
-          <Panel header="Can I customise which widgets to show?" key="1">
-            Yes, the widgets can be customised to show only the ones you want to see.
-            In case of no customizations, the default widgets will be shown.
-          </Panel>
           <Panel header="How does the AI fitness coaching work?" key="2">
             Our AI coach, powered by Google's Gemini AI, analyzes your profile, goals, and preferences
             to create personalized workout and diet plans. It adapts recommendations based on your progress

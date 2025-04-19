@@ -138,7 +138,7 @@ const ExerciseDiary = ( ) => {
             <Table columns={columns} dataSource={data.exercises || []} rowKey={(record, index) => index} />
             <h3>Summary</h3>
             <p>Total Duration: {exerciseSummary.total_duration} min</p>
-            <p>Total Calories Burnt: {exerciseSummary.total_calories_burnt} kcal</p>
+            <p>Total Calories Burnt: {exerciseSummary.total_calories_burnt.toFixed(2)} kcal</p>
             <Button type="primary" onClick={() => setModalVisible(true)}>Add Exercise</Button>
 
             <ExerciseForm
