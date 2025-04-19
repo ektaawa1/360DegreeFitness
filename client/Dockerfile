@@ -7,7 +7,8 @@ RUN npm install
 
 COPY . .
 
-ENV REACT_APP_BASE_URL=http://localhost:5050
+ENV WDS_SOCKET_PORT=0
+ENV WATCHPACK_POLLING=true
 
 EXPOSE 3000
 

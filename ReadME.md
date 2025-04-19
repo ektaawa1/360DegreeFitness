@@ -8,6 +8,7 @@
 - Node.js and npm
 - MongoDB Atlas account and connection string
 - Tesseract OCR (for image text recognition)
+- Docker and Docker Compose (for containerized deployment)
 
 ### • Clone Repository
 git clone https://github.com/tashigarg/360DegreeFitness.git
@@ -25,10 +26,9 @@ npm install @types/jspdf --legacy-peer-deps
 
 ### • Setup Server
 cd ../server
-
 npm install
 
-### • Setup Backend and Resolve Linter Errors
+### • Setup Backend
 cd ../backend
 
 #### 1. Create and activate conda environment
@@ -37,28 +37,14 @@ conda create -n 360fitness python=3.12.7
 conda activate 360fitness
 
 ### • Setup Environment
-Create a `.env` file in the backend directory
-
-Add the following variables:
-
-MONGO_URI=your_mongodb_connection_string_here
-
-ACCESS_TOKEN_EXPIRE_MINUTES=your_access_token_expire_minutes_here
-
-SECRET_KEY=your_secret_key_here
-
-GEMINI_API_KEY=your_gemini_api_key_here
+Create a `.env` file in the backend directory with required environment variables
 
 ### • Install Tesseract OCR
 #### macOS:
-```bash
 brew install tesseract
-```
 
 #### Ubuntu/Debian:
-```bash
 sudo apt-get install tesseract-ocr
-```
 
 #### Windows:
 1. Download the installer from https://github.com/UB-Mannheim/tesseract/wiki
@@ -102,7 +88,7 @@ pip install -e .
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;• Type "Developer: Reload Window"
 
-### • Start Services
+### Option 1: Start Services Locally
 
 #### Start Backend Server
 cd backend
@@ -119,6 +105,24 @@ cd client
 
 npm start
 
+### Option 2: Run with Docker
+
+#### Setup Environment Files
+Create `.env.local` and `.env.docker` files in server/config directory with required environment variables.
+
+#### Build and Start Services
+docker-compose up --build
+
+#### Stop Services
+docker-compose down
+
+#### View Logs
+docker-compose logs
+
+#### View Service-Specific Logs
+docker-compose logs backend
+docker-compose logs server
+docker-compose logs client
 
 ### • API Documentation
 Visit http://localhost:8000/docs for interactive API documentation
@@ -138,5 +142,7 @@ Visit http://localhost:8000/docs for interactive API documentation
 - User authentication
 
 - Responsive chat interface
+
+- Docker containerization support
 
 - More to come...

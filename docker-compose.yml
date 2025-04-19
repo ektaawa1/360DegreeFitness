@@ -7,8 +7,6 @@ services:
       - "8000:8000"
     env_file:
       - ./backend/.env
-    networks:
-      - app-network
 
   server:
     build: ./server
@@ -17,11 +15,10 @@ services:
     volumes:
       - ./server/config:/app/config
     env_file:
-      - ./server/config/.env
+      - ./server/config/.env.docker
     environment:
       - NODE_ENV=development
-    networks:
-      - app-network
+      - PORT=5050
     depends_on:
       - backend
 
@@ -30,16 +27,12 @@ services:
     ports:
       - "3000:3000"
     environment:
+      - WATCHPACK_POLLING=true
+      - WDS_SOCKET_PORT=0
       - REACT_APP_BASE_URL=http://localhost:5050
       - REACT_APP_AI_BASE_URL=http://localhost:8000
-    networks:
-      - app-network
     depends_on:
       - server
-
-networks:
-  app-network:
-    driver: bridge
 
 # Run both services with a single command
 # # Navigate to root directory
