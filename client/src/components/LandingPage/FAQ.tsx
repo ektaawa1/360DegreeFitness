@@ -10,7 +10,7 @@ export const FAQ = () => {
         <div className="titleHolder">
           <h2>Frequently Asked Questions</h2>
         </div>
-        <Collapse defaultActiveKey={['1']}>
+        <Collapse defaultActiveKey={['2']}>
           <Panel header="How does the AI fitness coaching work?" key="2">
             Our AI coach, powered by Google's Gemini AI, analyzes your profile, goals, and preferences
             to create personalized workout and diet plans. It adapts recommendations based on your progress
