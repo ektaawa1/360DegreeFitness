@@ -4,12 +4,12 @@ const jwt = require('jsonwebtoken');
 const axios = require("axios");
 const FASTAPI_BASE_URL = process.env.FASTAPI_BASE_URL;
 const errorMessage = (res, error) => {
-    return res.status(400).json({status: 'fail', message: error.message});
+    return res.status(400).json({ status: 'fail', message: error.message });
 };
 
 exports.registerUser = async (req, res) => {
     try {
-        const {username, password, name, email} = req.body;
+        const { username, password, name, email } = req.body;
 
         if (!username || !password) {
             return res.status(200).json({
@@ -25,7 +25,7 @@ exports.registerUser = async (req, res) => {
             });
         }
 
-        const existingUser = await User.findOne({username});
+        const existingUser = await User.findOne({ username });
         if (existingUser) {
             return res.status(200).json({
                 status: 'fail',
@@ -37,7 +37,7 @@ exports.registerUser = async (req, res) => {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        const newUser = new User({username, password: hashedPassword, name, email});
+        const newUser = new User({ username, password: hashedPassword, name, email });
         const savedUser = await newUser.save();
         res.status(201).json(savedUser);
     } catch (error) {
@@ -46,8 +46,9 @@ exports.registerUser = async (req, res) => {
 };
 
 exports.loginUser = async (req, res) => {
+    console.log("currently login user");
     try {
-        const {username, password} = req.body;
+        const { username, password } = req.body;
 
         if (!username || !password) {
             return res.status(200).json({
@@ -56,7 +57,7 @@ exports.loginUser = async (req, res) => {
             });
         }
 
-        const user = await User.findOne({username});
+        const user = await User.findOne({ username });
 
         if (!user) {
             return res.status(200).json({
@@ -73,7 +74,7 @@ exports.loginUser = async (req, res) => {
             });
         }
 
-        const token = jwt.sign({id: user._id}, process.env.JWT_SECRET);
+        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
         const response = await axios.get(`${FASTAPI_BASE_URL}/check_profile_completion/${user._id}`);
         return res.status(200).json({
             token,

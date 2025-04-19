@@ -10,7 +10,14 @@ app = FastAPI()
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # Your React app URL
+    allow_origins=[
+        "http://localhost:3000",    # Local React app
+        "http://127.0.0.1:3000",    # Alternative local URL
+        "http://client:3000",       # Docker service name
+        "http://server:5050",       # Server service in Docker
+        "http://localhost:5050",    # Local server
+        "http://127.0.0.1:5050"     # Alternative local server URL
+    ],  # Your React app URL
     allow_credentials=True,
     allow_methods=["*"],  # Allows all methods
     allow_headers=["*"],  # Allows all headers

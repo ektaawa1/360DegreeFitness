@@ -312,3 +312,175 @@
     overflow: hidden;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
+
+.profileContainer {
+    background-color: #ffffff;
+    border-radius: 8px;
+    padding: 16px;
+    margin: 10px 0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.profileSection {
+    margin-bottom: 20px;
+}
+
+.sectionTitle {
+    color: #333;
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+    padding-bottom: 5px;
+    border-bottom: 2px solid #eee;
+}
+
+.profileTable {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.labelCell {
+    padding: 8px;
+    width: 40%;
+    color: #666;
+    font-weight: 500;
+    background-color: #f8f9fa;
+    border: 1px solid #eee;
+}
+
+.valueCell {
+    padding: 8px;
+    border: 1px solid #eee;
+}
+
+/* Add hover effect for better interaction */
+.profileTable tr:hover {
+    background-color: #f5f5f5;
+}
+
+/* Make tables responsive */
+@media (max-width: 768px) {
+    .profileTable {
+        font-size: 0.9rem;
+    }
+
+    .labelCell,
+    .valueCell {
+        padding: 6px;
+    }
+}
+
+.planContainer {
+    background-color: white;
+    border-radius: 8px;
+    padding: 16px;
+    margin: 10px 0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.planTitle {
+    color: #2c3e50;
+    font-size: 1.4rem;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.planSection {
+    margin-bottom: 24px;
+}
+
+.planSection h4 {
+    color: #34495e;
+    margin-bottom: 12px;
+}
+
+.dayPlan {
+    margin-bottom: 16px;
+    padding: 12px;
+    background-color: #f8f9fa;
+    border-radius: 6px;
+}
+
+.dayPlan h5 {
+    color: #3498db;
+    margin-bottom: 8px;
+}
+
+.mealTable {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.mealType {
+    width: 25%;
+    padding: 8px;
+    font-weight: 500;
+    color: #666;
+    border-bottom: 1px solid #eee;
+}
+
+.mealDescription {
+    padding: 8px;
+    border-bottom: 1px solid #eee;
+}
+
+.suggestionTable {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.suggestionTable td {
+    padding: 8px;
+    border-bottom: 1px solid #eee;
+}
+
+.suggestionTable td:first-child {
+    width: 30%;
+    font-weight: 500;
+    color: #666;
+}
+
+.profileTableContainer {
+    background: white;
+    border-radius: 8px;
+    padding: 16px;
+    margin: 10px 0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.tableSection {
+    margin-bottom: 20px;
+}
+
+.sectionTitle {
+    color: #2c3e50;
+    font-size: 1.1rem;
+    margin-bottom: 10px;
+    padding-bottom: 5px;
+    border-bottom: 2px solid #eee;
+}
+
+.dataTable {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 10px;
+}
+
+.labelCell {
+    padding: 8px;
+    width: 40%;
+    font-weight: 500;
+    color: #666;
+    background-color: #f8f9fa;
+    border: 1px solid #eee;
+}
+
+.valueCell {
+    padding: 8px;
+    border: 1px solid #eee;
+}
+
+.dataTable tr:hover {
+    background-color: #f5f5f5;
+}
