@@ -8,7 +8,6 @@ import Axios from "axios";
 import {BASE_URL} from "../../config/Config";
 
 const { Title } = Typography;
-
 const COLORS = {
     primary: "#b173a0",       // Deep purple
     secondary: "#31a1b3",     // Pink
@@ -18,11 +17,20 @@ const COLORS = {
     text: "#3E2723",          // Dark brown
     background: "#EFEBE9",    // Light stone
     cardBackground: "#FFFFFF",
-    border: "#BCAAA4",        // Light stone border
-    stoneLight: "#D7CCC8",    // Lighter stone
-    stoneDark: "#ccb22b",     // Darker stone
-};
 
+    border: "#D8E1E8",                        // Light blue-gray border
+    stoneLight: "#E6ECF2",                    // Very light blue
+    stoneDark: "#5D8AA8",                     // Steel blue
+    chartColors: [
+        "rgba(88, 143, 182, 0.8)",           // Primary blue
+        "rgba(122, 197, 205, 0.8)",          // Aqua
+        "rgba(158, 218, 229, 0.8)",          // Light blue
+        "rgba(100, 179, 124, 0.8)",          // Green
+        "rgba(244, 177, 131, 0.8)",          // Peach
+        "rgba(177, 162, 202, 0.8)",          // Lavender
+        "rgba(255, 157, 166, 0.8)"           // Soft pink
+    ]
+};
 const FitnessDashboard: React.FC = () => {
     const [state, setState] = useState<DashboardState>({
         nutrition: null,
@@ -141,15 +149,7 @@ const FitnessDashboard: React.FC = () => {
                 borderRadius: 4,
                 borderWidth: 0,
                 colorByPoint: true,
-                colors: [
-                    COLORS.primary,
-                    COLORS.secondary,
-                    COLORS.accent,
-                    COLORS.primary,
-                    COLORS.secondary,
-                    COLORS.accent,
-                    COLORS.primary
-                ]
+                colors: COLORS.chartColors
             }
         },
         series: [{
@@ -191,9 +191,9 @@ const FitnessDashboard: React.FC = () => {
             name: "Macros (g)",
             type: "pie",
             data: [
-                { name: "Protein", y: state.nutrition?.macros.protein || 0, color: COLORS.primary },
-                { name: "Carbs", y: state.nutrition?.macros.carbs || 0, color: COLORS.secondary },
-                { name: "Fat", y: state.nutrition?.macros.fat || 0, color: COLORS.accent },
+                { name: "Protein", y: state.nutrition?.macros.protein || 0, color: COLORS.chartColors[0] },
+                { name: "Carbs", y: state.nutrition?.macros.carbs || 0, color: COLORS.chartColors[3] },
+                { name: "Fat", y: state.nutrition?.macros.fat || 0, color: COLORS.chartColors[6] },
             ],
         }],
     });
@@ -386,15 +386,7 @@ const FitnessDashboard: React.FC = () => {
                 borderRadius: 4,
                 borderWidth: 0,
                 colorByPoint: true,
-                colors: [
-                    COLORS.secondary,
-                    COLORS.primary,
-                    COLORS.secondary,
-                    COLORS.primary,
-                    COLORS.secondary,
-                    COLORS.primary,
-                    COLORS.secondary
-                ]
+                colors: COLORS.chartColors.slice().reverse() // Use reversed colors for variety
             }
         },
         series: [{
@@ -598,7 +590,7 @@ const FitnessDashboard: React.FC = () => {
                             <Card
                                 title={<span style={{
                                     color: COLORS.primary,
-                                    fontWeight: 500,
+                                    fontWeight: 600,
                                     fontFamily: "'Playfair Display', serif"
                                 }}>Recent Meals</span>}
                                 bordered={true}
@@ -662,7 +654,7 @@ const FitnessDashboard: React.FC = () => {
                             <Card
                                 title={<span style={{
                                     color: COLORS.secondary,
-                                    fontWeight: 500,
+                                    fontWeight: 600,
                                     fontFamily: "'Playfair Display', serif"
                                 }}>Recent Workouts</span>}
                                 bordered={true}
