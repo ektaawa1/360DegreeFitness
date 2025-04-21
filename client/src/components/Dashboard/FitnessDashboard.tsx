@@ -629,7 +629,7 @@ const FitnessDashboard: React.FC = () => {
                                                 border: "none"
                                             }}
                                         >
-                                            {meal.time}
+                                            {meal.date}
                                         </Tag>
                                         <span style={{
                                             flex: 1,

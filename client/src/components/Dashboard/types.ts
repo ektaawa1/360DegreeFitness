@@ -6,7 +6,7 @@ export interface NutritionData {
         fat: number;
     };
     meals: Array<{
-        time: string;
+        date: string;
         name: string;
         calories: number;
     }>;

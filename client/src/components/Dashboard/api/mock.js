@@ -11,9 +11,9 @@ const mockData = {
         dailyCalories: [1800, 1900, 1700, 2000, 2100, 1950, 1850],
         macros: { protein: 120, carbs: 200, fat: 70 },
         meals: [
-            { time: "08:00", name: "Breakfast", calories: 450 },
-            { time: "12:30", name: "Lunch", calories: 650 },
-            { time: "18:00", name: "Dinner", calories: 700 },
+            { date: "Apr 10", name: "Breakfast", calories: 450 },
+            { date: "Apr 10", name: "Lunch", calories: 650 },
+            { date: "Apr 9 ", name: "Dinner", calories: 700 },
         ],
     },
     exercise: {
