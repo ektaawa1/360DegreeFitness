@@ -1,5 +1,3 @@
-export type DateRangeOption = '1W' | '1M' | '3M' | '6M' | '1Y';
-
 export interface NutritionData {
     dailyCalories: number[];
     macros: {
@@ -24,14 +22,11 @@ export interface ExerciseData {
     }>;
 }
 
-export interface WeightData {
-    trend: number[];
-    goal: number;
-}
 
 export interface DashboardState {
     nutrition: NutritionData | null;
     exercise: ExerciseData | null;
-    weight: WeightData | null;
+    weightData: any;
+    targetWeight: number | null;
     loading: boolean;
 }

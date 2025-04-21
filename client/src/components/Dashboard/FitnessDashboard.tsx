@@ -1,15 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { Card, Row, Col, Statistic, Divider, Tag, Select, Typography } from "antd";
+import { Card, Row, Col, Statistic, Tag, Typography } from "antd";
 import Highcharts from "highcharts";
 import HighchartsReact from "highcharts-react-official";
 import axiosInstance from "./api/mock";
-import moment, { Moment } from "moment";
-import { DateRangeOption, DashboardState } from "./types";
+import { DashboardState } from "./types";
+import Axios from "axios";
+import {BASE_URL} from "../../config/Config";
 
 const { Title } = Typography;
-const { Option } = Select;
 
-// Nuriel Stone + Pink-Purple color palette
 const COLORS = {
     primary: "#b173a0",       // Deep purple
     secondary: "#31a1b3",     // Pink
@@ -25,49 +24,59 @@ const COLORS = {
 };
 
 const FitnessDashboard: React.FC = () => {
-    const [dateRangeOption, setDateRangeOption] = useState<DateRangeOption>("1W");
     const [state, setState] = useState<DashboardState>({
         nutrition: null,
         exercise: null,
-        weight: null,
+        weightData: null,
+        targetWeight: null,
         loading: false,
     });
 
-    // Get date range based on selection
-    const getDateRange = (option: DateRangeOption): [Moment, Moment] => {
-        const now = moment();
-        switch (option) {
-            case "1W": return [now.clone().subtract(1, "weeks"), now];
-            case "1M": return [now.clone().subtract(1, "months"), now];
-            case "3M": return [now.clone().subtract(3, "months"), now];
-            case "6M": return [now.clone().subtract(6, "months"), now];
-            case "1Y": return [now.clone().subtract(1, "years"), now];
-            default: return [now.clone().subtract(1, "weeks"), now];
-        }
-    };
 
     useEffect(() => {
         fetchData();
-    }, [dateRangeOption]);
+    }, []);
 
     const fetchData = async () => {
         setState((prev) => ({ ...prev, loading: true }));
+        const token = sessionStorage.getItem("auth-token");
+        const headers = { "x-auth-token": token };
         try {
-            const [nutritionRes, exerciseRes, weightRes] = await Promise.all([
+            const [nutritionRes, exerciseRes, weightRes, goalResponse] = await Promise.all([
                 axiosInstance.get("/api/dash/nutrition"),
                 axiosInstance.get("/api/dash/exercise"),
-                axiosInstance.get("/api/dash/weight"),
+                Axios.get(`${BASE_URL}/api/weight/get_weight?range=3m`, { headers }),
+                Axios.get(`${BASE_URL}/api/profile/get-weight-goal`, { headers })
             ]);
+            let updatedData = weightRes.data || {};
+            updatedData.weight_logs = preprocessWeightLogs(updatedData.weight_logs || []);
             setState({
                 nutrition: nutritionRes.data,
                 exercise: exerciseRes.data,
-                weight: weightRes.data,
+                weightData: updatedData,
+                targetWeight: goalResponse.data.weight_goal_in_kg,
                 loading: false,
             });
         } catch (error) {
             console.error("Error fetching data:", error);
             setState((prev) => ({ ...prev, loading: false }));
         }
+    };
+
+    // Function to preprocess weight logs and assign an index for each entry on the same date
+    const preprocessWeightLogs = (weightLogs) => {
+        let processedLogs = [];
+        let dateEntryMap = {};
+
+        weightLogs.forEach((entry) => {
+            if (!dateEntryMap[entry.date]) {
+                dateEntryMap[entry.date] = 0;
+            }
+            processedLogs.push({ ...entry, entryIndex: dateEntryMap[entry.date] });
+            dateEntryMap[entry.date] += 1;
+        });
+
+        return processedLogs;
     };
 
     // Chart options with new color scheme
@@ -178,74 +187,127 @@ const FitnessDashboard: React.FC = () => {
         }],
     });
 
-    const getWeightChartOptions = (): Highcharts.Options => ({
-        chart: {
-            type: "line",
-            backgroundColor: COLORS.cardBackground,
-            borderRadius: 8,
-            borderWidth: 1,
-            borderColor: COLORS.border,
-        },
-        title: {
-            text: "Weight Progress (kg)",
-            style: {
-                color: COLORS.text,
-                fontWeight: "500",
-                fontSize: "16px"
-            }
-        },
-        xAxis: {
-            categories: ["Week 1", "Week 2", "Week 3", "Week 4"],
-            lineColor: COLORS.border,
-            labels: {
-                style: {
-                    color: COLORS.text,
-                    fontWeight: "500"
-                }
-            }
-        },
-        yAxis: {
-            title: {
-                text: "Weight (kg)",
-                style: {
-                    color: COLORS.text,
-                    fontWeight: "500"
+    const getCurrentWeight = () => {
+        const weightData = state.weightData;
+        if (!weightData) {
+            return 0;
+        }
+
+// Calculate y-axis min/max to include starting_weight, target_weight, and logged weights
+        const weightLogs = weightData.weight_logs;
+        let lastLog = weightLogs[weightLogs.length - 1]?.weight_in_kg;
+        if (!lastLog) {
+            lastLog = weightData.starting_weight;
+        }
+ return lastLog;
+    }
+
+    const getWeightChartOptions = () => {
+
+        const weightData = state.weightData;
+        if (!weightData){
+            return {};
+        }
+        const targetWeight = state.targetWeight;
+
+// Calculate y-axis min/max to include starting_weight, target_weight, and logged weights
+        const today = new Date().toISOString().split("T")[0];
+        const weightLogs = weightData.weight_logs;
+        let lastLog = weightLogs[weightLogs.length - 1]?.weight_in_kg;
+        if (!lastLog) {
+            lastLog = weightData.starting_weight;
+        }
+
+
+
+        const allWeights = [
+            weightData.starting_weight,
+            targetWeight,
+            ...weightLogs.map(entry => entry.weight_in_kg)
+        ];
+        const minWeight = Math.min(...allWeights) - 0.5; // Add padding
+        const maxWeight = Math.max(...allWeights) + 0.5;
+
+        const weightChartOptions = {
+            chart: { type: "line" },
+            title: { text: "Weight Progress" },
+            xAxis: {
+                categories: [...weightLogs.map(entry => entry.date), today],
+                title: { text: "Date" },
+                min: 0,
+                max: weightLogs.length,
+            },
+            yAxis: {
+                title: { text: "Weight (kg)" },
+                min: minWeight,
+                max: maxWeight,
+                allowDecimals: true,
+                lineWidth: 1,
+                lineColor: "#000",
+                plotLines: [{ // Optional: Visual reference line for target
+                    color: 'green',
+                    width: 1,
+                    value: targetWeight,
+                    dashStyle: 'Dash',
+                    label: {
+                        text: `Target: ${targetWeight} kg`,
+                        align: 'right',
+                        style: { color: 'green' }
+                    }
+                }]
+            },
+            tooltip: {
+                formatter: function() {
+                    if (this.series.name === "Projected Weight") {
+                        return `<b>Date:</b> ${today}<br><b>Projected Weight:</b> ${lastLog} kg`;
+                    } else if (this.series.name === "Target Weight") {
+                        return `<b>Target Weight:</b> ${targetWeight} kg`;
+                    } else if (this.series.name === "Weight") {
+                        if (this.point.x === -0.5) return `<b>Start</b><br><b>Weight:</b> ${weightData.starting_weight} kg`;
+                        const log = weightLogs[this.point.x];
+                        return `<b>Date:</b> ${log.date}<br><b>Weight:</b> ${log.weight_in_kg} kg` +
+                            (log.notes ? `<br><b>Notes:</b> ${log.notes}` : "");
+                    }
                 }
             },
-            gridLineColor: COLORS.stoneLight,
-            labels: {
-                style: {
-                    color: COLORS.text,
-                    fontWeight: "500"
+            series: [
+                {
+                    name: "Weight",
+                    data: [
+                        { x: -0.5, y: weightData.starting_weight },
+                        ...weightLogs.map((entry, index) => ({ x: index, y: entry.weight_in_kg }))
+                    ],
+                    marker: { enabled: true },
+                    lineWidth: 2
+                },
+                {
+                    name: "Target Weight", // Horizontal target line
+                    data: [
+                        { x: -0.5, y: targetWeight },
+                        { x: weightLogs.length, y: targetWeight }
+                    ],
+                    color: "green",
+                    dashStyle: "Dash",
+                    marker: { enabled: false },
+                    lineWidth: 3,
+                    enableMouseTracking: true // Allows tooltips
+                },
+                {
+                    name: "Projected Weight",
+                    data: [
+                        { x: weightLogs.length - 1, y: lastLog },
+                        { x: weightLogs.length, y: lastLog }
+                    ],
+                    dashStyle: "dot",
+                    color: "gray",
+                    marker: { enabled: true }
                 }
-            }
-        },
-        series: [
-            {
-                name: "Current",
-                type: "line",
-                data: state.weight?.trend || [],
-                color: COLORS.primary,
-                lineWidth: 3,
-                marker: {
-                    symbol: "circle",
-                    radius: 6,
-                    fillColor: COLORS.primary,
-                    lineWidth: 1,
-                    lineColor: COLORS.stoneDark
-                }
-            },
-            {
-                name: "Goal",
-                type: "line",
-                data: Array(4).fill(state.weight?.goal || 0),
-                dashStyle: "Dot",
-                color: COLORS.secondary,
-                lineWidth: 2,
-                marker: { enabled: false }
-            },
-        ],
-    });
+            ]
+        };
+        return weightChartOptions;
+    }
+
+
 
     const getExerciseChartOptions = (): Highcharts.Options => ({
         chart: {
@@ -356,25 +418,6 @@ const FitnessDashboard: React.FC = () => {
                         }}>
                             Fitness Dashboard
                         </Title>
-                        <Select
-                            value={dateRangeOption}
-                            onChange={(value: DateRangeOption) => setDateRangeOption(value)}
-                            style={{
-                                width: "160px",
-                                border: `1px solid ${COLORS.border}`,
-                                borderRadius: "6px"
-                            }}
-                            dropdownStyle={{
-                                border: `1px solid ${COLORS.border}`,
-                                borderRadius: "8px"
-                            }}
-                        >
-                            <Option value="1W">Last Week</Option>
-                            <Option value="1M">Last Month</Option>
-                            <Option value="3M">Last 3 Months</Option>
-                            <Option value="6M">Last 6 Months</Option>
-                            <Option value="1Y">Last Year</Option>
-                        </Select>
                     </div>
 
                     {/* Summary Stats */}
@@ -391,18 +434,19 @@ const FitnessDashboard: React.FC = () => {
                                 title: "Workouts",
                                 value: state.exercise?.weeklyWorkouts.reduce((a, b) => a + b, 0) || 0,
                                 color: COLORS.secondary,
+                                suffix: "mins",
                                 icon: "💪"
                             },
                             {
                                 title: "Current Weight",
-                                value: state.weight?.trend[state.weight?.trend.length - 1] || 0,
+                                value: getCurrentWeight(),
                                 suffix: "kg",
                                 color: COLORS.accent,
                                 icon: "⚖️"
                             },
                             {
                                 title: "Goal Weight",
-                                value: state.weight?.goal || 0,
+                                value: state.targetWeight || 0,
                                 suffix: "kg",
                                 color: COLORS.primary,
                                 icon: "🎯"
