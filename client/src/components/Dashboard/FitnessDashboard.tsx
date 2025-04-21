@@ -230,12 +230,20 @@ const FitnessDashboard: React.FC = () => {
 
         const weightChartOptions = {
             chart: { type: "line" },
-            title: { text: "Weight Progress" },
+            title: { text: "Weight Progress",style: {
+                    color: COLORS.text,
+                    fontWeight: "500",
+                    fontSize: "16px"
+                } },
             xAxis: {
-                categories: [...weightLogs.map(entry => entry.date), today],
+                type: 'datetime',
                 title: { text: "Date" },
-                min: 0,
-                max: weightLogs.length,
+                labels: {
+                    format: '{value:%b %e}', // Shows abbreviated month and day (e.g., "Apr 15")
+                    rotation: -45
+                },
+                min: weightLogs.length > 0 ? new Date(weightLogs[0].date).getTime() : null,
+                max: new Date(today).getTime(),
             },
             yAxis: {
                 title: { text: "Weight (kg)" },
@@ -258,15 +266,15 @@ const FitnessDashboard: React.FC = () => {
             },
             tooltip: {
                 formatter: function() {
-                    if (this.series.name === "Projected Weight") {
-                        return `<b>Date:</b> ${today}<br><b>Projected Weight:</b> ${lastLog} kg`;
-                    } else if (this.series.name === "Target Weight") {
+                    if (this.series.name === "Target Weight") {
                         return `<b>Target Weight:</b> ${targetWeight} kg`;
-                    } else if (this.series.name === "Weight") {
-                        if (this.point.x === -0.5) return `<b>Start</b><br><b>Weight:</b> ${weightData.starting_weight} kg`;
-                        const log = weightLogs[this.point.x];
-                        return `<b>Date:</b> ${log.date}<br><b>Weight:</b> ${log.weight_in_kg} kg` +
-                            (log.notes ? `<br><b>Notes:</b> ${log.notes}` : "");
+                    } else {
+                        if (this.point.x === new Date(weightData.start_date).getTime()) {
+                            return `<b>Start</b><br><b>Weight:</b> ${weightData.starting_weight} kg`;
+                        }
+                        const dateStr = Highcharts.dateFormat('%b %e, %Y', new Date(this.point.x));
+                        return `<b>Date:</b> ${dateStr}<br><b>Weight:</b> ${this.point.y} kg` +
+                            (this.point.notes ? `<br><b>Notes:</b> ${this.point.notes}` : "");
                     }
                 }
             },
@@ -274,17 +282,20 @@ const FitnessDashboard: React.FC = () => {
                 {
                     name: "Weight",
                     data: [
-                        { x: -0.5, y: weightData.starting_weight },
-                        ...weightLogs.map((entry, index) => ({ x: index, y: entry.weight_in_kg }))
+                        { x: new Date(weightData.start_date).getTime(), y: weightData.starting_weight },
+                        ...weightLogs.map(entry => ({
+                            x: new Date(entry.date).getTime(),
+                            y: entry.weight_in_kg
+                        }))
                     ],
                     marker: { enabled: true },
                     lineWidth: 2
                 },
                 {
-                    name: "Target Weight", // Horizontal target line
+                    name: "Target Weight",
                     data: [
-                        { x: -0.5, y: targetWeight },
-                        { x: weightLogs.length, y: targetWeight }
+                        { x: new Date(weightData.start_date).getTime(), y: targetWeight },
+                        { x: new Date(today).getTime(), y: targetWeight }
                     ],
                     color: "green",
                     dashStyle: "Dash",
@@ -295,11 +306,12 @@ const FitnessDashboard: React.FC = () => {
                 {
                     name: "Projected Weight",
                     data: [
-                        { x: weightLogs.length - 1, y: lastLog },
-                        { x: weightLogs.length, y: lastLog }
+                        { x: weightLogs.length > 0 ? new Date(weightLogs[weightLogs.length-1].date).getTime() : new Date(weightData.start_date).getTime(),
+                            y: lastLog },
+                        { x: new Date(today).getTime(), y: lastLog }
                     ],
                     dashStyle: "dot",
-                    color: "gray",
+                    color: "red",
                     marker: { enabled: true }
                 }
             ]
