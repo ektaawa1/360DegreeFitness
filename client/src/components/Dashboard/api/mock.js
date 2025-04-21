@@ -22,6 +22,7 @@ const mockData = {
         lastWorkouts: [
             { type: "Running", duration: 30, calories: 350 },
             { type: "Weight Lifting", duration: 45, calories: 250 },
+            { type: "Zumba", duration: 30, calories: 280 },
         ],
     }
 };

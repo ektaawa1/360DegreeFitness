@@ -79,6 +79,15 @@ const FitnessDashboard: React.FC = () => {
         return processedLogs;
     };
 
+    const getLast7Days = () => {
+        const days = [];
+        for (let i = 6; i >= 0; i--) {
+            const date = new Date();
+            date.setDate(date.getDate() - i);
+            days.push(date.toLocaleDateString('en-US', { month: 'short', day: '2-digit' }).replace(' ', '-'));
+        }
+        return days;
+    };
     // Chart options with new color scheme
     const getCaloriesChartOptions = (): Highcharts.Options => ({
         chart: {
@@ -100,13 +109,15 @@ const FitnessDashboard: React.FC = () => {
             }
         },
         xAxis: {
-            categories: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+            categories: getLast7Days(),
             lineColor: COLORS.border,
             labels: {
                 style: {
                     color: COLORS.text,
                     fontWeight: "500"
-                }
+                },
+                autoRotation: [-45], // Only rotate if needed
+                rotation: 0 // Default to horizontal
             }
         },
         yAxis: {
@@ -239,8 +250,13 @@ const FitnessDashboard: React.FC = () => {
                 type: 'datetime',
                 title: { text: "Date" },
                 labels: {
-                    format: '{value:%b %e}', // Shows abbreviated month and day (e.g., "Apr 15")
-                    rotation: -45
+                    format: '{value:%b-%d}', // Shows "Apr-21" format
+                    autoRotation: [-45], // Only rotate if needed
+                    rotation: 0, // Default to horizontal
+                    style: {
+                        color: COLORS.text,
+                        fontWeight: "500"
+                    }
                 },
                 min: weightLogs.length > 0 ? new Date(weightLogs[0].date).getTime() : null,
                 max: new Date(today).getTime(),
@@ -338,13 +354,15 @@ const FitnessDashboard: React.FC = () => {
             }
         },
         xAxis: {
-            categories: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+            categories: getLast7Days(),
             lineColor: COLORS.border,
             labels: {
                 style: {
                     color: COLORS.text,
                     fontWeight: "500"
-                }
+                },
+                autoRotation: [-45], // Only rotate if needed
+                rotation: 0 // Default to horizontal
             }
         },
         yAxis: {
