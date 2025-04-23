@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Card, Row, Col, Statistic, Tag, Typography } from "antd";
+import { Card, Row, Col, Statistic, Tag, Typography, Empty } from "antd";
 import Highcharts from "highcharts";
 import HighchartsReact from "highcharts-react-official";
 import axiosInstance from "./api/mock";
@@ -8,6 +8,7 @@ import Axios from "axios";
 import {BASE_URL} from "../../config/Config";
 
 const { Title } = Typography;
+
 const COLORS = {
     primary: "#b173a0",       // Deep purple
     secondary: "#31a1b3",     // Pink
@@ -31,6 +32,41 @@ const COLORS = {
         "rgba(255, 157, 166, 0.8)"           // Soft pink
     ]
 };
+
+// Polish-style no data component
+const PolishNoData = ({ height, message = "No data to display" }) => (
+    <div style={{
+        height,
+        textAlign: 'center',
+        padding: '40px 20px',
+        backgroundColor: '#f9f9f9',
+        borderRadius: '8px',
+        border: `2px dashed ${COLORS.border}`
+    }}>
+        <div style={{
+            fontSize: '48px',
+            marginBottom: '16px',
+            color: COLORS.primary
+        }}>
+            🎨
+        </div>
+        <Title level={4} style={{
+            color: COLORS.text,
+            fontFamily: "'Playfair Display', serif",
+            marginBottom: '8px'
+        }}>
+            {message}
+        </Title>
+        <p style={{
+            color: COLORS.stoneDark,
+            fontStyle: 'italic',
+            marginBottom: '0'
+        }}>
+            Add data to see charts and statistics
+        </p>
+    </div>
+);
+
 const FitnessDashboard: React.FC = () => {
     const [state, setState] = useState<DashboardState>({
         nutrition: null,
@@ -38,8 +74,8 @@ const FitnessDashboard: React.FC = () => {
         weightData: null,
         targetWeight: null,
         loading: false,
+        hasError: false
     });
-
 
     useEffect(() => {
         fetchData();
@@ -64,10 +100,11 @@ const FitnessDashboard: React.FC = () => {
                 weightData: updatedData,
                 targetWeight: goalResponse.data.weight_goal_in_kg,
                 loading: false,
+                hasError: false
             });
         } catch (error) {
             console.error("Error fetching data:", error);
-            setState((prev) => ({ ...prev, loading: false }));
+            setState((prev) => ({ ...prev, loading: false, hasError: true }));
         }
     };
 
@@ -96,6 +133,19 @@ const FitnessDashboard: React.FC = () => {
         }
         return days;
     };
+
+    const renderChartOrPlaceholder = (chartOptions: Highcharts.Options, dataCheck: any, customMessage?: string, height?: number) => {
+        if (state.loading) return null;
+        if (state.hasError) {
+            return <PolishNoData message="An error occurred while loading data!!" height={height}/>;
+        }
+        if (!dataCheck) {
+            return <PolishNoData message={customMessage} height={height}/>;
+        }
+        return <HighchartsReact highcharts={Highcharts} options={chartOptions} />;
+    };
+
+
     // Chart options with new color scheme
     const getCaloriesChartOptions = (): Highcharts.Options => ({
         chart: {
@@ -190,11 +240,11 @@ const FitnessDashboard: React.FC = () => {
         series: [{
             name: "Macros (g)",
             type: "pie",
-            data: [
+            data: state.nutrition?.macros.carbs ? [
                 { name: "Protein", y: state.nutrition?.macros.protein || 0, color: COLORS.chartColors[0] },
                 { name: "Carbs", y: state.nutrition?.macros.carbs || 0, color: COLORS.chartColors[3] },
                 { name: "Fat", y: state.nutrition?.macros.fat || 0, color: COLORS.chartColors[6] },
-            ],
+            ]: [],
         }],
     });
 
@@ -534,7 +584,11 @@ const FitnessDashboard: React.FC = () => {
                                 }}
                                 bodyStyle={{ padding: "16px" }}
                             >
-                                <HighchartsReact highcharts={Highcharts} options={getCaloriesChartOptions()} />
+                                {renderChartOrPlaceholder(
+                                    getCaloriesChartOptions(),
+                                    state.nutrition?.dailyCalories?.length > 0,
+                                    "No calorie data."
+                                )}
                             </Card>
                         </Col>
                         <Col xs={24} md={12}>
@@ -548,7 +602,11 @@ const FitnessDashboard: React.FC = () => {
                                 }}
                                 bodyStyle={{ padding: "16px" }}
                             >
-                                <HighchartsReact highcharts={Highcharts} options={getMacrosChartOptions()} />
+                                {renderChartOrPlaceholder(
+                                    getMacrosChartOptions(),
+                                    state.nutrition?.macros?.carbs,
+                                    "No data on macronutrients."
+                                )}
                             </Card>
                         </Col>
                     </Row>
@@ -579,7 +637,12 @@ const FitnessDashboard: React.FC = () => {
                                 }}
                                 bodyStyle={{ padding: "16px" }}
                             >
-                                <HighchartsReact highcharts={Highcharts} options={getExerciseChartOptions()} />
+                                {renderChartOrPlaceholder(
+                                    getExerciseChartOptions(),
+                                    state.exercise?.caloriesBurned?.length > 0,
+                                    "No exercise data",
+                                    400
+                                )}
                             </Card>
                         </Col>
                     </Row>
@@ -606,48 +669,52 @@ const FitnessDashboard: React.FC = () => {
                                 }}
                                 bodyStyle={{ padding: "16px" }}
                             >
-                                {state.nutrition?.meals.map((meal, i) => (
-                                    <div key={i} style={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        marginBottom: "12px",
-                                        padding: "12px",
-                                        borderRadius: "6px",
-                                        backgroundColor: i % 2 === 0 ? "rgba(156, 39, 176, 0.05)" : "transparent",
-                                        borderLeft: `3px solid ${i % 2 === 0 ? COLORS.primary : "transparent"}`,
-                                        transition: "all 0.2s ease",
-                                        ":hover": {
-                                            backgroundColor: "rgba(233, 30, 99, 0.05)"
-                                        }
-                                    }}>
-                                        <Tag
-                                            color={COLORS.primary}
-                                            style={{
-                                                marginRight: "12px",
+                                {state.nutrition?.meals?.length > 0 ? (
+                                    state.nutrition.meals.map((meal, i) => (
+                                        <div key={i} style={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            marginBottom: "12px",
+                                            padding: "12px",
+                                            borderRadius: "6px",
+                                            backgroundColor: i % 2 === 0 ? "rgba(156, 39, 176, 0.05)" : "transparent",
+                                            borderLeft: `3px solid ${i % 2 === 0 ? COLORS.primary : "transparent"}`,
+                                            transition: "all 0.2s ease",
+                                            ":hover": {
+                                                backgroundColor: "rgba(233, 30, 99, 0.05)"
+                                            }
+                                        }}>
+                                            <Tag
+                                                color={COLORS.primary}
+                                                style={{
+                                                    marginRight: "12px",
+                                                    fontWeight: 500,
+                                                    borderRadius: "4px",
+                                                    border: "none"
+                                                }}
+                                            >
+                                                {meal.date}
+                                            </Tag>
+                                            <span style={{
+                                                flex: 1,
+                                                color: COLORS.text,
                                                 fontWeight: 500,
-                                                borderRadius: "4px",
-                                                border: "none"
-                                            }}
-                                        >
-                                            {meal.date}
-                                        </Tag>
-                                        <span style={{
-                                            flex: 1,
-                                            color: COLORS.text,
-                                            fontWeight: 500,
-                                            fontFamily: "'Roboto', sans-serif"
-                                        }}>
-                      {meal.name}
-                    </span>
-                                        <span style={{
-                                            color: COLORS.primary,
-                                            fontWeight: 600,
-                                            fontFamily: "'Roboto Condensed', sans-serif"
-                                        }}>
-                      {meal.calories} kcal
-                    </span>
-                                    </div>
-                                ))}
+                                                fontFamily: "'Roboto', sans-serif"
+                                            }}>
+                                                {meal.name}
+                                            </span>
+                                            <span style={{
+                                                color: COLORS.primary,
+                                                fontWeight: 600,
+                                                fontFamily: "'Roboto Condensed', sans-serif"
+                                            }}>
+                                                {meal.calories} kcal
+                                            </span>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <PolishNoData message="No recent meals" />
+                                )}
                             </Card>
                         </Col>
                         <Col xs={24} md={12}>
@@ -670,49 +737,53 @@ const FitnessDashboard: React.FC = () => {
                                 }}
                                 bodyStyle={{ padding: "16px" }}
                             >
-                                {state.exercise?.lastWorkouts.map((workout, i) => (
-                                    <div key={i} style={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        marginBottom: "12px",
-                                        padding: "12px",
-                                        borderRadius: "6px",
-                                        backgroundColor: i % 2 === 0 ? "rgba(233, 30, 99, 0.05)" : "transparent",
-                                        borderLeft: `3px solid ${i % 2 === 0 ? COLORS.secondary : "transparent"}`,
-                                        transition: "all 0.2s ease",
-                                        ":hover": {
-                                            backgroundColor: "rgba(156, 39, 176, 0.05)"
-                                        }
-                                    }}>
-                                        <Tag
-                                            color={COLORS.secondary}
-                                            style={{
-                                                marginRight: "12px",
-                                                color: "#FFFFFF",
+                                {state.exercise?.lastWorkouts?.length > 0 ? (
+                                    state.exercise.lastWorkouts.map((workout, i) => (
+                                        <div key={i} style={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            marginBottom: "12px",
+                                            padding: "12px",
+                                            borderRadius: "6px",
+                                            backgroundColor: i % 2 === 0 ? "rgba(233, 30, 99, 0.05)" : "transparent",
+                                            borderLeft: `3px solid ${i % 2 === 0 ? COLORS.secondary : "transparent"}`,
+                                            transition: "all 0.2s ease",
+                                            ":hover": {
+                                                backgroundColor: "rgba(156, 39, 176, 0.05)"
+                                            }
+                                        }}>
+                                            <Tag
+                                                color={COLORS.secondary}
+                                                style={{
+                                                    marginRight: "12px",
+                                                    color: "#FFFFFF",
+                                                    fontWeight: 500,
+                                                    borderRadius: "4px",
+                                                    border: "none"
+                                                }}
+                                            >
+                                                {workout.type}
+                                            </Tag>
+                                            <span style={{
+                                                flex: 1,
+                                                color: COLORS.text,
                                                 fontWeight: 500,
-                                                borderRadius: "4px",
-                                                border: "none"
-                                            }}
-                                        >
-                                            {workout.type}
-                                        </Tag>
-                                        <span style={{
-                                            flex: 1,
-                                            color: COLORS.text,
-                                            fontWeight: 500,
-                                            fontFamily: "'Roboto', sans-serif"
-                                        }}>
-                      {workout.duration} min
-                    </span>
-                                        <span style={{
-                                            color: COLORS.secondary,
-                                            fontWeight: 600,
-                                            fontFamily: "'Roboto Condensed', sans-serif"
-                                        }}>
-                      {workout.calories} kcal
-                    </span>
-                                    </div>
-                                ))}
+                                                fontFamily: "'Roboto', sans-serif"
+                                            }}>
+                                                {workout.duration} min
+                                            </span>
+                                            <span style={{
+                                                color: COLORS.secondary,
+                                                fontWeight: 600,
+                                                fontFamily: "'Roboto Condensed', sans-serif"
+                                            }}>
+                                                {workout.calories} kcal
+                                            </span>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <PolishNoData message="No recent training sessions" />
+                                )}
                             </Card>
                         </Col>
                     </Row>
