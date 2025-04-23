@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { Card, Row, Col, Statistic, Tag, Typography, Empty } from "antd";
 import Highcharts from "highcharts";
 import HighchartsReact from "highcharts-react-official";
-import axiosInstance from "./api/mock";
 import { DashboardState } from "./types";
 import Axios from "axios";
 import {BASE_URL} from "../../config/Config";
@@ -87,8 +86,8 @@ const FitnessDashboard: React.FC = () => {
         const headers = { "x-auth-token": token };
         try {
             const [nutritionRes, exerciseRes, weightRes, goalResponse] = await Promise.all([
-                axiosInstance.get("/api/dash/nutrition"),
-                axiosInstance.get("/api/dash/exercise"),
+                Axios.get(`${BASE_URL}/api/dash/nutrition`, { headers }),
+                Axios.get(`${BASE_URL}/api/dash/exercise`, { headers }),
                 Axios.get(`${BASE_URL}/api/weight/get_weight?range=3m`, { headers }),
                 Axios.get(`${BASE_URL}/api/profile/get-weight-goal`, { headers })
             ]);
