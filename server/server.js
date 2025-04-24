@@ -33,7 +33,7 @@ app.use("/api/auth", authenticationRouter);
 
 
 const dashboardRouter = require("./dashboard/routes/dashboardRoutes");
-app.use("/api/dashboard", dashboardRouter);
+app.use("/api/dash", dashboardRouter);
 
 
 const profileRouter = require("./profile/routes/profileRoutes");

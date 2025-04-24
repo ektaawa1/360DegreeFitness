@@ -29,4 +29,5 @@ export interface DashboardState {
     weightData: any;
     targetWeight: number | null;
     loading: boolean;
+    hasError: boolean;
 }
