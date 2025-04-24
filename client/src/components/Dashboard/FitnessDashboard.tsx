@@ -604,7 +604,8 @@ const FitnessDashboard: React.FC = () => {
                                 {renderChartOrPlaceholder(
                                     getMacrosChartOptions(),
                                     state.nutrition?.macros?.carbs,
-                                    "No data on macronutrients."
+                                    "No data on macronutrients.",
+                                    400
                                 )}
                             </Card>
                         </Col>
