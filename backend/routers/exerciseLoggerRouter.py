@@ -1,6 +1,6 @@
 import json
 import os
-from datetime import date
+from datetime import date, datetime, timedelta
 from typing import Dict
 
 import httpx
@@ -11,6 +11,7 @@ from pymongo.errors import PyMongoError
 
 from ..models.userExerciseLogger import UserExerciseDiary
 from ..db.database import exercise_diary_collection
+from fastapi import Query
 
 exercise_log_router = APIRouter()
 
@@ -326,3 +327,70 @@ async def calculate_calories_burnt(exercise_info_req: Dict):
 
     except Exception as e:
         return JSONResponse(status_code=500, content={"message": f"Error calculating calories: {str(e)}"})
+
+
+@exercise_log_router.get("/v1/360_degree_fitness/getWeeklyExerciseSummary")
+async def get_weekly_exercise_summary(user_id: str = Query(...)):
+    try:
+        if not user_id:
+            return JSONResponse(status_code=400, content={"message": "User ID is required"})
+
+        today = datetime.today().date()
+        print(f"Today's date (UTC): {today}")
+
+        weekly_workouts = []
+        calories_burned = []
+        all_exercises = []
+
+        # Loop over the last 7 days
+        for i in range(6, -1, -1): # 6 to 0
+            log_date = (today - timedelta(days=i)).isoformat()
+            print(f"Fetching data for date: {log_date}")
+
+            diary = await exercise_diary_collection.find_one({"user_id": user_id, "date": log_date})
+
+            if diary:
+                summary = diary.get("daily_exercise_summary", {})
+                total_duration = int(summary.get("total_duration", 0))
+                total_calories = int(summary.get("total_calories_burnt", 0))
+
+                weekly_workouts.append(total_duration)
+                calories_burned.append(total_calories)
+
+                # Collect exercises with date info for sorting later
+                for exercise in diary.get("exercises", []):
+                    all_exercises.append({
+                        "date": diary["date"],
+                        "type": exercise.get("exercise_type", ""),
+                        "duration": int(exercise.get("duration_minutes", 0)),
+                        "calories": int(exercise.get("calories_burnt", 0))
+                    })
+            else:
+                weekly_workouts.append(0)
+                calories_burned.append(0)
+
+        # Sort all exercises by date descending
+        sorted_exercises = sorted(
+            all_exercises,
+            key=lambda x: x["date"],
+            reverse=True
+        )
+
+        # Pick last 3 workouts
+        last_workouts = [
+            {
+                "type": ex["type"],
+                "duration": ex["duration"],
+                "calories": ex["calories"]
+            }
+            for ex in sorted_exercises[:3]
+        ]
+
+        return {
+            "weeklyWorkouts": weekly_workouts,
+            "caloriesBurned": calories_burned,
+            "lastWorkouts": last_workouts
+        }
+
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"message": f"Internal server error: {str(e)}"})
