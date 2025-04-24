@@ -2,7 +2,7 @@ import os
 from datetime import date
 from typing import Optional, Dict
 import requests
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import JSONResponse
 from pymongo.errors import PyMongoError
 import json
@@ -12,6 +12,7 @@ from bson import ObjectId
 from ..db.database import meal_diary_collection, get_meal, update_meal_log, delete_meal_log
 from ..models.userMealLogger import UserMealLogger
 from ..core.oauth2 import FatSecretAuthorization
+from datetime import datetime, timedelta
 
 meal_log_router = APIRouter()
 
@@ -347,77 +348,85 @@ async def delete_user_meal_log(delete_meal_request: Dict):
         return JSONResponse(status_code=500, content={"message": f"Error deleting meal log: {str(e)}"})
 
 
-#  Get Daily/Weekly Nutritional Summary API (GET /v1/360_degree_fitness/nutritional_summary)
-# @meal_log_router.get("/v1/360_degree_fitness/nutritional_summary")
-# async def get_nutritional_summary(user_id: str, start_date: str, end_date: str, period: Optional[str]):
-#     try:
-#         # Query the database to get meal logs for the given user and date range
-#         user_meal_logs = await get_meal(user_id, start_date, end_date)
-#
-#         # Serialize the MongoDB documents
-#         serialized_meal_logs = serialize_mongo_doc(user_meal_logs)
-#
-#         # Initializing the total nutritional values
-#         tot_calories = 0
-#         tot_fat = 0
-#         tot_carbs = 0
-#         tot_protein = 0
-#
-#         for log in serialized_meal_logs:
-#             tot_calories += log.get("total_calories", 0)
-#             tot_fat += log.get("total_fat", 0)
-#             tot_carbs += log.get("total_carbs", 0)
-#             tot_protein += log.get("total_protein", 0)
-#
-#         # The nutritional summary is being returned
-#         return {
-#             "user_id": user_id,
-#             "start_date": start_date,
-#             "end_date": end_date,
-#             "total_calories": tot_calories,
-#             "total_fat": tot_fat,
-#             "total_carbs": tot_carbs,
-#             "total_protein": tot_protein,
-#             "period": period
-#         }
-#     except Exception as e:
-#         return JSONResponse(status_code=500, content={"message": f"Error fetching nutritional summary: {str(e)}"})
+@meal_log_router.get("/v1/360_degree_fitness/getWeeklyNutritionSummary")
+async def get_weekly_nutrition_summary(user_id: str = Query(...)):
+    try:
+        if not user_id:
+            return JSONResponse(status_code=400, content={"message": "User ID is required"})
 
+        # Calculate the last 7 days
+        today = datetime.today().date()
+        print(f"Today's date (UTC): {today}")
 
-#  Get Calorie Chart for the Day (GET /v1/360_degree_fitness/calorie_chart)
-# @meal_log_router.get("/v1/360_degree_fitness/calorie_chart")
-# async def get_calorie_chart(user_id: str, date: str):
-#     try:
-#         user_meal_logs = await get_meal(user_id, date, date)  # fetching meal log for a particular day
-#
-#         # Initializing the total calories consumed
-#         total_calories_consumed = 0
-#         for log in user_meal_logs:
-#             total_calories_consumed += log.get("total_calories", 0)
-#
-#         # Note: Later include this part
-#         # Retrieve user's exercise data (calories burnt) from an external API (assuming a function exists)
-#         # total_calories_burnt
-#
-#         # Retrieve the user's base goal (target calories)
-#         # How to calculate the base goal of the user?
-#         user_base_goal = 2000
-#
-#         # Calculate the remaining calories
-#         calories_left = user_base_goal - total_calories_consumed
-#
-#         return {
-#             "user_id": user_id,
-#             "date": date,
-#             "total_calories_consumed": total_calories_consumed,
-#             "calories_left": calories_left,
-#             "user_base_goal": user_base_goal
-#         }
-#
-#     except Exception as e:
-#         return JSONResponse(status_code=500, content={"message": f"Error fetching calorie chart: {str(e)}"})
+        daily_calories = []
+        total_macros = {"protein": 0, "carbs": 0, "fat": 0}
+        count = 0
+        all_meals = []
 
-#  Get Nutritional Info for Food API (GET /v1/360_degree_fitness/food_nutrition_info)
-#  Get Calorie Intake vs Burnt Tracker (GET /v1/360_degree_fitness/calorie_tracker)
-#  Set Base Calorie Goal for User (POST /v1/360_degree_fitness/set_base_goal)
-#  Get Base Calorie Goal for the User
+        for i in range(6, -1, -1):  # last 7 days from oldest to newest
+            log_date = (today - timedelta(days=i)).isoformat()
+            print(f"Fetching data for date: {log_date}")
+
+            diary = await meal_diary_collection.find_one({
+                "user_id": user_id,
+                "date": log_date
+            })
+
+            if diary:
+                summary = diary.get("daily_nutrition_summary", {})
+                daily_calories.append(int(round(summary.get("total_calories", 0))))
+                total_macros["protein"] += summary.get("total_protein", 0)
+                total_macros["carbs"] += summary.get("total_carbs", 0)
+                total_macros["fat"] += summary.get("total_fat", 0)
+                count += 1
+
+                for meal_type in ["breakfast", "lunch", "dinner", "snacks"]:
+                    for meal in diary.get(meal_type, []):
+                        all_meals.append({
+                            "name": meal_type.capitalize(),
+                            "calories": int(round(meal.get("total_calories", 0))),
+                            "timestamp": meal.get("meal_log_date", diary.get("date"))
+                        })
+            else:
+                daily_calories.append(0)
+
+        # Avoid division by zero
+        if count > 0:
+            avg_macros = {
+                "protein": int(round(total_macros["protein"] / count)),
+                "carbs": int(round(total_macros["carbs"] / count)),
+                "fat": int(round(total_macros["fat"] / count)),
+            }
+        else:
+            avg_macros = {"protein": 0, "carbs": 0, "fat": 0}
+
+        # Last 3 meals
+        sorted_meals = sorted(all_meals, key=lambda m: m["timestamp"], reverse=True)
+
+        # Adding Last Breakfast, Lunch & Dinner
+        last_meals = {}
+        for meal in sorted_meals:
+            if meal["name"] not in last_meals:
+                last_meals[meal["name"]] = meal
+            # We will stop adding meals once we have Breakfast, Lunch, and Dinner
+            if len(last_meals) == 3:
+                break
+
+        # Return meals sorted as Breakfast, Lunch, Dinner if available
+        last_3_meals = [
+            last_meals.get("Breakfast", {}),
+            last_meals.get("Lunch", {}),
+            last_meals.get("Dinner", {})
+        ]
+
+        # Filter out any empty meals (in case one type is missing)
+        last_3_meals = [meal for meal in last_3_meals if meal]
+
+        return {
+            "dailyCalories": daily_calories,
+            "macros": avg_macros,
+            "meals": last_3_meals
+        }
+
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"message": f"Internal Server Error: {str(e)}"})
