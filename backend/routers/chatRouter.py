@@ -39,6 +39,9 @@ genai.configure(api_key=gemini_api_key)
 # No need for a separate client - we'll use the standard genai module
 chat_router = APIRouter()
 
+# Get the backend service URL from environment variable, default to localhost for development
+BACKEND_SERVICE_URL = os.getenv('BACKEND_SERVICE_URL', 'http://localhost:8000')
+
 class ChatMessage(BaseModel):
     user_id: str
     message: str
@@ -697,7 +700,7 @@ async def chat_with_ai(chat_message: ChatMessage):
                     print("No existing plan found, creating new plan...")
                     # Create new plan using the fitness plan endpoint
                     async with httpx.AsyncClient() as client:
-                        create_url = f"http://localhost:8000/v1/360_degree_fitness/create_fitness_plan/{chat_message.user_id}"
+                        create_url = f"{BACKEND_SERVICE_URL}/v1/360_degree_fitness/create_fitness_plan/{chat_message.user_id}"
                         print(f"Calling create plan endpoint: {create_url}")
                         
                         create_response = await client.post(create_url)
