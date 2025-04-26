@@ -113,7 +113,7 @@ async def create_fitness_plan(user_id: str):
         """
 
         # Generate plan using Gemini
-        model = genai.GenerativeModel('gemini-1.5-pro')
+        model = genai.GenerativeModel('gemini-1.5-flash')
         response = model.generate_content(prompt)
         
         if not response or not response.text:
