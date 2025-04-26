@@ -523,7 +523,7 @@ async def classify_user_intent(message: str):
                     pass
         
         # If not a simple date pattern, use Gemini
-        model = genai.GenerativeModel('gemini-1.5-pro')
+        model = genai.GenerativeModel('gemini-1.5-flash')
         
         prompt = f"""
         Classify the following user message into exactly ONE of these categories:
@@ -874,18 +874,19 @@ async def chat_with_ai(chat_message: ChatMessage):
         # Generate profile summary for the AI model
         profile_summary = f"""
             User Profile:
-            - Name: {fitness_profile.get('user_name', 'N/A')}
-            - Age: {fitness_profile.get('user_age', 'N/A')}
-            - Gender: {fitness_profile.get('user_gender', 'N/A')}
-            - Height: {fitness_profile.get('user_height_in_cm', 'N/A')} cm
-            - Weight: {fitness_profile.get('user_weight_in_kg', 'N/A')} kg
-            - Activity Level: {fitness_profile.get('activity_level', 'N/A')}
-            - Fitness Goals: {fitness_profile.get('fitness_goals', 'N/A')}
+            - Age: {fitness_profile.get('user_basic_details', {}).get('age', 'N/A')} years
+            - Gender: {fitness_profile.get('user_basic_details', {}).get('gender', 'N/A')}
+            - Height: {fitness_profile.get('user_basic_details', {}).get('height_in_cm', 'N/A')} cm
+            - Weight: {fitness_profile.get('user_basic_details', {}).get('weight_in_kg', 'N/A')} kg
+            - Activity Level: {fitness_profile.get('user_habits_assessment', {}).get('activity_level', 'N/A')}
+            - Diet Preference: {fitness_profile.get('user_habits_assessment', {}).get('diet_preference', 'N/A')}
+            - Fitness Goals: {fitness_profile.get('user_fitness_goals', 'N/A')}
+            - Health Conditions: {', '.join(fitness_profile.get('user_health_details', {}).get('existing_conditions', [])) or 'None'}
         """
         
         try:
             # Generate response using Gemini AI
-            model = genai.GenerativeModel('gemini-1.5-pro')
+            model = genai.GenerativeModel('gemini-1.5-flash')
             
             prompt = f"""
                 You are a professional fitness and health advisor. Based on the following user profile, provide a helpful answer to the user's question:
@@ -1100,7 +1101,7 @@ async def process_food_image(
             # If it's a label, also add cleaned text using Gemini
             if detected_type == "label":
                 # Use Gemini to clean and structure the OCR text
-                model = genai.GenerativeModel('gemini-1.5-pro')
+                model = genai.GenerativeModel('gemini-1.5-flash')
                 
                 prompt = f"""
                 The following text was extracted from a food label using OCR, but it may contain errors or be poorly formatted:
@@ -1136,7 +1137,7 @@ async def process_nutrition_label_with_gemini(image_content: bytes, mime_type: s
         base64_image = base64.b64encode(image_content).decode('utf-8')
         
         # Use Gemini to extract structured nutrition information
-        model = genai.GenerativeModel('gemini-1.5-pro')
+        model = genai.GenerativeModel('gemini-1.5-flash')
         
         prompt = """
         This is a nutrition label. Please extract the following nutrition information:
@@ -1215,7 +1216,7 @@ async def process_actual_food_with_gemini(image_content: bytes, mime_type: str):
         base64_image = base64.b64encode(image_content).decode('utf-8')
         
         # Use Gemini to identify food items and estimate nutrition
-        model = genai.GenerativeModel('gemini-1.5-pro')
+        model = genai.GenerativeModel('gemini-1.5-flash')
         
         prompt = """
         This is an image of food. Please:
