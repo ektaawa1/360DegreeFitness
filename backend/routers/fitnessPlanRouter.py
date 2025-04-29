@@ -5,9 +5,12 @@ from pymongo.errors import PyMongoError
 import httpx
 import google.generativeai as genai
 import json
+import os
 from ..db.database import profiles_collection
-
 from ..db.connection import get_fitness_plan_collection
+
+# Get the backend service URL from environment variable, default to localhost for development
+BACKEND_SERVICE_URL = os.getenv('BACKEND_SERVICE_URL', 'http://localhost:8000')
 
 # Note-
 # Install pymongo- pip install pymongo
@@ -21,7 +24,7 @@ http_client = httpx.AsyncClient()
 async def create_fitness_plan(user_id: str):
     try:
         # First check profile completion (keeping existing validation)
-        api_response = await http_client.get(f"http://localhost:8000/v1/360_degree_fitness/check_profile_completion/{user_id}")
+        api_response = await http_client.get(f"{BACKEND_SERVICE_URL}/v1/360_degree_fitness/check_profile_completion/{user_id}")
         if api_response.status_code != 200:
             return JSONResponse(status_code=api_response.status_code, content=api_response.json())
         
@@ -110,7 +113,7 @@ async def create_fitness_plan(user_id: str):
         """
 
         # Generate plan using Gemini
-        model = genai.GenerativeModel('gemini-1.5-pro')
+        model = genai.GenerativeModel('gemini-1.5-flash')
         response = model.generate_content(prompt)
         
         if not response or not response.text:

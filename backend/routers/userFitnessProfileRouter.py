@@ -1,3 +1,4 @@
+import os
 from bson import ObjectId
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
@@ -8,6 +9,10 @@ from ..models.userFitnessProfileUpdate import UserFitnessProfileUpdate
 from ..db.connection import get_fitness_profile_collection
 from decimal import Decimal
 import json
+import httpx
+
+# Get the backend service URL from environment variable, default to localhost for development
+BACKEND_SERVICE_URL = os.getenv('BACKEND_SERVICE_URL', 'http://localhost:8000')
 
 profile_router = APIRouter()
 
@@ -32,7 +37,40 @@ async def create_fitness_profile(user_profile: UserFitnessProfile):
         if not profile_dict.get("user_id"):
             return JSONResponse(status_code=400, content={"message": "user_id is required"})
 
+        # Insert the profile
         result = await fitness_profiles_collection.insert_one(profile_dict)
+        
+        # Check if the profile is complete
+        required_fields = [
+            "user_basic_details",
+            "user_initial_measurements",
+            "user_health_details",
+            "user_habits_assessment",
+            "user_routine_assessment",
+            "user_fitness_goals"
+        ]
+        
+        is_complete = all(field in profile_dict for field in required_fields)
+        
+        # If profile is complete, trigger fitness plan generation
+        if is_complete:
+            try:
+                async with httpx.AsyncClient() as client:
+                    # Call the create_fitness_plan endpoint using environment variable
+                    plan_response = await client.post(
+                        f"{BACKEND_SERVICE_URL}/v1/360_degree_fitness/create_fitness_plan/{user_profile.user_id}"
+                    )
+                    if plan_response.status_code == 200:
+                        return {
+                            "message": "User fitness profile created successfully and fitness plan generated!",
+                            "profile_id": str(result.inserted_id),
+                            "fitness_plan": plan_response.json()
+                        }
+            except Exception as e:
+                print(f"Error generating fitness plan: {str(e)}")
+                # Continue even if plan generation fails
+                pass
+        
         return {"message": "User fitness profile created successfully!", "profile_id": str(result.inserted_id)}
     except PyMongoError as e:
         return JSONResponse(status_code=500, content= {"message": f"Database error: {str(e)}"})
@@ -68,10 +106,45 @@ async def edit_fitness_profile(user_id: str, data: UserFitnessProfileUpdate):
         update_data = data.dict(exclude_unset=True)
         
         # Update the latest profile
-        update_latest_profile(user_id, update_data)
+        await update_latest_profile(user_id, update_data)
         
         # Log the changes
-        log_profile_change(user_id, update_data)
+        await log_profile_change(user_id, update_data)
+        
+        # Get the updated profile to check completeness
+        fitness_profiles_collection = get_fitness_profile_collection()
+        updated_profile = await fitness_profiles_collection.find_one({"user_id": user_id})
+        
+        if updated_profile:
+            # Check if the profile is complete
+            required_fields = [
+                "user_basic_details",
+                "user_initial_measurements",
+                "user_health_details",
+                "user_habits_assessment",
+                "user_routine_assessment",
+                "user_fitness_goals"
+            ]
+            
+            is_complete = all(field in updated_profile for field in required_fields)
+            
+            # If profile is complete, trigger fitness plan generation
+            if is_complete:
+                try:
+                    async with httpx.AsyncClient() as client:
+                        # Call the create_fitness_plan endpoint
+                        plan_response = await client.post(
+                            f"{BACKEND_SERVICE_URL}/v1/360_degree_fitness/create_fitness_plan/{user_id}"
+                        )
+                        if plan_response.status_code == 200:
+                            return {
+                                "message": "Profile updated successfully and fitness plan generated!",
+                                "fitness_plan": plan_response.json()
+                            }
+                except Exception as e:
+                    print(f"Error generating fitness plan: {str(e)}")
+                    # Continue even if plan generation fails
+                    pass
         
         return {"status": "Profile updated successfully"}
     except Exception as e:
