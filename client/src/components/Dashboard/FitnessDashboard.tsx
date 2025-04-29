@@ -446,7 +446,21 @@ const FitnessDashboard: React.FC = () => {
     });
 
     const avgCalories = state.nutrition
-        ? Math.round(state.nutrition.dailyCalories.reduce((a, b) => a + b, 0) / 7)
+        ? Math.round(
+            state.nutrition.dailyCalories
+                .filter(calories => calories > 0) // Exclude 0 values
+                .reduce((sum, calories) => sum + calories, 0) /
+            Math.max(1, state.nutrition.dailyCalories.filter(calories => calories > 0).length) // Divide by actual data points (min 1)
+        )
+        : 0;
+
+    const weeklyWorkouts = state.exercise?.weeklyWorkouts
+        ? Math.round(
+            state.exercise.weeklyWorkouts
+                .filter(workouts => workouts > 0) // Exclude 0 values
+                .reduce((sum, workouts) => sum + workouts, 0) /
+            Math.max(1, state.exercise.weeklyWorkouts.filter(workouts => workouts > 0).length) // Divide by actual data points
+        )
         : 0;
 
     return (
@@ -503,7 +517,7 @@ const FitnessDashboard: React.FC = () => {
                             },
                             {
                                 title: "Workouts",
-                                value: state.exercise?.weeklyWorkouts.reduce((a, b) => a + b, 0) || 0,
+                                value: weeklyWorkouts,
                                 color: COLORS.secondary,
                                 suffix: "mins",
                                 icon: "💪"
