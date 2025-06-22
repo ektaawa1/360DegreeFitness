@@ -1,5 +1,9 @@
 # 360 Degree Fitness
 
+## 📄 Project Documentation
+
+- [View Capstone Project PDF](ProjectSummary/Poster_Capstone_360DegreeFitness.pdf) 
+
 ## Installation and Setup
 
 ### • Prerequisites
